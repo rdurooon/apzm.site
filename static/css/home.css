@@ -1,0 +1,44 @@
+body, h1, h2, p {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f2f2f2;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 75px;
+    background-color: darkgreen;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.menu-btn {
+    position: absolute;
+    left: 20px;
+    font-size: 32px;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+}
+
+.site-title {
+    font-family: "Nosifer", cursive;
+    font-size: 26px;
+    color: red;
+    text-shadow: 2px 2px 0 black, -2px -2px 0 black, 2px -2px 0 black, -2px 2px 0 black;
+}
+
+.content {
+    padding: 80px 20%;
+    text-align: center;
+}
