@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}">
@@ -8,6 +9,7 @@
     <script src="{{url_for('static', filename='js/home.js')}}" defer></script>
     <title>Amapá Zombies</title>
 </head>
+
 <body>
     <header class="header">
         <div class="menu-btn" id="menu-btn">
@@ -16,27 +18,28 @@
         <h1 class="site-title">Amapá Zombies</h1>
         <div class="auth-buttons">
             {% if not logged_in %}
-                <button class="btn-register">Cadastrar</button>
-                <button class="btn-login">Entrar</button>
+            <button class="btn-register">Cadastrar</button>
+            <button class="btn-login">Entrar</button>
             {% else %}
-                <span class="welcome-message">Olá, {{ username }}!</span>
-                <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
+            <span class="welcome-message">Olá, {{ username }}!</span>
+            <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
+            {% if is_admin %}
+            <button class="btn-admin" onclick="location.href='/admin'">Admin</button>
+            {% endif %}
             {% endif %}
         </div>
     </header>
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="background-slideshow">
-            <div class="bg-slide slide1"></div>
-            <div class="bg-slide slide2"></div>
-            <div class="bg-slide slide3"></div>
-            <div class="bg-slide slide4"></div>
-            <div class="bg-slide slide5"></div>
-            <div class="bg-slide slide6"></div>
-            <div class="bg-slide slide7"></div>
-        </div>
-        <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo" class="main-logo">
+        <div class="background-slideshow" id="background-slideshow"></div>
+        <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo"
+            class="main-logo">
+
+        <script>
+            // Lista de imagens do Flask
+            const slideImages = JSON.parse('{{ slide_images | tojson | safe }}');
+        </script>
     </section>
 
     <!-- Conteúdo abaixo -->
@@ -44,10 +47,9 @@
         <!-- Cards Dinâmicos -->
         <div class="cards-container">
             {% for card in cards %}
-            {% set title_filename = card.file.rsplit('.', 1)[0] + '.png' %}
-            <div class="card" 
-                data-title="{{ url_for('static', filename='images/titles/' ~ title_filename) }}"
-                data-description="{{ card.description }}">
+            <div class="card"
+                data-base="{{ card.file | replace('.png','') | replace('.jpg','') | replace('.jpeg','') }}"
+                data-description="{{ card.description | e }}">
                 <img src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" alt="Card">
             </div>
             {% endfor %}
@@ -62,7 +64,8 @@
             <div class="popup-content">
                 <div class="popup-title" id="popup-title">Título do Mapa/História</div>
                 <div class="popup-description" id="popup-description">
-                    Aqui vai o resumo ou sinopse do mapa/história. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.
+                    Aqui vai o resumo ou sinopse do mapa/história. Lorem ipsum dolor sit amet, consectetur adipiscing
+                    elit. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.
                 </div>
                 <div class="popup-buttons">
                     <button>Baixar mapa</button>
@@ -162,4 +165,5 @@
         </a>
     </footer>
 </body>
+
 </html>

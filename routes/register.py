@@ -1,7 +1,9 @@
 import json
 import os
+import uuid
 from flask import Blueprint, request, jsonify, session
 from cryptography.fernet import Fernet
+from datetime import datetime
 
 register_bp = Blueprint("register_bp", __name__)
 
@@ -65,7 +67,12 @@ def login_user():
             if decrypted_password == password:
                 session["user_logged_in"] = True
                 session["username"] = u["username"]
-                return jsonify({"status": "success", "message": f"Bem-vindo de volta, {u['username']}!"})
+                session["is_admin"] = u.get("is_admin", False)
+                return jsonify({
+                "status": "success",
+                "message": f"Bem-vindo de volta, {u['username']}!",
+                "is_admin": u.get("is_admin", False)
+            })
             else:
                 return jsonify({"status": "fail", "message": "Senha incorreta."}), 400
 
@@ -100,9 +107,12 @@ def register_user():
 
     # Adiciona novo usuário
     users.append({
+        "id": str(uuid.uuid4()),
         "username": username,
         "email": encrypted_email,
-        "password": encrypted_password
+        "password": encrypted_password,
+        "is_admin": False,
+        "created_at": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     })
 
     save_users(users)
@@ -110,5 +120,52 @@ def register_user():
     # ==================== LOGIN AUTOMÁTICO ====================
     session["user_logged_in"] = True
     session["username"] = username
+    session["is_admin"] = False
 
     return jsonify({"status": "success", "message": "Cadastro realizado com sucesso!"})
+
+# ==========================
+# Funções de manipulação de usuários (Admin)
+# ==========================
+def promote_user(user_id):
+    """
+    Promove um usuário para admin.
+    Retorna True se sucesso, False se usuário não encontrado ou já for admin.
+    """
+    users = load_users()
+    for u in users:
+        if u.get("id") == user_id:
+            if u.get("is_admin", False):
+                return False  # já é admin
+            u["is_admin"] = True
+            save_users(users)
+            return True
+    return False
+
+def demote_user(user_id):
+    """
+    Remove status de admin de um usuário.
+    Retorna True se sucesso, False se usuário não encontrado ou não for admin.
+    """
+    users = load_users()
+    for u in users:
+        if u.get("id") == user_id:
+            if not u.get("is_admin", False):
+                return False  # não é admin
+            u["is_admin"] = False
+            save_users(users)
+            return True
+    return False
+
+def delete_user(user_id):
+    """
+    Deleta um usuário.
+    Retorna True se sucesso, False se usuário não encontrado.
+    """
+    users = load_users()
+    for i, u in enumerate(users):
+        if u.get("id") == user_id:
+            users.pop(i)
+            save_users(users)
+            return True
+    return False
