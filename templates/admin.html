@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin - Amapá Zombies</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
 </head>
+
 <body>
     <!-- Hamburger Menu -->
     <div class="hamburger" id="hamburger">&#9776;</div>
@@ -23,28 +25,71 @@
             </li>
             <li>
                 <div class="menu-item" id="maps-stories">
-                    <span>Mapas/Historias</span>
+                    <span>Mapas/Histórias</span>
                     <span class="arrow">&#9654;</span>
                 </div>
                 <ul class="submenu" id="maps-submenu">
-                    <li>Adicionar ou Remover</li>
+                    <li class="add-map-story">Adicionar</li>
+                    <li>Remover</li>
+                    <li>Reorganizar</li>
                 </ul>
             </li>
             <li>
-                <div class="menu-item">
-                    <span>Usuarios</span>
+                <div class="menu-item" id="users">
+                    <span>Usuários</span>
                     <span class="arrow">&#9654;</span>
                 </div>
+                <ul class="submenu" id="users-submenu">
+                    <li>Listar Usuários</li>
+                    <li>Alterar Usuários</li>
+                </ul>
             </li>
+            <!-- Botão Voltar para Home -->
+            <div class="sidebar-footer">
+                <a href="{{ url_for('home.home') }}" class="back-home-btn">Voltar para página principal</a>
+            </div>
         </ul>
     </div>
 
     <!-- Main Content -->
     <div class="admin-container">
-        <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Logo Amapá Zombies" class="admin-logo">
+        <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Logo Amapá Zombies"
+            class="admin-logo" />
         <h1 class="admin-title">Página da Administração</h1>
     </div>
 
+    <div id="users-list-container" class="users-list-container"></div>
+    <div id="cards-list-container" class="cards-list-container"></div>
+
+    <!-- Popup Adicionar Mapa/História -->
+    <div class="popup-overlay" id="add-popup-overlay">
+        <div class="popup" id="add-popup">
+            <span class="popup-close" id="add-popup-close">&times;</span>
+
+            <!-- Coluna esquerda: card do mapa/história -->
+            <div class="popup-image-placeholder" id="add-popup-image">
+                <span>+</span>
+                <div class="tooltip">Inserir card</div>
+            </div>
+
+            <!-- Coluna direita: título, descrição e botão -->
+            <div class="popup-content">
+                <div class="popup-title" id="add-popup-title">
+                    <span>+</span>
+                    <div class="tooltip">Inserir imagem do título</div>
+                </div>
+                <textarea id="add-popup-description" placeholder="Insira a descrição do mapa/historia..."></textarea>
+                <div class="popup-buttons">
+                    <button id="save-map-story">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loggedInUser = "{{ session['username'] }}";
+    </script>
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
+
 </html>

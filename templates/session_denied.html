@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso negado - APZM</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            /* fundo preto */
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            flex-direction: column;
+        }
+
+        .logo {
+            max-width: 300px;
+            width: 50%;
+            height: auto;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #ff5555;
+            /* destaque em vermelho */
+        }
+
+        p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .btn-home {
+            background-color: white;
+            color: darkgreen;
+            border: none;
+            padding: 16px 32px;
+            font-size: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .btn-home:hover {
+            transform: scale(1.05);
+            background-color: #f0f0f0;
+        }
+
+        @media (max-width: 600px) {
+            .logo {
+                max-width: 200px;
+                margin-bottom: 20px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            p {
+                font-size: 16px;
+                margin-bottom: 30px;
+                padding: 0 10px;
+            }
+
+            .btn-home {
+                font-size: 16px;
+                padding: 12px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <img src="{{ url_for('static', filename='images/common/amapazombies-trans.png') }}" alt="Amapá Zombies Logo"
+        class="logo">
+    <h1>Acesso Negado</h1>
+    <p>Você não pode acessar essa página.<br>Retorne para a página principal.</p>
+    <a href="{{ url_for('home.home') }}" class="btn-home">Voltar para página principal</a>
+    </button>
+</body>
+
+</html>
