@@ -2,6 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}">
     <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{url_for('static', filename='css/home.css')}}">
     <script src="{{url_for('static', filename='js/home.js')}}" defer></script>
@@ -13,10 +14,152 @@
             ☰
         </div>
         <h1 class="site-title">Amapá Zombies</h1>
+        <div class="auth-buttons">
+            {% if not logged_in %}
+                <button class="btn-register">Cadastrar</button>
+                <button class="btn-login">Entrar</button>
+            {% else %}
+                <span class="welcome-message">Olá, {{ username }}!</span>
+                <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
+            {% endif %}
+        </div>
     </header>
 
-    <main>
-        Hello World!
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="background-slideshow">
+            <div class="bg-slide slide1"></div>
+            <div class="bg-slide slide2"></div>
+            <div class="bg-slide slide3"></div>
+            <div class="bg-slide slide4"></div>
+            <div class="bg-slide slide5"></div>
+            <div class="bg-slide slide6"></div>
+            <div class="bg-slide slide7"></div>
+        </div>
+        <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo" class="main-logo">
+    </section>
+
+    <!-- Conteúdo abaixo -->
+    <main class="content">
+        <!-- Cards Dinâmicos -->
+        <div class="cards-container">
+            {% for card in cards %}
+            {% set title_filename = card.file.rsplit('.', 1)[0] + '.png' %}
+            <div class="card" 
+                data-title="{{ url_for('static', filename='images/titles/' ~ title_filename) }}"
+                data-description="{{ card.description }}">
+                <img src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" alt="Card">
+            </div>
+            {% endfor %}
+        </div>
     </main>
+
+    <!-- Popup Overlay -->
+    <div class="popup-overlay" id="popup-overlay">
+        <div class="popup" id="popup">
+            <span class="popup-close" id="popup-close">&times;</span>
+            <img src="" alt="Card Detalhe" id="popup-image">
+            <div class="popup-content">
+                <div class="popup-title" id="popup-title">Título do Mapa/História</div>
+                <div class="popup-description" id="popup-description">
+                    Aqui vai o resumo ou sinopse do mapa/história. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.
+                </div>
+                <div class="popup-buttons">
+                    <button>Baixar mapa</button>
+                    <button>Ler história</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Overlay de Login/Cadastro -->
+    <div class="popup-overlay" id="auth-popup-overlay">
+        <!-- Aviso rápido -->
+        <div id="quick-warning" style="
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff5555;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.5s;
+        ">
+        </div>
+        <div class="auth-popup">
+            <span class="popup-close" id="auth-popup-close">&times;</span>
+
+            <!-- Login -->
+            <div class="auth-content" id="login-popup">
+                <h2 class="auth-title">ENTRAR</h2>
+                <input type="email" placeholder="Email: exemplo@email.com" class="auth-input">
+                <input type="password" placeholder="Senha: ********" class="auth-input">
+                <button class="auth-btn">Entrar</button>
+                <p class="auth-switch">Ainda sem uma conta? <span id="switch-to-register">Cadastrar-se</span></p>
+            </div>
+
+            <!-- Cadastro -->
+            <div class="auth-content" id="register-popup" style="display:none;">
+                <h2 class="auth-title">CADASTRO</h2>
+
+                <!-- Campo Usuário -->
+                <div class="input-wrapper">
+                    <input type="text" id="username" placeholder="Nome de usuário: JucelinoPexeira" class="auth-input">
+                    <div class="username-tooltip" id="username-tooltip">
+                        <p id="rule-length">• Nome deve ter entre 5 e 20 caracteres</p>
+                        <p id="rule-special">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
+                        <p id="rule-first-upper">• Primeira letra deve ser maiúscula</p>
+                        <p id="rule-no-number-start">• Não pode começar com número</p>
+                        <p id="rule-badwords">• Não pode conter palavras ofensivas</p>
+                    </div>
+                </div>
+
+                <!-- Campo Email -->
+                <div class="input-wrapper">
+                    <input type="email" id="email" placeholder="Email: exemplo@email.com" class="auth-input">
+                    <div class="email-tooltip" id="email-tooltip">
+                        <p id="rule-email-format">• Email deve ser válido (ex: usuario@dominio.com)</p>
+                    </div>
+                </div>
+
+                <!-- Campo Senha -->
+                <div class="input-wrapper">
+                    <input type="password" id="password" placeholder="Senha: ********" class="auth-input">
+                    <div class="password-tooltip" id="password-tooltip">
+                        <p id="rule-password-length">• Mínimo de 8 caracteres</p>
+                        <p id="rule-password-upper">• Deve conter pelo menos uma letra maiúscula</p>
+                        <p id="rule-password-lower">• Deve conter pelo menos uma letra minúscula</p>
+                        <p id="rule-password-number">• Deve conter pelo menos um número</p>
+                        <p id="rule-password-special">• Deve conter pelo menos um caractere especial (!@#$%^&*)</p>
+                    </div>
+                </div>
+
+                <label class="auth-checkbox">
+                    <input type="checkbox">
+                    Confirmo que a senha utilizada não é a mesma que é usada em outros lugares importantes
+                </label>
+                <button class="auth-btn">Cadastrar</button>
+                <p class="auth-switch">Já possui uma conta? <span id="switch-to-login">Entrar</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="footer">
+        <h3>Nossa redes sociais</h3><br>
+        <a href="https://instagram.com/amapazombies" target="_blank">
+            <img src="{{ url_for('static', filename='images/social/instagram.png') }}" alt="Instagram">
+        </a>
+        <a href="https://x.com/amapazombies" target="_blank">
+            <img src="{{ url_for('static', filename='images/social/twitter.png') }}" alt="Twitter/X">
+        </a>
+        <a href="https://wattpad.com/user/AmapaZombies" target="_blank">
+            <img src="{{ url_for('static', filename='images/social/wattpad.png') }}" alt="Wattpad">
+        </a>
+    </footer>
 </body>
 </html>
