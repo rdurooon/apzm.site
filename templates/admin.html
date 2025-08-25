@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Amapá Zombies</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <!-- Hamburger Menu -->
+    <div class="hamburger" id="hamburger">&#9776;</div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <ul class="sidebar-menu">
+            <li>
+                <div class="menu-item">
+                    <span>Visão Geral</span>
+                    <span class="arrow">&#9654;</span>
+                </div>
+            </li>
+            <li>
+                <div class="menu-item" id="maps-stories">
+                    <span>Mapas/Historias</span>
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <ul class="submenu" id="maps-submenu">
+                    <li>Adicionar ou Remover</li>
+                </ul>
+            </li>
+            <li>
+                <div class="menu-item">
+                    <span>Usuarios</span>
+                    <span class="arrow">&#9654;</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-container">
+        <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Logo Amapá Zombies" class="admin-logo">
+        <h1 class="admin-title">Página da Administração</h1>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

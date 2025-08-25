@@ -1,0 +1,239 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #ffffff;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Main Content */
+.admin-container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 1;
+}
+
+.admin-logo {
+    width: 120px;
+    height: auto;
+}
+
+.admin-title {
+    color: darkgreen;
+    font-size: 36px;
+}
+
+/* Hamburger */
+.hamburger {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    font-size: 32px;
+    color: white; /* muda para branco quando aberto */
+    cursor: pointer;
+    z-index: 1001;
+    transition: transform 0.3s ease;
+}
+
+/* quando aberto, transforma o hamburguer em X */
+.hamburger.open::after {
+    content: '✖';
+}
+.hamburger.open {
+    color: white;
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 250px;
+    height: 100%;
+    background-color: darkgreen;
+    padding-top: 60px;
+    transition: left 0.3s ease;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    padding: 15px 20px;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background-color: #006400;
+}
+
+.arrow {
+    transition: transform 0.3s ease;
+}
+
+/* Submenu */
+.submenu {
+    list-style: none;
+    padding-left: 20px;
+    display: none;
+}
+
+.submenu li {
+    background-color: white;
+    color: black;
+    padding: 10px 15px;
+    margin: 5px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.submenu li:hover {
+    background-color: #f0f0f0;
+}
+
+/* Rotate arrow when open */
+.menu-item.open .arrow {
+    transform: rotate(90deg);
+}
+
+/* ==============================
+   Responsividade: Tablets e Celulares
+   ============================== */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+        padding: 0;
+        height: 100vh; /* garante centralização vertical */
+        justify-content: center; /* centraliza verticalmente */
+        align-items: center;
+    }
+
+    /* Container principal centralizado vertical e horizontalmente */
+    .admin-container {
+        flex-direction: row; /* logo ao lado do título */
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    /* Logo maior para celular */
+    .admin-logo {
+        width: 100px;
+        height: auto;
+    }
+
+    /* Título centralizado e maior */
+    .admin-title {
+        font-size: 32px;
+        color: darkgreen;
+        text-align: center;
+    }
+
+    /* Hamburger maior e mais fácil de clicar */
+    .hamburger {
+        font-size: 36px;
+        top: 15px;
+        left: 15px;
+    }
+
+    /* Sidebar maior e mais legível */
+    .sidebar {
+        width: 250px; /* maior */
+        padding-top: 60px;
+    }
+
+    .menu-item {
+        padding: 18px 20px;
+        font-size: 18px;
+    }
+
+    .submenu li {
+        padding: 12px 15px;
+        margin: 6px 15px;
+        font-size: 16px;
+    }
+
+    .arrow {
+        font-size: 18px;
+    }
+}
+
+/* ==============================
+   Responsividade: Celulares Pequenos
+   ============================== */
+@media (max-width: 480px) {
+    body {
+        height: 100vh;
+        justify-content: center; /* mantém centralização vertical */
+        align-items: center;
+    }
+
+    /* Container principal centralizado e horizontal */
+    .admin-container {
+        flex-direction: row; /* logo ao lado do título */
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    /* Logo maior */
+    .admin-logo {
+        width: 90px;
+    }
+
+    /* Título maior e legível */
+    .admin-title {
+        font-size: 28px;
+        text-align: center;
+    }
+
+    /* Hamburger maior */
+    .hamburger {
+        font-size: 34px;
+        top: 10px;
+        left: 10px;
+    }
+
+    /* Sidebar maior */
+    .sidebar {
+        width: 220px;
+        padding-top: 50px;
+    }
+
+    .menu-item {
+        padding: 16px 18px;
+        font-size: 16px;
+    }
+
+    .submenu li {
+        padding: 10px 12px;
+        margin: 5px 12px;
+        font-size: 14px;
+    }
+
+    .arrow {
+        font-size: 16px;
+    }
+}
