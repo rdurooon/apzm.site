@@ -9,6 +9,7 @@ admin_bp = Blueprint("admin", __name__)
 
 # =========================== PASTAS E ARQUIVOS ===========================
 DATA_FILE = 'data/cards.json'
+LINKS_FILE = "data/links.json"
 CARD_DIR = 'static/images/cards/'
 TITLE_DIR = 'static/images/titles/'
 
@@ -31,6 +32,31 @@ def list_users():
             "created_at": u.get("created_at", "Desconhecido")
         })
     return jsonify(users_list)
+
+@admin_bp.route("/admin/list_links")
+@admin_required
+def list_links():
+    # Carrega cards
+    if not os.path.exists(DATA_FILE):
+        return jsonify([])
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        cards = json.load(f)
+
+    # Carrega links existentes
+    if os.path.exists(LINKS_FILE):
+        with open(LINKS_FILE, "r", encoding="utf-8") as f:
+            links_data = json.load(f)
+    else:
+        links_data = {}
+
+    # Retorna lista de cards com links se existirem
+    for card in cards:
+        file = card["file"]
+        card_links = links_data.get(file, {})
+        card["link_historia"] = card_links.get("historia", "")
+        card["link_mapa"] = card_links.get("mapa", "")
+
+    return jsonify(cards)
 
 # =========================== PROMOVER USUÁRIO ===========================
 @admin_bp.route("/admin/promote/<user_id>", methods=['POST'])
@@ -161,3 +187,76 @@ def delete_map_story(filename):
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+# =========================== SALVAR ORDEM + VISIBILIDADE ===========================
+@admin_bp.route("/admin/save_cards_order", methods=["POST"])
+@admin_required
+def save_cards_order():
+    try:
+        new_cards = request.get_json()
+
+        if not isinstance(new_cards, list):
+            return jsonify({"success": False, "error": "Formato inválido"})
+
+        # Carrega dados existentes
+        if os.path.exists(DATA_FILE):
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                current_cards = json.load(f)
+        else:
+            current_cards = []
+
+        # Cria um dict para preservar title/description
+        cards_dict = {c["file"]: c for c in current_cards}
+
+        updated_cards = []
+        for c in new_cards:
+            file = c.get("file")
+            if not file:
+                continue
+            # mantém dados antigos se existirem
+            old = cards_dict.get(file, {})
+            updated_cards.append({
+                "file": file,
+                "title": old.get("title", os.path.splitext(file)[0].capitalize()),
+                "description": old.get("description", ""),
+                "visible": c.get("visible", True)
+            })
+
+        # Salva no JSON
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(updated_cards, f, ensure_ascii=False, indent=4)
+
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+    
+# =========================== SALVAR LINKS ===========================
+@admin_bp.route("/admin/save_card_links/<filename>", methods=["POST"])
+@admin_required
+def save_card_links(filename):
+    data = request.get_json()
+    historia_link = data.get("historia", "")
+    mapa_link = data.get("mapa", "")
+
+    # Carrega JSON atual
+    if os.path.exists(LINKS_FILE):
+        with open(LINKS_FILE, "r", encoding="utf-8") as f:
+            try:
+                links_data = json.load(f)
+            except json.JSONDecodeError:
+                links_data = {}
+    else:
+        links_data = {}
+
+
+    # Atualiza links para o card
+    links_data[filename] = {
+        "historia": historia_link,
+        "mapa": mapa_link
+    }
+
+    # Salva novamente
+    with open(LINKS_FILE, "w", encoding="utf-8") as f:
+        json.dump(links_data, f, ensure_ascii=False, indent=4)
+
+    return jsonify({"success": True})

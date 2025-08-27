@@ -60,9 +60,24 @@ function toggleUsersSubmenu() {
 // Limpa todo conteúdo principal (logo, título e container de usuários)
 // ===========================
 function limparConteudoPrincipal() {
+  // Esconde container padrão
   if (adminContainer) adminContainer.style.display = "none";
-  usersListContainer.innerHTML = "";
-  usersListContainer.style.display = "grid";
+
+  // Limpa container de usuários
+  if (usersListContainer) {
+    usersListContainer.innerHTML = "";
+    usersListContainer.style.display = "grid";
+  }
+
+  // Limpa container de cards para remover / reorganizar / linkar
+  if (cardsListContainer) {
+    cardsListContainer.innerHTML = "";
+  }
+
+  // Limpa container da subguia "Linkar"
+  if (linkarContainer) {
+    linkarContainer.innerHTML = "";
+  }
 }
 
 // ===========================
@@ -602,6 +617,260 @@ const removerMapStoryItem = mapsSubmenu.querySelector("li:nth-child(2)"); // "Re
 
 // Evento de clique - Remover Cards
 removerMapStoryItem.addEventListener("click", removerCards);
+
+// ===========================
+// Função: Reorganizar cards
+// ===========================
+async function reorganizarCards() {
+  limparConteudoPrincipal();
+  fecharSidebar();
+
+  cardsListContainer.innerHTML = ""; // limpa antes
+
+  try {
+    const res = await fetch("/admin/list_cards");
+    const cards = await res.json();
+
+    if (!cards.length) {
+      cardsListContainer.innerHTML = "<p>Nenhum card encontrado.</p>";
+      return;
+    }
+
+    cards.forEach((card, index) => {
+      const div = document.createElement("div");
+      div.classList.add("reorganizar-card");
+      div.dataset.index = index; // salvar posição
+
+      // usa flag do JSON se existir, senão visível por padrão
+      const isInitiallyVisible = card.hasOwnProperty('visible') ? !!card.visible : true;
+      div.dataset.visible = isInitiallyVisible ? "true" : "false";
+      if (!isInitiallyVisible) div.classList.add("invisible");
+
+      div.innerHTML = `
+        <img src="/static/images/cards/${card.file}" alt="${card.title}">
+        <button class="btn-left">&lt;</button>
+        <button class="btn-right">&gt;</button>
+      `;
+
+      // cria uma overlay que captura clicks para toggle (fica abaixo dos botões)
+      const toggleOverlay = document.createElement('div');
+      toggleOverlay.className = 'toggle-overlay';
+      div.appendChild(toggleOverlay);
+
+      // Botão esquerda
+      const btnLeft = div.querySelector(".btn-left");
+      btnLeft.addEventListener("click", (e) => {
+        e.stopPropagation();
+        moverCard(div, -1);
+        atualizarBotoes(); // atualiza visibilidade/estado dos botões
+      });
+
+      // Botão direita
+      const btnRight = div.querySelector(".btn-right");
+      btnRight.addEventListener("click", (e) => {
+        e.stopPropagation();
+        moverCard(div, 1);
+        atualizarBotoes(); // atualiza visibilidade/estado dos botões
+      });
+
+      // Toggle de visibilidade via overlay (funciona mesmo se o card estiver 'invisible')
+      toggleOverlay.addEventListener("click", async () => {
+        const currentlyVisible = div.dataset.visible === "true";
+
+        if (currentlyVisible) {
+          div.dataset.visible = "false";
+          div.classList.add("invisible");
+        } else {
+          div.dataset.visible = "true";
+          div.classList.remove("invisible");
+        }
+
+        // opcional: notifica backend sobre alteração de visibilidade
+        try {
+          await fetch(`/admin/toggle_card_visibility/${card.file}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ visible: !currentlyVisible })
+          });
+        } catch (err) {
+          console.error("Erro ao alterar visibilidade do card:", err);
+        }
+      });
+
+      cardsListContainer.appendChild(div);
+    });
+
+    // Ajusta botões iniciais
+    atualizarBotoes();
+
+  // Remove botão antigo apenas dentro da subguia
+  const existingSaveBtn = cardsListContainer.querySelector(".btn-save-cards");
+  if (existingSaveBtn) existingSaveBtn.remove();
+
+  // cria botão de salvar apenas dentro de cardsListContainer
+  const saveBtn = document.createElement("button");
+  saveBtn.textContent = "Salvar Alterações";
+  saveBtn.classList.add("btn-save-cards");
+  saveBtn.addEventListener("click", salvarOrdemCards);
+  cardsListContainer.appendChild(saveBtn);
+
+  } catch (err) {
+    console.error("Erro ao listar/reorganizar cards:", err);
+    showQuickWarning("Erro ao carregar cards!", "#e74c3c");
+  }
+}
+
+// ===========================
+// Função: mover card na tela
+// ===========================
+function moverCard(cardEl, direction) {
+  const container = cardEl.parentElement;
+  const currentIndex = Array.from(container.children).indexOf(cardEl);
+  const newIndex = currentIndex + direction;
+
+  if (newIndex < 0 || newIndex >= container.children.length) return; // limite
+
+  if (direction === -1) {
+    container.insertBefore(cardEl, container.children[newIndex]);
+  } else {
+    container.insertBefore(cardEl, container.children[newIndex].nextSibling);
+  }
+}
+
+// ===========================
+// Função: Atualizar visibilidade dos botões
+// ===========================
+function atualizarBotoes() {
+  const cards = Array.from(cardsListContainer.children);
+
+  cards.forEach((card, idx) => {
+    const btnLeft = card.querySelector(".btn-left");
+    const btnRight = card.querySelector(".btn-right");
+
+    // Se for o primeiro, não tem esquerda
+    if (idx === 0) {
+      btnLeft.style.display = "none";
+    } else {
+      btnLeft.style.display = "block";
+    }
+
+    // Se for o último, não tem direita
+    if (idx === cards.length - 1) {
+      btnRight.style.display = "none";
+    } else {
+      btnRight.style.display = "block";
+    }
+  });
+}
+
+// ===========================
+// Função: salvar ordem + visibilidade
+// ===========================
+async function salvarOrdemCards() {
+  const cards = Array.from(cardsListContainer.children).map(card => ({
+    file: card.querySelector("img").src.split("/").pop(), // só o filename
+    visible: card.dataset.visible === "true"
+  }));
+
+  try {
+    const res = await fetch("/admin/save_cards_order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cards)
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showQuickWarning("Alterações salvas com sucesso!", "green");
+    } else {
+      showQuickWarning("Erro ao salvar alterações!", "red");
+    }
+  } catch (err) {
+    console.error("Erro ao salvar ordem:", err);
+    showQuickWarning("Erro de rede ao salvar.", "red");
+  }
+}
+
+const reorganizarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(3)"); // "Reorganizar"
+reorganizarMapStoryItem.addEventListener("click", reorganizarCards);
+
+const linkarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(4)"); // criar no menu HTML
+const linkarContainer = document.getElementById("linkarContainer");
+
+async function abrirSubguiaLinkar() {
+    limparConteudoPrincipal();
+    fecharSidebar();
+
+    linkarContainer.innerHTML = ""; // limpa container
+
+    try {
+        const res = await fetch("/admin/list_links");
+        const cards = await res.json();
+
+        if (!cards.length) {
+            linkarContainer.innerHTML = "<p>Nenhum card encontrado.</p>";
+            return;
+        }
+
+        cards.forEach(card => {
+          const div = document.createElement("div");
+          div.classList.add("linkar-card-container");
+
+          div.innerHTML = `
+              <div class="linkar-card-left">
+                  <img src="/static/images/cards/${card.file}" alt="${card.title}">
+              </div>
+              <div class="linkar-card-right">
+                  <h3 class="linkar-card-title">${card.title}</h3>
+                  <div class="link-fields">
+                      <label>Linkar História</label>
+                      <input type="text" placeholder="Cole o link da história" value="${card.link_historia || ""}" class="historia-link">
+                      
+                      <label>Linkar Mapa</label>
+                      <input type="text" placeholder="Cole o link do mapa" value="${card.link_mapa || ""}" class="mapa-link">
+                  </div>
+                  <button class="save-links">Salvar Alterações</button>
+              </div>
+          `;
+
+          const btnSave = div.querySelector(".save-links");
+          const inputHistoria = div.querySelector(".historia-link");
+          const inputMapa = div.querySelector(".mapa-link");
+
+          btnSave.addEventListener("click", async () => {
+              btnSave.disabled = true;
+              btnSave.textContent = "Salvando...";
+              try {
+                  const res = await fetch(`/admin/save_card_links/${card.file}`, {
+                      method: "POST",
+                      headers: {"Content-Type": "application/json"},
+                      body: JSON.stringify({
+                          historia: inputHistoria.value.trim(),
+                          mapa: inputMapa.value.trim()
+                      })
+                  });
+                  const data = await res.json();
+                  if (data.success) showQuickWarning("Links salvos com sucesso!", "green");
+                  else showQuickWarning("Erro ao salvar links!", "red");
+              } catch(err) {
+                  console.error(err);
+                  showQuickWarning("Erro de rede!", "red");
+              } finally {
+                  btnSave.disabled = false;
+                  btnSave.textContent = "Salvar Alterações";
+              }
+          });
+
+          linkarContainer.appendChild(div);
+      });
+
+    } catch(err) {
+        console.error(err);
+        showQuickWarning("Erro ao carregar cards!", "red");
+    }
+}
+
+linkarMapStoryItem.addEventListener("click", abrirSubguiaLinkar);
 
 // ===========================
 // Inicialização: Página Carregada
