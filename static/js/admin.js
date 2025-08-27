@@ -873,6 +873,64 @@ async function abrirSubguiaLinkar() {
 linkarMapStoryItem.addEventListener("click", abrirSubguiaLinkar);
 
 // ===========================
+// Site Online/Offline Toggle
+// ===========================
+const siteToggleContainer = document.createElement("div");
+siteToggleContainer.style.position = "absolute";
+siteToggleContainer.style.top = "20px";
+siteToggleContainer.style.right = "20px";
+siteToggleContainer.style.display = "flex";
+siteToggleContainer.style.alignItems = "center";
+siteToggleContainer.style.gap = "10px";
+
+const siteToggleLabel = document.createElement("span");
+siteToggleLabel.textContent = "Site Online:";
+siteToggleContainer.appendChild(siteToggleLabel);
+
+const siteToggle = document.createElement("input");
+siteToggle.type = "checkbox";
+siteToggle.style.width = "40px";
+siteToggle.style.height = "20px";
+siteToggleContainer.appendChild(siteToggle);
+
+document.body.appendChild(siteToggleContainer);
+
+// Inicializa estado
+fetch("/api/site_status.json")
+  .then(res => res.json())
+  .then(data => {
+    siteToggle.checked = data.online;
+  })
+  .catch(err => console.error(err));
+
+// Evento de mudança
+siteToggle.addEventListener("change", async () => {
+  const online = siteToggle.checked;
+  try {
+    const res = await fetch("/admin/toggle_site", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({online})
+    });
+    const data = await res.json();
+    if (data.success) {
+      showQuickWarning(`Site ${online ? "online" : "offline"}!`, online ? "green" : "red");
+    } else {
+      showQuickWarning("Erro ao alterar status do site!", "red");
+    }
+  } catch(err) {
+    console.error(err);
+    showQuickWarning("Erro de rede!", "red");
+  }
+});
+
+if(subguiaAtiva === "visao-geral") {
+    siteToggleContainer.style.display = "flex";
+} else {
+    siteToggleContainer.style.display = "none";
+}
+
+// ===========================
 // Inicialização: Página Carregada
 // ===========================
 window.addEventListener("DOMContentLoaded", () => {

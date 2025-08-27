@@ -1,12 +1,32 @@
 import os
 import json
 from .register import load_users 
-from flask import Blueprint, render_template, session, redirect, url_for, send_from_directory
+from flask import Blueprint, render_template, session, redirect, url_for, send_from_directory, request, jsonify
 
 home_bp = Blueprint("home", __name__)
 
+# ==========================
+# Arquivo para salvar status do site
+# ==========================
+STATUS_FILE = os.path.join("data", "site_status.json")
+
+# ==========================
+# Homepage
+# ==========================
 @home_bp.route("/")
 def home():
+    # 🔹 Checa se o site está online
+    site_online = True
+    if os.path.exists(STATUS_FILE):
+        try:
+            with open(STATUS_FILE, "r") as f:
+                site_online = json.load(f).get("online", True)
+        except:
+            site_online = True
+
+    if not site_online:
+        return render_template("off.html")  # template fora do ar
+
     card_folder = os.path.join('static', 'images', 'cards')
     json_path = os.path.join('data', 'cards.json')
 
@@ -53,15 +73,39 @@ def home():
         if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))
     ]
     
-    return render_template("home.html", cards=visible_cards, logged_in=logged_in, username=username, is_admin=is_admin, slide_images=slide_images)
+    return render_template(
+        "home.html",
+        cards=visible_cards,
+        logged_in=logged_in,
+        username=username,
+        is_admin=is_admin,
+        slide_images=slide_images
+    )
 
+# ==========================
+# Template sessão negada
+# ==========================
 @home_bp.route("/session_denied")
 def session_denied():
     return render_template("session_denied.html")
 
-
-# ======== NOVA ROTA PARA JSONS ========
+# ==========================
+# Servir JSONs da pasta data
+# ==========================
 @home_bp.route("/api/<filename>")
 def serve_data(filename):
-    # Serve arquivos JSON que estão na pasta 'data' fora de /static
     return send_from_directory("data", filename)
+
+# ==========================
+# Toggle Site Online/Offline
+# ==========================
+@home_bp.route("/admin/toggle_site", methods=["POST"])
+def toggle_site():
+    data = request.json
+    online = data.get("online", True)
+    try:
+        with open(STATUS_FILE, "w") as f:
+            json.dump({"online": bool(online)}, f)
+        return jsonify({"success": True, "online": online})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
