@@ -11,6 +11,13 @@ home_bp = Blueprint("home", __name__)
 STATUS_FILE = os.path.join("data", "site_status.json")
 
 # ==========================
+# Sitemap
+# ==========================
+@home_bp.route("/sitemap.xml")
+def sitemap():
+    return render_template("sitemap.xml"), 200, {"Content-Type": "application/xml"}
+
+# ==========================
 # Homepage
 # ==========================
 @home_bp.route("/")
@@ -26,6 +33,14 @@ def home():
 
     if not site_online:
         return render_template("off.html")  # template fora do ar
+
+    seo = {
+        "title": "Amapá Zombies",
+        "description": "Descubra o universo de Amapá Zombies: historias e mapas que se passam no estado do Amapá.",
+        "keywords": "Amapá Zombies, Amapá, zombies, zumbis, codzombies",
+        "url": "https://amapazombies.com.br/",
+        "image": "/static/images/icon.jpg"
+    }
 
     card_folder = os.path.join('static', 'images', 'cards')
     json_path = os.path.join('data', 'cards.json')
@@ -75,6 +90,7 @@ def home():
     
     return render_template(
         "home.html",
+        seo=seo,
         cards=visible_cards,
         logged_in=logged_in,
         username=username,

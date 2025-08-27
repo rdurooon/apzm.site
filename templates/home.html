@@ -7,7 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{url_for('static', filename='css/home.css')}}">
     <script src="{{url_for('static', filename='js/home.js')}}" defer></script>
-    <title>Amapá Zombies</title>
+    
+    <title>{{ seo.title }}</title>
+    <meta name="description" content="{{ seo.description }}">
+    <meta name="keywords" content="{{ seo.keywords }}">
 </head>
 
 <body>
