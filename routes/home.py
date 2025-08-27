@@ -1,7 +1,7 @@
 import os
 import json
 from .register import load_users 
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, session, redirect, url_for, send_from_directory
 
 home_bp = Blueprint("home", __name__)
 
@@ -10,18 +10,26 @@ def home():
     card_folder = os.path.join('static', 'images', 'cards')
     json_path = os.path.join('data', 'cards.json')
 
-    cards_data = []
+    all_cards = []
     if os.path.exists(json_path):
         with open(json_path, 'r', encoding='utf-8') as f:
-            all_cards = json.load(f)
-            for card in all_cards:
-                card_file = card.get("file")
-                if card_file and os.path.exists(os.path.join(card_folder, card_file)):
-                    cards_data.append({
-                        "file": card_file,
-                        "title": card.get("title", "Sem título"),
-                        "description": card.get("description", "")
-                    })
+            try:
+                all_cards = json.load(f)
+            except:
+                all_cards = []
+
+    # 🔹 filtra apenas os visíveis
+    visible_cards = []
+    for card in all_cards:
+        card_file = card.get("file")
+        is_visible = card.get("visible", True)  # padrão é visível
+        if card_file and is_visible and os.path.exists(os.path.join(card_folder, card_file)):
+            visible_cards.append({
+                "file": card_file,
+                "title": card.get("title", "Sem título"),
+                "description": card.get("description", ""),
+                "visible": True
+            })
 
     # Verifica se usuário está logado
     logged_in = session.get("user_logged_in", False)
@@ -45,8 +53,15 @@ def home():
         if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))
     ]
     
-    return render_template("home.html", cards=cards_data, logged_in=logged_in, username=username, is_admin=is_admin, slide_images=slide_images)
+    return render_template("home.html", cards=visible_cards, logged_in=logged_in, username=username, is_admin=is_admin, slide_images=slide_images)
 
 @home_bp.route("/session_denied")
 def session_denied():
     return render_template("session_denied.html")
+
+
+# ======== NOVA ROTA PARA JSONS ========
+@home_bp.route("/api/<filename>")
+def serve_data(filename):
+    # Serve arquivos JSON que estão na pasta 'data' fora de /static
+    return send_from_directory("data", filename)

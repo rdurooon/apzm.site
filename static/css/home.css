@@ -489,6 +489,12 @@ header {
   transform: scale(1.05);
 }
 
+.popup-buttons button.disabled {
+  opacity: 0.5;       /* deixa meio apagado */
+  cursor: not-allowed; /* mostra cursor de não clicável */
+  pointer-events: none; /* desativa clique */
+}
+
 .popup-close {
   position: absolute;
   top: 10px;

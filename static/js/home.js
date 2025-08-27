@@ -49,6 +49,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Seleciona todos os cards
   const cards = document.querySelectorAll(".card");
 
+  // Oculta cards invisíveis (com base no atributo salvo no JSON)
+  cards.forEach((card) => {
+    const isVisible = card.dataset.visible === "true";
+    if (!isVisible) {
+      card.style.display = "none";
+    }
+  });
+
   // Função auxiliar para verificar se imagem existe
   function imageExists(url) {
     const xhr = new XMLHttpRequest();
@@ -116,6 +124,67 @@ document.addEventListener("DOMContentLoaded", () => {
       popupOverlay.classList.remove("show");
     }
   });
+
+  // ================= LINKS DOS CARDS =================
+  let cardLinks = {};
+
+  // Seleciona botões do popup
+  const btnDownloadMap = document.getElementById("btn-download-map");
+  const btnReadStory = document.getElementById("btn-read-story");
+
+  // Função para atualizar links quando abrir popup
+  function setPopupLinks(cardTitle) {
+    const links = cardLinks[cardTitle];
+    
+    // Baixar mapa
+    if (links && links.mapa) {
+      btnDownloadMap.onclick = () => window.open(links.mapa, "_blank");
+      btnDownloadMap.classList.remove("disabled");
+    } else {
+      btnDownloadMap.onclick = null;
+      btnDownloadMap.classList.add("disabled");
+    }
+
+    // Ler história
+    if (links && links.historia) {
+      btnReadStory.onclick = () => window.open(links.historia, "_blank");
+      btnReadStory.classList.remove("disabled");
+    } else {
+      btnReadStory.onclick = null;
+      btnReadStory.classList.add("disabled");
+    }
+  }
+
+
+  // Carrega JSON com fetch
+  fetch("/api/links.json")
+    .then(res => res.json())
+    .then(data => {
+      cardLinks = data;
+
+      // Só depois de carregar links, adiciona clique nos cards
+      cards.forEach((card) => {
+        card.addEventListener("click", () => {
+          const img = card.querySelector("img");
+          const cardImgSrc = img ? img.src : "";
+
+          // 🔹 Pega o nome do arquivo do card
+          const cardFileName = cardImgSrc.split("/").pop(); // ex: bacabeiras.jpg
+
+          let titleImgSrc = getTitleImage(cardFileName.split(".")[0]);
+          if (!titleImgSrc) titleImgSrc = card.dataset.title;
+
+          const description = card.dataset.description;
+
+          openPopup(cardImgSrc, titleImgSrc, description);
+
+          // Atualiza links usando o nome do arquivo completo
+          setPopupLinks(cardFileName);
+        });
+      });
+    })
+    .catch(err => console.error("Erro ao carregar links:", err));
+
 
   // ================= AUTH POPUPS =================
   const authOverlay = document.getElementById("auth-popup-overlay");

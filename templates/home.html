@@ -48,9 +48,10 @@
         <div class="cards-container">
             {% for card in cards %}
             <div class="card"
-                data-base="{{ card.file | replace('.png','') | replace('.jpg','') | replace('.jpeg','') }}"
-                data-description="{{ card.description | e }}">
-                <img src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" alt="Card">
+                data-title="{{ card.title | e }}"
+                data-description="{{ card.description | e }}"
+                data-visible="{{ 'true' if card.get('visible', True) else 'false' }}">
+                <img src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" alt="{{ card.title }}">
             </div>
             {% endfor %}
         </div>
@@ -68,8 +69,10 @@
                     elit. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.
                 </div>
                 <div class="popup-buttons">
-                    <button>Baixar mapa</button>
-                    <button>Ler história</button>
+                    <div class="popup-buttons">
+                        <button id="btn-download-map">Baixar mapa</button>
+                        <button id="btn-read-story">Ler história</button>
+                    </div>
                 </div>
             </div>
         </div>
