@@ -2,30 +2,10 @@ import json
 import os
 import uuid
 from flask import Blueprint, request, jsonify, session
-from cryptography.fernet import Fernet
 from datetime import datetime
+from tools.crypto_utils import cipher, encrypt_value, decrypt_value
 
 register_bp = Blueprint("register_bp", __name__)
-
-# Caminho da chave
-KEY_FILE = "data/fernet.key"
-
-# Função para carregar ou gerar a chave
-def load_or_create_key():
-    if not os.path.exists(KEY_FILE):
-        # Gera nova chave
-        key = Fernet.generate_key()
-        with open(KEY_FILE, "wb") as f:
-            f.write(key)
-        print("Chave Fernet criada com sucesso!")
-    else:
-        with open(KEY_FILE, "rb") as f:
-            key = f.read()
-    return key
-
-# Carrega ou cria a chave
-key = load_or_create_key()
-cipher = Fernet(key)
 
 USERS_FILE = "data/users.json"
 
@@ -61,9 +41,9 @@ def login_user():
 
     users = load_users()
     for u in users:
-        decrypted_email = cipher.decrypt(u["email"].encode()).decode()
-        decrypted_password = cipher.decrypt(u["password"].encode()).decode()
-        if decrypted_email.lower() == email.lower():
+        decrypted_email = decrypt_value(u["email"])
+        decrypted_password = decrypt_value(u["password"])
+        if decrypted_email and decrypted_email.lower() == email.lower():
             if decrypted_password == password:
                 session["user_logged_in"] = True
                 session["username"] = u["username"]
@@ -91,8 +71,9 @@ def register_user():
         return jsonify({"status": "error", "message": "Todos os campos são obrigatórios."}), 400
 
     # Criptografar email e senha
-    encrypted_email = cipher.encrypt(email.encode()).decode()
-    encrypted_password = cipher.encrypt(password.encode()).decode()
+    # REGISTER
+    encrypted_email = encrypt_value(email)
+    encrypted_password = encrypt_value(password)
 
     users = load_users()
 

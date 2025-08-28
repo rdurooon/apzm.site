@@ -2,6 +2,7 @@ import os
 import json
 from .register import load_users 
 from flask import Blueprint, render_template, session, redirect, url_for, send_from_directory, request, jsonify
+from tools.crypto_utils import decrypt_value
 
 home_bp = Blueprint("home", __name__)
 
@@ -36,7 +37,7 @@ def home():
 
     seo = {
         "title": "Amapá Zombies",
-        "description": "Descubra o universo de Amapá Zombies: historias e mapas que se passam no estado do Amapá.",
+        "description": "Descubra o universo de Amapá Zombies: historias e mapas que se passam no estado do Amapá, baseados no CoD Zombies.",
         "keywords": "Amapá Zombies, Amapá, zombies, zumbis, codzombies",
         "url": "https://amapazombies.com.br/",
         "image": "/static/images/icon.jpg"
@@ -76,11 +77,20 @@ def home():
         user = next((u for u in users if u["username"] == username), None)
         if user:
             is_admin = user.get("is_admin", False)
+
+            email = decrypt_value(user.get("email", "")) or "não informado"
+            raw_password = decrypt_value(user.get("password", "")) or ""
+
+            # máscara de senha
+            password_masked = "*" * len(raw_password) if raw_password else "********"
         else:
             # Usuário deletado, limpar sessão
             session.clear()
             return redirect(url_for("home.session_denied"))
-        
+    else:
+        email = ""
+        password_masked = ""
+   
     background_folder = os.path.join('static', 'images', 'background')
     slide_images = [
         f"/static/images/background/{f}" 
@@ -94,6 +104,8 @@ def home():
         cards=visible_cards,
         logged_in=logged_in,
         username=username,
+        email=email,
+        password_masked=password_masked,
         is_admin=is_admin,
         slide_images=slide_images
     )

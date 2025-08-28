@@ -421,77 +421,56 @@ document.addEventListener("DOMContentLoaded", () => {
   registerBtnSubmit.addEventListener("click", (e) => {
     e.preventDefault(); // evita envio padrão
 
-    // Verifica se todos os campos estão preenchidos
     const usernameVal = usernameInput.value.trim();
     const emailVal = emailInput.value.trim();
     const passwordVal = passwordInput.value.trim();
-    const allFilled =
-      usernameVal && emailVal && passwordVal && checkbox.checked;
+    const allFilled = usernameVal && emailVal && passwordVal && checkbox.checked;
 
-    // Verifica se todas as regras estão validadas
-    const usernameValid =
-      document.querySelectorAll("#username-tooltip .valid").length === 5;
+    const usernameValid = document.querySelectorAll("#username-tooltip .valid").length === 5;
     const emailValid = ruleEmailFormat.classList.contains("valid");
-    const passwordValid =
-      document.querySelectorAll("#password-tooltip .valid").length === 5;
+    const passwordValid = document.querySelectorAll("#password-tooltip .valid").length === 5;
     const checkboxValid = checkbox.checked;
 
-    if (
-      !allFilled ||
-      !usernameValid ||
-      !emailValid ||
-      !passwordValid ||
-      !checkboxValid
-    ) {
-      showQuickWarning(
-        "Por favor, preencha todos os campos corretamente e marque a checkbox."
-      );
-      return; // bloqueia cadastro
+    if (!allFilled || !usernameValid || !emailValid || !passwordValid || !checkboxValid) {
+      showQuickWarning("Preencha todos os campos corretamente e marque a checkbox.", "error");
+      return;
     }
 
-    // Se passar tudo, pode enviar ou continuar com lógica de cadastro
-    // Preparar dados
-    const payload = {
-      username: usernameVal,
-      email: emailVal,
-      password: passwordVal,
-    };
+    const payload = { username: usernameVal, email: emailVal, password: passwordVal };
 
-    // Enviar via fetch para o Flask
     fetch("/register", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.status === "success") {
-          showQuickWarning(data.message);
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.status === "success") {
+        // Mostra aviso de sucesso ANTES de fechar popup
+        showQuickWarning(data.message, "success");
 
-          // Limpa campos
-          usernameInput.value = "";
-          emailInput.value = "";
-          passwordInput.value = "";
-          checkbox.checked = false;
+        // Limpa campos
+        usernameInput.value = "";
+        emailInput.value = "";
+        passwordInput.value = "";
+        checkbox.checked = false;
 
-          // Fecha popup
-          authOverlay.classList.remove("show");
+        // Fecha popup de registro com delay curto pra usuário ver o aviso
+        setTimeout(() => authOverlay.classList.remove("show"), 500);
 
-          // Atualiza interface para mostrar que usuário está logado
-          document.querySelector(".auth-buttons").innerHTML = `
-                    <span class="welcome-message">Olá, ${usernameVal}!</span>
-                    <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
-                `;
-        } else {
-          showQuickWarning(data.message);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-        showQuickWarning("Erro ao registrar usuário.");
-      });
+        // Atualiza interface para mostrar que usuário está logado
+        document.querySelector(".auth-buttons").innerHTML = `
+          <span class="welcome-message">Olá, ${usernameVal}!</span>
+          <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
+        `;
+      } else {
+        showQuickWarning(data.message, "error");
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      showQuickWarning("Erro ao registrar usuário.", "error");
+    });
   });
 
   // ================= AVISO RÁPIDO =================
@@ -577,4 +556,202 @@ document.addEventListener("DOMContentLoaded", () => {
         showQuickWarning("Erro ao realizar login.", "error");
       });
   });
+});
+
+// ================= SIDEBAR =================
+const menuBtn = document.getElementById("menu-btn");
+const sidebar = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebar-overlay");
+const sidebarClose = document.getElementById("sidebar-close");
+
+// Abrir sidebar
+menuBtn.addEventListener("click", () => {
+    const isOpen = sidebar.classList.contains("open");
+
+    if (isOpen) {
+        sidebar.classList.remove("open");
+        sidebarOverlay.classList.remove("show");
+        menuBtn.textContent = "☰";
+        menuBtn.classList.remove("open");
+    } else {
+        sidebar.classList.add("open");
+        sidebarOverlay.classList.add("show");
+        menuBtn.textContent = "";
+        menuBtn.classList.add("open");
+    }
+});
+
+// Fechar sidebar clicando no X
+sidebarClose.addEventListener("click", () => {
+    sidebar.classList.remove("open");
+    sidebarOverlay.classList.remove("show");
+    menuBtn.textContent = "☰";
+    menuBtn.classList.remove("open");
+});
+
+// Fechar clicando fora da sidebar
+sidebarOverlay.addEventListener("click", () => {
+    sidebar.classList.remove("open");
+    sidebarOverlay.classList.remove("show");
+    menuBtn.textContent = "☰";
+    menuBtn.classList.remove("open");
+});
+
+// ======================= SIDEBAR =========================
+// ================= SUA CONTA =================
+const accountBtn = document.getElementById("btn-user-account");
+const accountOverlay = document.getElementById("account-popup-overlay");
+const accountPopupClose = document.getElementById("account-popup-close");
+const inputUsername = document.getElementById("account-username");
+const inputEmail = document.getElementById("account-email");
+const inputPassword = document.getElementById("account-password");
+const passwordLabel = document.querySelector('label[for="account-password"]');
+
+// Abre popup de conta
+// Ao abrir popup de conta
+accountBtn.addEventListener("click", () => {
+    accountOverlay.classList.add("show");
+
+    // Guarda valores originais
+    inputUsername.dataset.username = inputUsername.value;
+    inputEmail.dataset.email = inputEmail.value;
+    inputPassword.dataset.password = inputPassword.value;
+
+    // Fecha sidebar se estiver aberta
+    sidebar.classList.remove("open");
+    sidebarOverlay.classList.remove("show");
+    menuBtn.textContent = "☰";
+    menuBtn.classList.remove("open");
+});
+
+
+// Fecha popup ao clicar no X
+accountPopupClose.addEventListener("click", () => {
+    accountOverlay.classList.remove("show");
+});
+
+// Fecha clicando fora do popup
+accountOverlay.addEventListener("click", (e) => {
+    if (e.target === accountOverlay) {
+        accountOverlay.classList.remove("show");
+    }
+});
+
+// ======================= EDITAR CONTA =========================
+const btnEditAccount = document.getElementById("btn-edit-account");
+const btnSaveAccount = document.getElementById("btn-save-account");
+const btnCancelEdit = document.getElementById("btn-cancel-edit");
+const btnDeleteAccount = document.getElementById("btn-delete-account"); // 🔹 novo
+
+
+// ================= SUA CONTA / TOOLTIP =================
+const accountUsernameTooltip = document.getElementById("account-username-tooltip");
+const accountEmailTooltip = document.getElementById("account-email-tooltip");
+
+// Mostrar tooltip ao focar
+inputUsername.addEventListener("focus", () => {
+  if (!inputUsername.hasAttribute("readonly")) {
+    accountUsernameTooltip.classList.add("show");
+  }
+});
+inputUsername.addEventListener("blur", () => accountUsernameTooltip.classList.remove("show"));
+
+inputEmail.addEventListener("focus", () => {
+  if (!inputEmail.hasAttribute("readonly")) {
+    accountEmailTooltip.classList.add("show");
+  }
+});
+inputEmail.addEventListener("blur", () => accountEmailTooltip.classList.remove("show"));
+
+
+// Entrar em modo edição
+btnEditAccount.addEventListener("click", () => {
+    inputUsername.removeAttribute("readonly");
+    inputEmail.removeAttribute("readonly");
+
+    // Limpa senha e troca o label
+    inputPassword.value = "";
+    inputPassword.removeAttribute("readonly");
+    inputPassword.placeholder = "Digite sua senha atual";
+    passwordLabel.textContent = "Senha Atual";
+
+    btnEditAccount.style.display = "none";
+    btnSaveAccount.style.display = "inline-block";
+    btnCancelEdit.style.display = "inline-block";
+
+    // 🔹 Oculta botão deletar
+    if (btnDeleteAccount) btnDeleteAccount.style.display = "none";
+
+    // 🔹 Validação em tempo real
+    inputUsername.addEventListener("input", (e) => validateUsername(e.target.value));
+    inputEmail.addEventListener("input", (e) => validateEmail(e.target.value));
+    inputPassword.addEventListener("input", (e) => validatePassword(e.target.value));
+});
+
+// Cancelar edição
+btnCancelEdit.addEventListener("click", () => {
+  inputUsername.value = inputUsername.dataset.username;
+  inputEmail.value = inputEmail.dataset.email;
+  inputPassword.type = "password";
+  inputPassword.value = inputPassword.dataset.password;
+  inputPassword.setAttribute("readonly", true);
+  passwordLabel.textContent = "Senha";
+
+  inputUsername.setAttribute("readonly", true);
+  inputEmail.setAttribute("readonly", true);
+
+  // 🔹 Volta visibilidade corretamente
+  btnEditAccount.style.display = "inline-block";
+  btnSaveAccount.style.display = "none";
+  btnCancelEdit.style.display = "none";
+  if (btnDeleteAccount) btnDeleteAccount.style.display = "inline-block";
+});
+
+// Salvar edição
+btnSaveAccount.addEventListener("click", () => {
+    if (btnDeleteAccount) btnDeleteAccount.style.display = "inline-block";
+    const usernameVal = inputUsername.value.trim();
+    const emailVal = inputEmail.value.trim();
+    const currentPassword = inputPassword.value.trim();
+
+    if (!usernameVal || !emailVal || !currentPassword) {
+        showQuickWarning("Preencha todos os campos.", "error");
+        return;
+    }
+
+    validateUsername(usernameVal);
+    validateEmail(emailVal);
+
+    const usernameValid = document.querySelectorAll("#username-tooltip .valid").length === 5;
+    const emailValid = document.getElementById("rule-email-format").classList.contains("valid");
+
+    if (!usernameValid || !emailValid) {
+        showQuickWarning("Usuário ou Email inválidos.", "error");
+        return;
+    }
+
+    fetch("/update_user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: usernameVal, email: emailVal, password: currentPassword })
+    })
+    .then(res => res.json())
+    .then(data => {
+        // ✅ Retorno visual
+        showQuickWarning(data.message, data.status === "success" ? "success" : "error");
+
+        if (data.status === "success") {
+            // Atualiza valores originais para evitar undefined
+            inputUsername.dataset.username = usernameVal;
+            inputEmail.dataset.email = emailVal;
+            inputPassword.dataset.password = ""; // senha não é exibida
+
+            btnCancelEdit.click();
+            document.querySelector(".welcome-message").textContent = `Olá, ${usernameVal}!`;
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showQuickWarning("Erro ao atualizar conta.", "error");
+    });
 });
