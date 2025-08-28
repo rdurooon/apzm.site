@@ -1,4 +1,25 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // 🔹 Armazena dados do usuário logado globalmente
+  let LOGGED_USER = {
+    username: null,
+    email: null,
+    password_masked: null,
+  };
+
+  // Atualiza quando o login é bem-sucedido
+  function onLoginSuccess(data) {
+    const username = data.message.split(", ")[1].replace("!", "");
+    LOGGED_USER.username = username;
+    LOGGED_USER.email = data.email || "";
+    LOGGED_USER.password_masked = data.password_masked || "";
+
+    // Atualiza campos do popup "Sua Conta" imediatamente
+    updateAccountPopupFields(
+      LOGGED_USER.username,
+      LOGGED_USER.email,
+      LOGGED_USER.password_masked
+    );
+  }
   // ================= SLIDES =================
   const slideshowContainer = document.getElementById("background-slideshow");
 
@@ -135,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Função para atualizar links quando abrir popup
   function setPopupLinks(cardTitle) {
     const links = cardLinks[cardTitle];
-    
+
     // Baixar mapa
     if (links && links.mapa) {
       btnDownloadMap.onclick = () => window.open(links.mapa, "_blank");
@@ -155,11 +176,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
   // Carrega JSON com fetch
   fetch("/api/links.json")
-    .then(res => res.json())
-    .then(data => {
+    .then((res) => res.json())
+    .then((data) => {
       cardLinks = data;
 
       // Só depois de carregar links, adiciona clique nos cards
@@ -183,8 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
     })
-    .catch(err => console.error("Erro ao carregar links:", err));
-
+    .catch((err) => console.error("Erro ao carregar links:", err));
 
   // ================= AUTH POPUPS =================
   const authOverlay = document.getElementById("auth-popup-overlay");
@@ -193,24 +212,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.querySelector(".btn-login");
   const registerBtn = document.querySelector(".btn-register");
 
+  if (loginBtn) {
+    loginBtn.addEventListener("click", () => {
+      loginPopup.style.display = "flex";
+      registerPopup.style.display = "none";
+      authOverlay.classList.add("show");
+    });
+  }
+
+  if (registerBtn) {
+    registerBtn.addEventListener("click", () => {
+      registerPopup.style.display = "flex";
+      loginPopup.style.display = "none";
+      authOverlay.classList.add("show");
+    });
+  }
+
   const loginPopup = document.getElementById("login-popup");
   const registerPopup = document.getElementById("register-popup");
 
   const switchToRegister = document.getElementById("switch-to-register");
   const switchToLogin = document.getElementById("switch-to-login");
-
-  // Abrir popups
-  loginBtn.addEventListener("click", () => {
-    loginPopup.style.display = "flex";
-    registerPopup.style.display = "none";
-    authOverlay.classList.add("show");
-  });
-
-  registerBtn.addEventListener("click", () => {
-    registerPopup.style.display = "flex";
-    loginPopup.style.display = "none";
-    authOverlay.classList.add("show");
-  });
 
   // Alternar entre login e cadastro
   switchToRegister.addEventListener("click", () => {
@@ -239,11 +261,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const usernameInput = document.getElementById("username");
   const usernameTooltip = document.getElementById("username-tooltip");
 
-  const ruleLength = document.getElementById("rule-length");
-  const ruleSpecial = document.getElementById("rule-special");
-  const ruleFirstUpper = document.getElementById("rule-first-upper");
-  const ruleNoNumberStart = document.getElementById("rule-no-number-start");
-  const ruleBadwords = document.getElementById("rule-badwords");
+  const ruleUsernameLength = document.getElementById("rule-username-length");
+  const ruleUsernameSpecial = document.getElementById("rule-username-special");
+  const ruleUsernameFirstUpper = document.getElementById(
+    "rule-username-first-upper"
+  );
+  const ruleUsernameNoNumberStart = document.getElementById(
+    "rule-username-no-number-start"
+  );
+  const ruleUsernameBadwords = document.getElementById(
+    "rule-username-badwords"
+  );
 
   // Lista simples de palavras proibidas
   const badwords = [
@@ -261,46 +289,32 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   // Função de validação
+
   function validateUsername(value) {
     const trimmed = value.trim();
 
-    // Regra 1: comprimento entre 5 e 20 caracteres
-    if (trimmed.length >= 5 && trimmed.length <= 20) {
-      ruleLength.classList.add("valid");
-    } else {
-      ruleLength.classList.remove("valid");
-    }
+    trimmed.length >= 5 && trimmed.length <= 20
+      ? ruleUsernameLength.classList.add("valid")
+      : ruleUsernameLength.classList.remove("valid");
 
-    // Regra 2: apenas letras, números e underscores
-    if (/^[A-Za-z0-9_]*$/.test(trimmed)) {
-      ruleSpecial.classList.add("valid");
-    } else {
-      ruleSpecial.classList.remove("valid");
-    }
+    /^[A-Za-z0-9_]*$/.test(trimmed)
+      ? ruleUsernameSpecial.classList.add("valid")
+      : ruleUsernameSpecial.classList.remove("valid");
 
-    // Regra 3: primeira letra maiúscula
-    if (trimmed.length > 0 && /^[A-Z]/.test(trimmed)) {
-      ruleFirstUpper.classList.add("valid");
-    } else {
-      ruleFirstUpper.classList.remove("valid");
-    }
+    /^[A-Z]/.test(trimmed)
+      ? ruleUsernameFirstUpper.classList.add("valid")
+      : ruleUsernameFirstUpper.classList.remove("valid");
 
-    // Regra 4: não começar com número
-    if (trimmed.length > 0 && !/^[0-9]/.test(trimmed)) {
-      ruleNoNumberStart.classList.add("valid");
-    } else {
-      ruleNoNumberStart.classList.remove("valid");
-    }
+    !/^[0-9]/.test(trimmed)
+      ? ruleUsernameNoNumberStart.classList.add("valid")
+      : ruleUsernameNoNumberStart.classList.remove("valid");
 
-    // Regra 5: sem palavras proibidas
     const hasBadword = badwords.some((bad) =>
       trimmed.toLowerCase().includes(bad)
     );
-    if (!hasBadword) {
-      ruleBadwords.classList.add("valid");
-    } else {
-      ruleBadwords.classList.remove("valid");
-    }
+    !hasBadword
+      ? ruleUsernameBadwords.classList.add("valid")
+      : ruleUsernameBadwords.classList.remove("valid");
   }
 
   // Mostrar tooltip ao focar
@@ -325,8 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Regex básica para email válido
   function validateEmail(value) {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (regex.test(value.trim())) {
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
       ruleEmailFormat.classList.add("valid");
     } else {
       ruleEmailFormat.classList.remove("valid");
@@ -346,6 +359,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Validar em tempo real
   emailInput.addEventListener("input", (e) => {
     validateEmail(e.target.value);
+    emailTooltip.classList.add("show");
   });
 
   // ================= VALIDACAO DE SENHA =================
@@ -424,53 +438,86 @@ document.addEventListener("DOMContentLoaded", () => {
     const usernameVal = usernameInput.value.trim();
     const emailVal = emailInput.value.trim();
     const passwordVal = passwordInput.value.trim();
-    const allFilled = usernameVal && emailVal && passwordVal && checkbox.checked;
+    const allFilled =
+      usernameVal && emailVal && passwordVal && checkbox.checked;
 
-    const usernameValid = document.querySelectorAll("#username-tooltip .valid").length === 5;
+    const usernameValid =
+      ruleUsernameLength.classList.contains("valid") &&
+      ruleUsernameSpecial.classList.contains("valid") &&
+      ruleUsernameFirstUpper.classList.contains("valid") &&
+      ruleUsernameNoNumberStart.classList.contains("valid") &&
+      ruleUsernameBadwords.classList.contains("valid");
+
     const emailValid = ruleEmailFormat.classList.contains("valid");
-    const passwordValid = document.querySelectorAll("#password-tooltip .valid").length === 5;
+
+    const passwordValid =
+      rulePasswordLength.classList.contains("valid") &&
+      rulePasswordUpper.classList.contains("valid") &&
+      rulePasswordLower.classList.contains("valid") &&
+      rulePasswordNumber.classList.contains("valid") &&
+      rulePasswordSpecial.classList.contains("valid");
+
     const checkboxValid = checkbox.checked;
 
-    if (!allFilled || !usernameValid || !emailValid || !passwordValid || !checkboxValid) {
-      showQuickWarning("Preencha todos os campos corretamente e marque a checkbox.", "error");
+    if (
+      !allFilled ||
+      !usernameValid ||
+      !emailValid ||
+      !passwordValid ||
+      !checkboxValid
+    ) {
+      showQuickWarning(
+        "Preencha todos os campos corretamente e marque a checkbox.",
+        "error"
+      );
       return;
     }
 
-    const payload = { username: usernameVal, email: emailVal, password: passwordVal };
+    const payload = {
+      username: usernameVal,
+      email: emailVal,
+      password: passwordVal,
+    };
 
     fetch("/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.status === "success") {
-        // Mostra aviso de sucesso ANTES de fechar popup
-        showQuickWarning(data.message, "success");
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          // Mostra aviso de sucesso ANTES de fechar popup
+          showQuickWarning(data.message, "success");
 
-        // Limpa campos
-        usernameInput.value = "";
-        emailInput.value = "";
-        passwordInput.value = "";
-        checkbox.checked = false;
+          // Limpa campos
+          usernameInput.value = "";
+          emailInput.value = "";
+          passwordInput.value = "";
+          checkbox.checked = false;
 
-        // Fecha popup de registro com delay curto pra usuário ver o aviso
-        setTimeout(() => authOverlay.classList.remove("show"), 500);
+          // Fecha popup de registro com delay curto pra usuário ver o aviso
+          setTimeout(() => authOverlay.classList.remove("show"), 500);
 
-        // Atualiza interface para mostrar que usuário está logado
-        document.querySelector(".auth-buttons").innerHTML = `
-          <span class="welcome-message">Olá, ${usernameVal}!</span>
-          <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
-        `;
-      } else {
-        showQuickWarning(data.message, "error");
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-      showQuickWarning("Erro ao registrar usuário.", "error");
-    });
+          // 🔹 Atualiza variáveis globais
+          IS_LOGGED_IN = true;
+          LOGGED_USER.username = usernameVal;
+          LOGGED_USER.email = emailVal;
+          LOGGED_USER.password_masked = passwordVal.replace(/./g, "*"); // opcional, mantém mascarada
+
+          // Atualiza interface para mostrar que usuário está logado
+          document.querySelector(".auth-buttons").innerHTML = `
+            <span class="welcome-message">Olá, ${usernameVal}!</span>
+            <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
+          `;
+        } else {
+          showQuickWarning(data.message, "error");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        showQuickWarning("Erro ao registrar usuário.", "error");
+      });
   });
 
   // ================= AVISO RÁPIDO =================
@@ -503,6 +550,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ================ LOGIN =====================
+  function updateAccountPopupFields(username, email, password_masked) {
+    const inputUsername = document.getElementById("account-username-popup");
+    const inputEmail = document.getElementById("account-email-popup");
+    const inputPassword = document.getElementById("account-password");
+
+    inputUsername.value = username;
+    inputUsername.dataset.username = username;
+
+    if (email) {
+      inputEmail.value = email;
+      inputEmail.dataset.email = email;
+    }
+
+    if (password_masked) {
+      inputPassword.value = password_masked;
+      inputPassword.dataset.password = password_masked;
+    }
+  }
+
+  // ➡️ Aqui, adicione a chamada fetch
+  fetch("/api/current_user")
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.logged_in) {
+        LOGGED_USER.username = data.username;
+        LOGGED_USER.email = data.email || "";
+        LOGGED_USER.password_masked = data.password_masked || "";
+
+        updateAccountPopupFields(
+          LOGGED_USER.username,
+          LOGGED_USER.email,
+          LOGGED_USER.password_masked
+        );
+      }
+    })
+    .catch((err) => console.error("Erro ao carregar usuário atual:", err));
+
   const loginPopupBtn = document.querySelector("#login-popup .auth-btn");
   const loginEmailInput = document.querySelector(
     "#login-popup input[type='email']"
@@ -513,10 +597,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loginPopupBtn.addEventListener("click", (e) => {
     e.preventDefault();
-
     const emailVal = loginEmailInput.value.trim();
     const passwordVal = loginPasswordInput.value.trim();
-
     if (!emailVal || !passwordVal) {
       showQuickWarning("Preencha email e senha corretamente.", "error");
       return;
@@ -529,26 +611,23 @@ document.addEventListener("DOMContentLoaded", () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        // Exibe a mensagem do servidor no popup
         showQuickWarning(
           data.message,
           data.status === "success" ? "success" : "error"
         );
-
         if (data.status === "success") {
           authOverlay.classList.remove("show");
-          const username = data.message.split(", ")[1].replace("!", "");
+          IS_LOGGED_IN = true;
 
-          let buttonsHTML = `
-                    <span class="welcome-message">Olá, ${username}!</span>
-                    <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
-                `;
-
-          if (data.is_admin) {
+          let buttonsHTML = `<span class="welcome-message">Olá, ${data.message
+            .split(", ")[1]
+            .replace("!", "")}!</span>
+                  <button class="btn-logout" onclick="location.href='/logout'">Sair</button>`;
+          if (data.is_admin)
             buttonsHTML += `<button class="btn-admin" onclick="location.href='/admin'">Admin</button>`;
-          }
-
           document.querySelector(".auth-buttons").innerHTML = buttonsHTML;
+
+          onLoginSuccess(data); // 🔹 Atualiza global e campos do popup
         }
       })
       .catch((err) => {
@@ -556,116 +635,112 @@ document.addEventListener("DOMContentLoaded", () => {
         showQuickWarning("Erro ao realizar login.", "error");
       });
   });
-});
 
-// ================= SIDEBAR =================
-const menuBtn = document.getElementById("menu-btn");
-const sidebar = document.getElementById("sidebar");
-const sidebarOverlay = document.getElementById("sidebar-overlay");
-const sidebarClose = document.getElementById("sidebar-close");
+  // ================= SIDEBAR =================
+  const menuBtn = document.getElementById("menu-btn");
+  const sidebar = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarClose = document.getElementById("sidebar-close");
 
-// Abrir sidebar
-menuBtn.addEventListener("click", () => {
-    const isOpen = sidebar.classList.contains("open");
+  // Funções para abrir e fechar
+  function openSidebar() {
+    sidebar.classList.add("open");
+    sidebarOverlay.classList.add("show");
+    menuBtn.textContent = "";
+    menuBtn.classList.add("open");
+  }
 
-    if (isOpen) {
-        sidebar.classList.remove("open");
-        sidebarOverlay.classList.remove("show");
-        menuBtn.textContent = "☰";
-        menuBtn.classList.remove("open");
-    } else {
-        sidebar.classList.add("open");
-        sidebarOverlay.classList.add("show");
-        menuBtn.textContent = "";
-        menuBtn.classList.add("open");
+  function closeSidebar() {
+    sidebar.classList.remove("open");
+    sidebarOverlay.classList.remove("show");
+    menuBtn.textContent = "☰";
+    menuBtn.classList.remove("open");
+  }
+
+  // Event listeners
+  menuBtn.addEventListener("click", () => {
+    sidebar.classList.contains("open") ? closeSidebar() : openSidebar();
+  });
+
+  sidebarClose.addEventListener("click", closeSidebar);
+  sidebarOverlay.addEventListener("click", closeSidebar);
+
+  // ======================= SIDEBAR =========================
+  // ================= SUA CONTA =================
+  const accountBtn = document.getElementById("btn-user-account");
+  const accountOverlay = document.getElementById("account-popup-overlay");
+  const accountPopupClose = document.getElementById("account-popup-close");
+  const inputUsername = document.getElementById("account-username");
+  const inputEmail = document.getElementById("account-email");
+  const inputPassword = document.getElementById("account-password");
+  const passwordLabel = document.querySelector('label[for="account-password"]');
+
+  // Abre popup de conta
+  accountBtn.addEventListener("click", () => {
+    if (!IS_LOGGED_IN) {
+      closeSidebar();
+      authOverlay.classList.add("show");
+      loginPopup.style.display = "flex";
+      registerPopup.style.display = "none";
+      showQuickWarning("Você precisa fazer login primeiro.", "error");
+      return;
     }
-});
-
-// Fechar sidebar clicando no X
-sidebarClose.addEventListener("click", () => {
-    sidebar.classList.remove("open");
-    sidebarOverlay.classList.remove("show");
-    menuBtn.textContent = "☰";
-    menuBtn.classList.remove("open");
-});
-
-// Fechar clicando fora da sidebar
-sidebarOverlay.addEventListener("click", () => {
-    sidebar.classList.remove("open");
-    sidebarOverlay.classList.remove("show");
-    menuBtn.textContent = "☰";
-    menuBtn.classList.remove("open");
-});
-
-// ======================= SIDEBAR =========================
-// ================= SUA CONTA =================
-const accountBtn = document.getElementById("btn-user-account");
-const accountOverlay = document.getElementById("account-popup-overlay");
-const accountPopupClose = document.getElementById("account-popup-close");
-const inputUsername = document.getElementById("account-username");
-const inputEmail = document.getElementById("account-email");
-const inputPassword = document.getElementById("account-password");
-const passwordLabel = document.querySelector('label[for="account-password"]');
-
-// Abre popup de conta
-// Ao abrir popup de conta
-accountBtn.addEventListener("click", () => {
+    closeSidebar();
     accountOverlay.classList.add("show");
 
-    // Guarda valores originais
-    inputUsername.dataset.username = inputUsername.value;
-    inputEmail.dataset.email = inputEmail.value;
-    inputPassword.dataset.password = inputPassword.value;
+    // Atualiza inputs com dados do login atual
+    updateAccountPopupFields(
+      LOGGED_USER.username,
+      LOGGED_USER.email,
+      LOGGED_USER.password_masked
+    );
+  });
 
-    // Fecha sidebar se estiver aberta
-    sidebar.classList.remove("open");
-    sidebarOverlay.classList.remove("show");
-    menuBtn.textContent = "☰";
-    menuBtn.classList.remove("open");
-});
-
-
-// Fecha popup ao clicar no X
-accountPopupClose.addEventListener("click", () => {
+  // Fecha popup ao clicar no X
+  accountPopupClose.addEventListener("click", () => {
     accountOverlay.classList.remove("show");
-});
+  });
 
-// Fecha clicando fora do popup
-accountOverlay.addEventListener("click", (e) => {
+  // Fecha clicando fora do popup
+  accountOverlay.addEventListener("click", (e) => {
     if (e.target === accountOverlay) {
-        accountOverlay.classList.remove("show");
+      accountOverlay.classList.remove("show");
     }
-});
+  });
 
-// ======================= EDITAR CONTA =========================
-const btnEditAccount = document.getElementById("btn-edit-account");
-const btnSaveAccount = document.getElementById("btn-save-account");
-const btnCancelEdit = document.getElementById("btn-cancel-edit");
-const btnDeleteAccount = document.getElementById("btn-delete-account"); // 🔹 novo
+  /*// ======================= EDITAR CONTA =========================
+  const btnEditAccount = document.getElementById("btn-edit-account");
+  const btnSaveAccount = document.getElementById("btn-save-account");
+  const btnCancelEdit = document.getElementById("btn-cancel-edit");
+  const btnDeleteAccount = document.getElementById("btn-delete-account"); // 🔹 novo
 
+  // ================= SUA CONTA / TOOLTIP =================
+  const accountUsernameTooltip = document.getElementById(
+    "account-username-tooltip"
+  );
+  const accountEmailTooltip = document.getElementById("account-email-tooltip");
 
-// ================= SUA CONTA / TOOLTIP =================
-const accountUsernameTooltip = document.getElementById("account-username-tooltip");
-const accountEmailTooltip = document.getElementById("account-email-tooltip");
+  // Mostrar tooltip ao focar
+  inputUsername.addEventListener("focus", () => {
+    if (!inputUsername.hasAttribute("readonly")) {
+      accountUsernameTooltip.classList.add("show");
+    }
+  });
+  inputUsername.addEventListener("blur", () =>
+    accountUsernameTooltip.classList.remove("show")
+  );
 
-// Mostrar tooltip ao focar
-inputUsername.addEventListener("focus", () => {
-  if (!inputUsername.hasAttribute("readonly")) {
-    accountUsernameTooltip.classList.add("show");
-  }
-});
-inputUsername.addEventListener("blur", () => accountUsernameTooltip.classList.remove("show"));
+  inputEmail.addEventListener("focus", () => {
+    if (!inputEmail.hasAttribute("readonly")) {
+      accountEmailTooltip.classList.add("show");
+    }
+  });
+  inputEmail.addEventListener("blur", () =>
+    accountEmailTooltip.classList.remove("show")
+  );
 
-inputEmail.addEventListener("focus", () => {
-  if (!inputEmail.hasAttribute("readonly")) {
-    accountEmailTooltip.classList.add("show");
-  }
-});
-inputEmail.addEventListener("blur", () => accountEmailTooltip.classList.remove("show"));
-
-
-// Entrar em modo edição
-btnEditAccount.addEventListener("click", () => {
+  // Entrar em modo edição
+  btnEditAccount.addEventListener("click", () => {
     inputUsername.removeAttribute("readonly");
     inputEmail.removeAttribute("readonly");
 
@@ -683,75 +758,145 @@ btnEditAccount.addEventListener("click", () => {
     if (btnDeleteAccount) btnDeleteAccount.style.display = "none";
 
     // 🔹 Validação em tempo real
-    inputUsername.addEventListener("input", (e) => validateUsername(e.target.value));
+    inputUsername.addEventListener("input", (e) =>
+      validateUsername(e.target.value)
+    );
     inputEmail.addEventListener("input", (e) => validateEmail(e.target.value));
-    inputPassword.addEventListener("input", (e) => validatePassword(e.target.value));
-});
+    inputPassword.addEventListener("input", (e) =>
+      validatePassword(e.target.value)
+    );
+  });
 
-// Cancelar edição
-btnCancelEdit.addEventListener("click", () => {
-  inputUsername.value = inputUsername.dataset.username;
-  inputEmail.value = inputEmail.dataset.email;
-  inputPassword.type = "password";
-  inputPassword.value = inputPassword.dataset.password;
-  inputPassword.setAttribute("readonly", true);
-  passwordLabel.textContent = "Senha";
+  // Cancelar edição
+  btnCancelEdit.addEventListener("click", () => {
+    inputUsername.value = inputUsername.dataset.username;
+    inputEmail.value = inputEmail.dataset.email;
+    inputPassword.type = "password";
+    inputPassword.value = inputPassword.dataset.password;
+    inputPassword.setAttribute("readonly", true);
+    passwordLabel.textContent = "Senha";
 
-  inputUsername.setAttribute("readonly", true);
-  inputEmail.setAttribute("readonly", true);
+    inputUsername.setAttribute("readonly", true);
+    inputEmail.setAttribute("readonly", true);
 
-  // 🔹 Volta visibilidade corretamente
-  btnEditAccount.style.display = "inline-block";
-  btnSaveAccount.style.display = "none";
-  btnCancelEdit.style.display = "none";
-  if (btnDeleteAccount) btnDeleteAccount.style.display = "inline-block";
-});
+    // 🔹 Volta visibilidade corretamente
+    btnEditAccount.style.display = "inline-block";
+    btnSaveAccount.style.display = "none";
+    btnCancelEdit.style.display = "none";
+    if (btnDeleteAccount) btnDeleteAccount.style.display = "inline-block";
+  });
 
-// Salvar edição
-btnSaveAccount.addEventListener("click", () => {
+  // Salvar edição
+  btnSaveAccount.addEventListener("click", () => {
     if (btnDeleteAccount) btnDeleteAccount.style.display = "inline-block";
     const usernameVal = inputUsername.value.trim();
     const emailVal = inputEmail.value.trim();
     const currentPassword = inputPassword.value.trim();
 
     if (!usernameVal || !emailVal || !currentPassword) {
-        showQuickWarning("Preencha todos os campos.", "error");
-        return;
+      showQuickWarning("Preencha todos os campos.", "error");
+      return;
     }
 
     validateUsername(usernameVal);
     validateEmail(emailVal);
 
-    const usernameValid = document.querySelectorAll("#username-tooltip .valid").length === 5;
-    const emailValid = document.getElementById("rule-email-format").classList.contains("valid");
+    const usernameValid =
+      document.querySelectorAll("#username-tooltip .valid").length === 5;
+    const emailValid = document
+      .getElementById("rule-email-format")
+      .classList.contains("valid");
 
     if (!usernameValid || !emailValid) {
-        showQuickWarning("Usuário ou Email inválidos.", "error");
-        return;
+      showQuickWarning("Usuário ou Email inválidos.", "error");
+      return;
     }
 
     fetch("/update_user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: usernameVal, email: emailVal, password: currentPassword })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: usernameVal,
+        email: emailVal,
+        password: currentPassword,
+      }),
     })
-    .then(res => res.json())
-    .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         // ✅ Retorno visual
-        showQuickWarning(data.message, data.status === "success" ? "success" : "error");
+        showQuickWarning(
+          data.message,
+          data.status === "success" ? "success" : "error"
+        );
 
         if (data.status === "success") {
-            // Atualiza valores originais para evitar undefined
-            inputUsername.dataset.username = usernameVal;
-            inputEmail.dataset.email = emailVal;
-            inputPassword.dataset.password = ""; // senha não é exibida
+          // Atualiza valores originais para evitar undefined
+          inputUsername.dataset.username = usernameVal;
+          inputEmail.dataset.email = emailVal;
+          inputPassword.dataset.password = ""; // senha não é exibida
 
-            btnCancelEdit.click();
-            document.querySelector(".welcome-message").textContent = `Olá, ${usernameVal}!`;
+          btnCancelEdit.click();
+          document.querySelector(
+            ".welcome-message"
+          ).textContent = `Olá, ${usernameVal}!`;
         }
-    })
-    .catch(err => {
+      })
+      .catch((err) => {
         console.error(err);
         showQuickWarning("Erro ao atualizar conta.", "error");
+      });
+  });*/
+  // ================= DELETE ACCOUNT =================
+  const deleteAccountBtn = document.getElementById("btn-delete-account");
+  const deleteAccountOverlay = document.getElementById("delete-account-popup-overlay");
+  const confirmDeleteBtn = document.getElementById("confirm-delete-account");
+  const cancelDeleteBtn = document.getElementById("cancel-delete-account");
+
+  if (deleteAccountBtn) {
+    deleteAccountBtn.addEventListener("click", () => {
+      deleteAccountOverlay.classList.add("show"); // mostra overlay
     });
+  }
+
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.addEventListener("click", () => {
+      deleteAccountOverlay.classList.remove("show"); // fecha overlay
+    });
+  }
+
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener("click", () => {
+      fetch("/delete_account", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"   // 🔹 avisa que é JSON
+        },
+        body: JSON.stringify({ username: LOGGED_USER.username }) // 🔹 manda um body qualquer
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Falha na requisição");
+          return res.json();
+        })
+        .then(data => {
+          if (data.status === "success") {
+            showQuickWarning("Conta deletada com sucesso.", "success");
+            window.location.href = "/"; // redireciona
+          } else {
+            showQuickWarning(data.message, "error");
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          showQuickWarning("Erro ao deletar conta.", "error");
+        });
+    });
+  }
+  // também fecha ao clicar fora
+  if (deleteAccountOverlay) {
+    deleteAccountOverlay.addEventListener("click", (e) => {
+      if (e.target === deleteAccountOverlay) {
+        deleteAccountOverlay.classList.remove("show");
+      }
+    });
+  }
 });

@@ -280,6 +280,32 @@ header {
   display: block;
 }
 
+/* Regras dentro dos tooltips */
+#username-tooltip p,
+#email-tooltip p,
+#password-tooltip p {
+  margin: 2px 0;
+  font-size: 0.9em;
+  color: #ff5555; /* vermelho padrão (inválido) */
+  transition: color 0.3s ease;
+}
+
+/* Quando a regra é válida */
+#username-tooltip p.valid,
+#email-tooltip p.valid,
+#password-tooltip p.valid {
+  color: greenyellow; /* verde quando válida */
+}
+
+/* Garantir cores de validação */
+#rule-email-format.invalid {
+  color: #ff5555; /* vermelho */
+}
+
+#rule-email-format.valid {
+  color: #9fff9c; /* verde */
+}
+
 /* ================= LOGADO ====================== */
 /* Botão Logout: darkgreen com borda branca */
 .btn-logout {
@@ -755,6 +781,66 @@ header {
 
 .account-input-wrapper .tooltip p.valid {
   color: #4caf50; /* verde para válido */
+}
+
+/* Popup delete account */
+#delete-account-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+#delete-account-popup-overlay.show {
+    display: flex;
+}
+
+.delete-popup {
+    background: #fff;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.delete-popup-text {
+    margin-top: 14px;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: black;
+}
+
+.delete-popup-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.delete-popup-buttons button {
+    padding: 10px 25px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.delete-popup-buttons .btn-red {
+    background: #ff5555;
+    color: white;
+}
+
+.delete-popup-buttons .btn-gray {
+    background: #ccc;
+    color: #333;
 }
 
 /* Fade-in keyframes */
