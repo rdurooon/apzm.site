@@ -2,22 +2,39 @@
 <html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{url_for('static', filename='css/home.css')}}">
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}" />
+    <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{url_for('static', filename='css/home.css')}}" />
     <script src="{{url_for('static', filename='js/home.js')}}" defer></script>
-    
+
     <title>{{ seo.title }}</title>
-    <meta name="description" content="{{ seo.description }}">
-    <meta name="keywords" content="{{ seo.keywords }}">
+    <meta name="description" content="{{ seo.description }}" />
+    <meta name="keywords" content="{{ seo.keywords }}" />
+
+    <!-- Open Graph (Facebook, WhatsApp, Discord, Instagram, etc.) -->
+    <meta property="og:title" content="{{ seo.title }}" />
+    <meta property="og:description" content="{{ seo.description }}" />
+    <meta property="og:image" content="{{ url_for('static', filename='images/share_banner.jpg', _external=True) }}" />
+    <meta property="og:url" content="https://amapazombies.com.br/" />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{ seo.title }}" />
+    <meta name="twitter:description" content="{{ seo.description }}" />
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/share_banner.jpg', _external=True) }}" />
+
+    <meta property="og:logo" content="{{ url_for('static', filename='images/icon.png', _external=True) }}">
 </head>
 
+
 <body>
+    <script>
+        const slideImages = JSON.parse('{{ slide_images | tojson | safe }}');
+    </script>
     <header class="header">
-        <div class="menu-btn" id="menu-btn">
-            ☰
-        </div>
+        <!--<div class="menu-btn" id="menu-btn">☰</div> -->
         <h1 class="site-title">Amapá Zombies</h1>
         <div class="auth-buttons">
             {% if not logged_in %}
@@ -25,24 +42,36 @@
             <button class="btn-login">Entrar</button>
             {% else %}
             <span class="welcome-message">Olá, {{ username }}!</span>
-            <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
+            <button class="btn-logout" onclick="location.href='/logout'">
+                Sair
+            </button>
             {% if is_admin %}
-            <button class="btn-admin" onclick="location.href='/admin'">Admin</button>
-            {% endif %}
-            {% endif %}
+            <button class="btn-admin" onclick="location.href='/admin'">
+                Admin
+            </button>
+            {% endif %} {% endif %}
         </div>
     </header>
+
+    <!-- Overlay da sidebar -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <span id="sidebar-close" class="sidebar-close">&times;</span>
+        </div>
+        <div class="sidebar-content">
+            <button id="btn-user-account" class="sidebar-guide">Sua Conta</button>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="background-slideshow" id="background-slideshow"></div>
         <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo"
-            class="main-logo">
+            class="main-logo" />
 
-        <script>
-            // Lista de imagens do Flask
-            const slideImages = JSON.parse('{{ slide_images | tojson | safe }}');
-        </script>
     </section>
 
     <!-- Conteúdo abaixo -->
@@ -50,11 +79,9 @@
         <!-- Cards Dinâmicos -->
         <div class="cards-container">
             {% for card in cards %}
-            <div class="card"
-                data-title="{{ card.title | e }}"
-                data-description="{{ card.description | e }}"
+            <div class="card" data-title="{{ card.title | e }}" data-description="{{ card.description | e }}"
                 data-visible="{{ 'true' if card.get('visible', True) else 'false' }}">
-                <img src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" alt="{{ card.title }}">
+                <img src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" alt="{{ card.title }}" />
             </div>
             {% endfor %}
         </div>
@@ -64,12 +91,15 @@
     <div class="popup-overlay" id="popup-overlay">
         <div class="popup" id="popup">
             <span class="popup-close" id="popup-close">&times;</span>
-            <img src="" alt="Card Detalhe" id="popup-image">
+            <img src="" alt="Card Detalhe" id="popup-image" />
             <div class="popup-content">
-                <div class="popup-title" id="popup-title">Título do Mapa/História</div>
+                <div class="popup-title" id="popup-title">
+                    Título do Mapa/História
+                </div>
                 <div class="popup-description" id="popup-description">
-                    Aqui vai o resumo ou sinopse do mapa/história. Lorem ipsum dolor sit amet, consectetur adipiscing
-                    elit. Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.
+                    Aqui vai o resumo ou sinopse do mapa/história. Lorem ipsum dolor sit
+                    amet, consectetur adipiscing elit. Curabitur non nulla sit amet nisl
+                    tempus convallis quis ac lectus.
                 </div>
                 <div class="popup-buttons">
                     <div class="popup-buttons">
@@ -80,45 +110,19 @@
             </div>
         </div>
     </div>
-    <!-- Overlay de Login/Cadastro -->
-    <div class="popup-overlay" id="auth-popup-overlay">
-        <!-- Aviso rápido -->
-        <div id="quick-warning" style="
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #ff5555;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            z-index: 9999;
-            opacity: 0;
-            transition: opacity 0.5s;
-        ">
-        </div>
-        <div class="auth-popup">
-            <span class="popup-close" id="auth-popup-close">&times;</span>
 
-            <!-- Login -->
-            <div class="auth-content" id="login-popup">
-                <h2 class="auth-title">ENTRAR</h2>
-                <input type="email" placeholder="Email: exemplo@email.com" class="auth-input">
-                <input type="password" placeholder="Senha: ********" class="auth-input">
-                <button class="auth-btn">Entrar</button>
-                <p class="auth-switch">Ainda sem uma conta? <span id="switch-to-register">Cadastrar-se</span></p>
-            </div>
+    <!-- Popup Sua Conta -->
+    <div class="popup-overlay" id="account-popup-overlay">
+        <div class="popup account-popup" id="account-popup">
+            <span class="popup-close" id="account-popup-close">&times;</span>
+            <div class="account-guide">📌 Sua Conta</div>
+            <div class="account-content">
 
-            <!-- Cadastro -->
-            <div class="auth-content" id="register-popup" style="display:none;">
-                <h2 class="auth-title">CADASTRO</h2>
-
-                <!-- Campo Usuário -->
-                <div class="input-wrapper">
-                    <input type="text" id="username" placeholder="Nome de usuário: JucelinoPexeira" class="auth-input">
-                    <div class="username-tooltip" id="username-tooltip">
+                <!-- Usuário -->
+                <label>Usuário</label>
+                <div class="account-input-wrapper">
+                    <input type="text" id="account-username" class="account-input" value="{{ username }}" readonly />
+                    <div id="account-username-tooltip" class="tooltip">
                         <p id="rule-length">• Nome deve ter entre 5 e 20 caracteres</p>
                         <p id="rule-special">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
                         <p id="rule-first-upper">• Primeira letra deve ser maiúscula</p>
@@ -127,52 +131,149 @@
                     </div>
                 </div>
 
+                <!-- Email -->
+                <label>Email</label>
+                <div class="account-input-wrapper">
+                    <input type="email" id="account-email" class="account-input" value="{{ email }}" readonly />
+                    <div id="account-email-tooltip" class="tooltip">
+                        <p id="rule-email-format">• Email deve ser válido (ex: usuario@dominio.com)</p>
+                    </div>
+                </div>
+
+                <!-- Senha -->
+                <label id="account-password-label">Senha</label>
+                <input type="password" id="account-password" class="account-input" value="{{ password_masked }}"
+                    readonly />
+            </div>
+
+            <div class="account-buttons">
+                <button id="btn-edit-account" class="btn-green">Editar</button>
+                <button id="btn-save-account" class="btn-green" style="display: none;">Salvar</button>
+                <button id="btn-cancel-edit" class="btn-red" style="display: none;">Cancelar</button>
+                <button id="btn-delete-account" class="btn-red">Excluir Conta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay de Login/Cadastro -->
+    <div class="popup-overlay" id="auth-popup-overlay">
+        <!-- Aviso rápido -->
+        <div id="quick-warning" style="
+          display: none;
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #ff5555;
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+          z-index: 9999;
+          opacity: 0;
+          transition: opacity 0.5s;
+        "></div>
+        <div class="auth-popup">
+            <span class="popup-close" id="auth-popup-close">&times;</span>
+
+            <!-- Login -->
+            <div class="auth-content" id="login-popup">
+                <h2 class="auth-title">ENTRAR</h2>
+                <input type="email" placeholder="Email: exemplo@email.com" class="auth-input" />
+                <input type="password" placeholder="Senha: ********" class="auth-input" />
+                <button class="auth-btn">Entrar</button>
+                <p class="auth-switch">
+                    Ainda sem uma conta?
+                    <span id="switch-to-register">Cadastrar-se</span>
+                </p>
+            </div>
+
+            <!-- Cadastro -->
+            <div class="auth-content" id="register-popup" style="display: none">
+                <h2 class="auth-title">CADASTRO</h2>
+
+                <!-- Campo Usuário -->
+                <div class="input-wrapper">
+                    <input type="text" id="username" placeholder="Nome de usuário: JucelinoPexeira"
+                        class="auth-input" />
+                    <div class="username-tooltip" id="username-tooltip">
+                        <p id="rule-length">• Nome deve ter entre 5 e 20 caracteres</p>
+                        <p id="rule-special">
+                            • Não pode conter caracteres especiais ($, #, @, etc.)
+                        </p>
+                        <p id="rule-first-upper">• Primeira letra deve ser maiúscula</p>
+                        <p id="rule-no-number-start">• Não pode começar com número</p>
+                        <p id="rule-badwords">• Não pode conter palavras ofensivas</p>
+                    </div>
+                </div>
+
                 <!-- Campo Email -->
                 <div class="input-wrapper">
-                    <input type="email" id="email" placeholder="Email: exemplo@email.com" class="auth-input">
+                    <input type="email" id="email" placeholder="Email: exemplo@email.com" class="auth-input" />
                     <div class="email-tooltip" id="email-tooltip">
-                        <p id="rule-email-format">• Email deve ser válido (ex: usuario@dominio.com)</p>
+                        <p id="rule-email-format">
+                            • Email deve ser válido (ex: usuario@dominio.com)
+                        </p>
                     </div>
                 </div>
 
                 <!-- Campo Senha -->
                 <div class="input-wrapper">
-                    <input type="password" id="password" placeholder="Senha: ********" class="auth-input">
+                    <input type="password" id="password" placeholder="Senha: ********" class="auth-input" />
                     <div class="password-tooltip" id="password-tooltip">
                         <p id="rule-password-length">• Mínimo de 8 caracteres</p>
-                        <p id="rule-password-upper">• Deve conter pelo menos uma letra maiúscula</p>
-                        <p id="rule-password-lower">• Deve conter pelo menos uma letra minúscula</p>
-                        <p id="rule-password-number">• Deve conter pelo menos um número</p>
-                        <p id="rule-password-special">• Deve conter pelo menos um caractere especial (!@#$%^&*)</p>
+                        <p id="rule-password-upper">
+                            • Deve conter pelo menos uma letra maiúscula
+                        </p>
+                        <p id="rule-password-lower">
+                            • Deve conter pelo menos uma letra minúscula
+                        </p>
+                        <p id="rule-password-number">
+                            • Deve conter pelo menos um número
+                        </p>
+                        <p id="rule-password-special">
+                            • Deve conter pelo menos um caractere especial (!@#$%^&*)
+                        </p>
                     </div>
                 </div>
 
                 <label class="auth-checkbox">
-                    <input type="checkbox">
-                    Confirmo que a senha utilizada não é a mesma que é usada em outros lugares importantes
+                    <input type="checkbox" />
+                    Confirmo que a senha utilizada não é a mesma que é usada em outros
+                    lugares importantes
                 </label>
                 <button class="auth-btn">Cadastrar</button>
-                <p class="auth-switch">Já possui uma conta? <span id="switch-to-login">Entrar</span></p>
+                <p class="auth-switch">
+                    Já possui uma conta? <span id="switch-to-login">Entrar</span>
+                </p>
             </div>
         </div>
     </div>
 
     <!-- Rodapé -->
     <footer class="footer">
-        <h3>Nossa redes sociais</h3><br>
+        <h3>Nossa redes sociais</h3>
+        <br />
         <a href="https://instagram.com/amapazombies" target="_blank">
-            <img src="{{ url_for('static', filename='images/social/instagram.png') }}" alt="Instagram">
+            <img src="{{ url_for('static', filename='images/social/instagram.png') }}" alt="Instagram" />
         </a>
         <a href="https://x.com/amapazombies" target="_blank">
-            <img src="{{ url_for('static', filename='images/social/twitter.png') }}" alt="Twitter/X">
+            <img src="{{ url_for('static', filename='images/social/twitter.png') }}" alt="Twitter/X" />
         </a>
         <a href="https://wattpad.com/user/AmapaZombies" target="_blank">
-            <img src="{{ url_for('static', filename='images/social/wattpad.png') }}" alt="Wattpad">
+            <img src="{{ url_for('static', filename='images/social/wattpad.png') }}" alt="Wattpad" />
         </a>
         <a href="mailto:contato@amapazombies.com.br" target="_blank">
-            <img src="{{ url_for('static', filename='images/social/email.png') }}" alt="Email">
+            <img src="{{ url_for('static', filename='images/social/email.png') }}" alt="Email" />
         </a>
     </footer>
+
+    <script>
+        if (window.location.search.includes("utm_")) {
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    </script>
 </body>
 
 </html>

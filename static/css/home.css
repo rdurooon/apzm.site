@@ -424,7 +424,7 @@ header {
   display: flex;
   gap: 20px;
   animation: fadeIn 0.3s ease forwards;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .popup img {
@@ -508,6 +508,253 @@ header {
 
 .popup-close:hover {
   color: red;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999; /* atrás da sidebar */
+    display: none;
+}
+
+.sidebar-overlay.show {
+    display: block;
+}
+
+/* Sidebar principal */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px; /* largura inicial fora da tela */
+    width: 250px;
+    height: 100%;
+    background-color: darkgreen;
+    color: white;
+    z-index: 1000; /* na frente do cabeçalho */
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+    padding-top: 20px;
+    overflow-y: auto;
+}
+
+/* Quando aberta */
+.sidebar.open {
+    left: 0;
+}
+
+/* Protrusão sempre visível */
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -20px; /* 20px visíveis */
+    width: 20px;
+    height: 100%;
+    background-color: darkgreen;
+}
+
+/* Header da sidebar */
+.sidebar-header {
+    display: flex;
+    justify-content: flex-start; /* X à esquerda */
+    align-items: center;
+    padding: 0 15px;
+    margin-bottom: 20px;
+}
+
+.sidebar-close {
+    font-size: 48px;
+    cursor: pointer;
+    color: white;
+}
+
+/* Conteúdo da sidebar */
+.sidebar-content {
+    padding: 0 15px;
+}
+
+.sidebar-content h2 {
+    margin: 20px 0 10px 0;
+    padding: 10px 0;
+    border-top: 1px solid white;
+    border-bottom: 1px solid white;
+}
+
+.sidebar-content p {
+    margin: 5px 0 15px 0;
+}
+
+/* Substituir o hamburguer pelo X */
+.menu-btn.open {
+    font-size: 2rem;
+    color: white;
+}
+
+/* ================= SIDEBAR GUIDES ================= */
+.sidebar-guide {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 24px; /* tamanho grande do nome da guia */
+  color: white;
+  background: none;
+  border: none;
+  padding: 20px 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.sidebar-guide:hover {
+  color: #bfff00; /* efeito visual ao passar o mouse */
+}
+
+/* Linha acima da guia */
+.sidebar-guide::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: white;
+}
+
+/* Linha abaixo da guia */
+.sidebar-guide::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: white;
+}
+
+/* ================= POPUP CONTA ================= */
+.account-popup {
+  width: 600px;       
+  max-width: 90%;
+  padding: 30px 25px;       /* laterais menores */
+  background: #fff;
+  border-radius: 16px;
+  text-align: left;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;  /* centraliza o conteúdo */
+  min-height: 400px;
+}
+
+/* Frase guia */
+.account-guide {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: darkgreen;
+}
+
+/* Container centralizado */
+.account-content {
+  flex: 1;                         /* ocupa espaço disponível */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;         /* centraliza verticalmente */
+}
+
+/* Labels maiores e em negrito */
+.account-content label {
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+/* Inputs */
+.account-input {
+  width: 95%;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  border: 2px solid darkgreen;
+  border-radius: 10px;
+  font-size: 16px;
+  background-color: #f9f9f9;
+  outline: none;
+}
+
+.account-input:focus {
+  border-color: #006400;
+  box-shadow: 0 0 8px rgba(0, 100, 0, 0.4);
+}
+
+/* Botões */
+.account-buttons {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.account-buttons button {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.btn-green { background-color: #4CAF50; color: #fff; }
+.btn-green:hover { background-color: #3e8e41; }
+
+.btn-red { background-color: #f44336; color: #fff; }
+.btn-red:hover { background-color: #d32f2f; }
+
+#btn-save-account,
+#btn-cancel-edit {
+  display: none;
+}
+
+/* Envolvendo inputs de conta */
+.account-input-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+/* Tooltip padrão */
+.account-input-wrapper .tooltip {
+  display: none;
+  position: absolute;
+  bottom: 150%; /* aparece acima do input */
+  left: 0;
+  background: darkgreen;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  z-index: 99999;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* Mostra tooltip quando ativado */
+.account-input-wrapper .tooltip.show {
+  display: block;
+}
+
+/* Regras de validação dentro do tooltip */
+.account-input-wrapper .tooltip p {
+  margin: 4px 0;
+}
+
+.account-input-wrapper .tooltip p.valid {
+  color: #4caf50; /* verde para válido */
 }
 
 /* Fade-in keyframes */
