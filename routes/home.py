@@ -23,6 +23,13 @@ def sitemap():
 # ==========================
 @home_bp.route("/")
 def home():
+    seo = {
+        "title": "Amapá Zombies",
+        "description": "Descubra o universo de Amapá Zombies: historias e mapas que se passam no estado do Amapá, baseados no CoD Zombies.",
+        "keywords": "Amapá Zombies, Amapá, zombies, zumbis, codzombies",
+        "url": "https://amapazombies.com.br/",
+        "image": "/static/images/icon.jpg"
+    }
     # 🔹 Checa se o site está online
     site_online = True
     if os.path.exists(STATUS_FILE):
@@ -33,15 +40,8 @@ def home():
             site_online = True
 
     if not site_online:
-        return render_template("off.html")  # template fora do ar
+        return render_template("off.html", seo=seo)  # template fora do ar
 
-    seo = {
-        "title": "Amapá Zombies",
-        "description": "Descubra o universo de Amapá Zombies: historias e mapas que se passam no estado do Amapá, baseados no CoD Zombies.",
-        "keywords": "Amapá Zombies, Amapá, zombies, zumbis, codzombies",
-        "url": "https://amapazombies.com.br/",
-        "image": "/static/images/icon.jpg"
-    }
 
     card_folder = os.path.join('static', 'images', 'cards')
     json_path = os.path.join('data', 'cards.json')
