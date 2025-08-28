@@ -48,11 +48,18 @@ def login_user():
                 session["user_logged_in"] = True
                 session["username"] = u["username"]
                 session["is_admin"] = u.get("is_admin", False)
+
+                decrypted_email = decrypt_value(u.get("email", "")) or "não informado"
+                raw_password = decrypt_value(u.get("password", "")) or ""
+                password_masked = "*" * len(raw_password) if raw_password else "********"
+
                 return jsonify({
-                "status": "success",
-                "message": f"Bem-vindo de volta, {u['username']}!",
-                "is_admin": u.get("is_admin", False)
-            })
+                    "status": "success",
+                    "message": f"Bem-vindo de volta, {u['username']}!",
+                    "is_admin": u.get("is_admin", False),
+                    "email": decrypted_email,
+                    "password_masked": password_masked
+                })
             else:
                 return jsonify({"status": "fail", "message": "Senha incorreta."}), 400
 
@@ -150,3 +157,37 @@ def delete_user(user_id):
             save_users(users)
             return True
     return False
+
+@register_bp.route("/delete_account", methods=["POST"])
+def api_delete_user():
+    if not session.get("user_logged_in") or not session.get("username"):
+        return jsonify({"status": "error", "message": "Usuário não logado."}), 401
+
+    data = request.get_json()  # 🔹 garante leitura do JSON corretamente
+    if not data or "username" not in data:
+        return jsonify({"status": "error", "message": "Requisição inválida."}), 400
+
+    username_to_delete = data.get("username")
+
+    # Verifica se o username enviado bate com o da sessão
+    if username_to_delete != session["username"]:
+        return jsonify({"status": "error", "message": "Ação não permitida."}), 403
+
+    users = load_users()
+    user_found = False
+    for i, u in enumerate(users):
+        if u["username"] == username_to_delete:
+            users.pop(i)
+            user_found = True
+            break
+
+    if not user_found:
+        return jsonify({"status": "error", "message": "Usuário não encontrado."}), 404
+
+    # Salva alterações
+    save_users(users)
+
+    # Limpa sessão
+    session.clear()
+
+    return jsonify({"status": "success", "message": "Conta deletada com sucesso!"})

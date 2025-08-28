@@ -32,9 +32,10 @@
 <body>
     <script>
         const slideImages = JSON.parse('{{ slide_images | tojson | safe }}');
+        let IS_LOGGED_IN = {{ 'true' if logged_in else 'false' }};
     </script>
     <header class="header">
-        <!--<div class="menu-btn" id="menu-btn">☰</div> -->
+        <div class="menu-btn" id="menu-btn">☰</div>
         <h1 class="site-title">Amapá Zombies</h1>
         <div class="auth-buttons">
             {% if not logged_in %}
@@ -121,36 +122,46 @@
                 <!-- Usuário -->
                 <label>Usuário</label>
                 <div class="account-input-wrapper">
-                    <input type="text" id="account-username" class="account-input" value="{{ username }}" readonly />
-                    <div id="account-username-tooltip" class="tooltip">
-                        <p id="rule-length">• Nome deve ter entre 5 e 20 caracteres</p>
-                        <p id="rule-special">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
-                        <p id="rule-first-upper">• Primeira letra deve ser maiúscula</p>
-                        <p id="rule-no-number-start">• Não pode começar com número</p>
-                        <p id="rule-badwords">• Não pode conter palavras ofensivas</p>
+                    <input type="text" id="account-username-popup" class="account-input" value="{{ username or '' }}" data-username="{{ username or '' }}" readonly>
+                    <div id="account-username-tooltip-popup" class="tooltip">
+                        <p id="rule-length-popup">• Nome deve ter entre 5 e 20 caracteres</p>
+                        <p id="rule-special-popup">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
+                        <p id="rule-first-upper-popup">• Primeira letra deve ser maiúscula</p>
+                        <p id="rule-no-number-start-popup">• Não pode começar com número</p>
+                        <p id="rule-badwords-popup">• Não pode conter palavras ofensivas</p>
                     </div>
                 </div>
 
                 <!-- Email -->
                 <label>Email</label>
                 <div class="account-input-wrapper">
-                    <input type="email" id="account-email" class="account-input" value="{{ email }}" readonly />
-                    <div id="account-email-tooltip" class="tooltip">
-                        <p id="rule-email-format">• Email deve ser válido (ex: usuario@dominio.com)</p>
+                    <input type="email" id="account-email-popup" class="account-input" value="{{ email or '' }}" data-email="{{ email or '' }}" readonly>
+                    <div id="account-email-tooltip-popup" class="tooltip">
+                        <p id="rule-email-format-popup">• Email deve ser válido (ex: usuario@dominio.com)</p>
                     </div>
                 </div>
 
                 <!-- Senha -->
                 <label id="account-password-label">Senha</label>
-                <input type="password" id="account-password" class="account-input" value="{{ password_masked }}"
-                    readonly />
+                <input type="password" id="account-password" class="account-input" value="{{ password_masked or '********' }}" data-password="{{ password_masked or '********' }}" readonly>
             </div>
 
             <div class="account-buttons">
-                <button id="btn-edit-account" class="btn-green">Editar</button>
+                <!-- <button id="btn-edit-account" class="btn-green">Editar</button>
                 <button id="btn-save-account" class="btn-green" style="display: none;">Salvar</button>
-                <button id="btn-cancel-edit" class="btn-red" style="display: none;">Cancelar</button>
-                <button id="btn-delete-account" class="btn-red">Excluir Conta</button>
+                <button id="btn-cancel-edit" class="btn-red" style="display: none;">Cancelar</button> -->
+                <button id="btn-delete-account" class="btn-red">Deletar Conta</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup de confirmação de exclusão -->
+    <div class="popup-overlay" id="delete-account-popup-overlay">
+        <div class="popup delete-popup">
+            <p class="delete-popup-text">Tem certeza que deseja deletar sua conta? Esta ação não pode ser desfeita.</p>
+            <div class="delete-popup-buttons">
+                <button id="confirm-delete-account" class="btn-red">Sim, quero deletar</button>
+                <button id="cancel-delete-account" class="btn-gray">Cancelar</button>
             </div>
         </div>
     </div>
@@ -196,14 +207,13 @@
                 <div class="input-wrapper">
                     <input type="text" id="username" placeholder="Nome de usuário: JucelinoPexeira"
                         class="auth-input" />
+                    <!-- Cadastro -->
                     <div class="username-tooltip" id="username-tooltip">
-                        <p id="rule-length">• Nome deve ter entre 5 e 20 caracteres</p>
-                        <p id="rule-special">
-                            • Não pode conter caracteres especiais ($, #, @, etc.)
-                        </p>
-                        <p id="rule-first-upper">• Primeira letra deve ser maiúscula</p>
-                        <p id="rule-no-number-start">• Não pode começar com número</p>
-                        <p id="rule-badwords">• Não pode conter palavras ofensivas</p>
+                        <p id="rule-username-length">• Nome deve ter entre 5 e 20 caracteres</p>
+                        <p id="rule-username-special">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
+                        <p id="rule-username-first-upper">• Primeira letra deve ser maiúscula</p>
+                        <p id="rule-username-no-number-start">• Não pode começar com número</p>
+                        <p id="rule-username-badwords">• Não pode conter palavras ofensivas</p>
                     </div>
                 </div>
 

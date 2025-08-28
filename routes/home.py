@@ -137,3 +137,29 @@ def toggle_site():
         return jsonify({"success": True, "online": online})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+# ==========================
+# API
+# ==========================
+@home_bp.route("/api/current_user")
+def current_user():
+    if not session.get("user_logged_in"):
+        return jsonify({"logged_in": False})
+
+    username = session.get("username")
+    users = load_users()
+    user = next((u for u in users if u["username"] == username), None)
+    if not user:
+        return jsonify({"logged_in": False})
+
+    email = decrypt_value(user.get("email", "")) or "não informado"
+    raw_password = decrypt_value(user.get("password", "")) or ""
+    password_masked = "*" * len(raw_password) if raw_password else "********"
+
+    return jsonify({
+        "logged_in": True,
+        "username": username,
+        "email": email,
+        "password_masked": password_masked,
+        "is_admin": user.get("is_admin", False)
+    })
