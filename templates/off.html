@@ -10,6 +10,20 @@
   p { font-size:1.2rem;}
   .logo { max-width: 300px; width: 50%; height: auto; margin-bottom: 30px;}
 </style>
+    <!-- Open Graph (Facebook, WhatsApp, Discord, Instagram, etc.) -->
+    <meta property="og:title" content="{{ seo.title }}" />
+    <meta property="og:description" content="{{ seo.description }}" />
+    <meta property="og:image" content="{{ url_for('static', filename='images/share_banner.jpg', _external=True) }}" />
+    <meta property="og:url" content="https://amapazombies.com.br/" />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{ seo.title }}" />
+    <meta name="twitter:description" content="{{ seo.description }}" />
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/share_banner.jpg', _external=True) }}" />
+
+    <meta property="og:logo" content="{{ url_for('static', filename='images/icon.png', _external=True) }}">
 </head>
 <body>
   <div>
