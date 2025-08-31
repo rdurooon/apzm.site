@@ -885,16 +885,21 @@ header {
 /* Tablets e celulares */
 @media (max-width: 1024px) {
   header {
-    height: 175px;
+    height: 80px;
   }
 
   .auth-popup {
-    width: 95%; /* aumenta ocupação da tela */
-    max-width: 700px; /* permite mais largura em tablets grandes */
-    height: 40%;
+    width: 85%; /* aumenta ocupação da tela */
+    max-width: 400px; 
     padding: 50px 30px;
-    align-items: center; /* centraliza horizontalmente */
-    justify-content: center; /* centraliza verticalmente */
+    align-items: center; 
+    justify-content: center; 
+  }
+
+  #register-popup {
+    height: 60%;
+    min-height: 480px; /* maior altura */
+    max-height: 100vh; /* para não estourar na tela */
   }
 
   .auth-content {
@@ -904,69 +909,70 @@ header {
   }
 
   .auth-title {
-    font-size: 70px;
+    font-size: 25px;
     width: 100%;
   }
 
   .auth-input {
-    font-size: 40px;
+    font-size: 20px;
   }
 
   .auth-btn {
-    font-size: 54px;
+    font-size: 24px;
   }
 
   .auth-buttons {
-    top: 24px;
+    top: 9px;
     right: 15px;
-    flex-direction: column; /* coloca os botões um em cima do outro */
-    gap: 15px; /* aumenta o espaço entre eles */
+    flex-direction: column; 
+    gap: 5px;
   }
 
   .auth-buttons button {
-    height: 55px;
-    font-size: 20px; /* maior que o original */
-    padding: 12px 24px; /* aumenta área clicável */
-    width: 150px; /* largura uniforme */
+    height: 30px;
+    font-size: 12px; /* maior que o original */
+    padding: 2px 0px; /* aumenta área clicável */
+    width: 70px; /* largura uniforme */
   }
 
   .auth-checkbox {
-    font-size: 32px;
+    font-size: 18px;
   }
 
   .auth-checkbox input {
-    min-width: 40px;
-    min-height: 40px;
+    min-width: 20px;
+    min-height: 20px;
   }
 
   .username-tooltip {
-    font-size: 32px;
+    font-size: 18px;
   }
 
   .email-tooltip {
-    font-size: 32px;
+    font-size: 18px;
   }
 
   .password-tooltip {
-    font-size: 32px;
+    font-size: 18px;
   }
 
   .auth-switch {
-    font-size: 32px;
+    font-size: 18px;
     text-align: center;
   }
 
   .site-title {
-    font-size: 48px;
+    font-size: 22px;
+    padding-right: 30px;
   }
 
   .menu-btn {
-    font-size: 54px; /* maior */
-    left: 48px;
+    font-size: 24px; /* maior */
+    left: 28px;
   }
 
   .main-logo {
-    max-width: 540px; /* maior */
+    max-width: 200px; /* maior */
     padding-top: 6vh; /* menos espaço no topo */
   }
 
@@ -976,14 +982,14 @@ header {
   }
 
   .footer {
-    padding: 54px 0;
-    bottom: 0;
+    padding: 20px 0;
     width: 100%;
+    padding-bottom: 54px;
   }
 
   .footer img {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     transition: transform 0.3s ease;
   }
 
@@ -992,26 +998,24 @@ header {
   }
 
   h3 {
-    font-size: 32px;
+    font-size: 26px;
   }
 
   .cards-container {
-    gap: 18px;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
   .card {
-    max-width: 280px;
+    max-width: 180px;
   }
 
   .popup {
-    flex-direction: column; /* mantém empilhamento */
+    flex-direction: row; /* mantém empilhamento */
     align-items: center;
   }
 
   .popup img {
-    width: 80%; /* menor que 90%, mantém espaço para conteúdo */
-    max-height: 300px; /* limita altura */
-    margin-bottom: 20px;
+    width: 40%; /* menor que 90%, mantém espaço para conteúdo */
   }
 
   .popup-content {
@@ -1026,97 +1030,34 @@ header {
   .popup-description {
     font-size: 16px;
     line-height: 1.5;
+    text-justify: auto;
   }
 
   .popup-buttons button {
     font-size: 16px;
     padding: 10px 18px;
   }
-}
 
-/* Celulares até 600px */
-@media (max-width: 600px) {
-  header {
-    height: 175px;
+  /* ================= LOGADO ====================== */
+  /* Botão Logout: darkgreen com borda branca */
+  .btn-logout {
+    margin-top: 14px;
+    margin-left: 100px;
   }
 
-  .auth-popup {
-    width: 80%; /* ocupa quase toda a tela */
-    max-width: 1000px; /* maior que antes */
-    padding: 40px 20px;
+  /* Botão Admin: branco, sem borda */
+  .btn-admin {
+    margin-left: 100px;
   }
 
-  .auth-input {
-    font-size: 18px; /* deixa os campos maiores */
-    padding: 16px 18px;
+  /* Mensagem de boas-vindas */
+  .welcome-message {
+    display: none;
   }
 
-  .auth-btn {
-    font-size: 20px; /* aumenta botão */
-    padding: 16px;
-  }
-
-  .auth-title {
-    font-size: 28px; /* título maior */
-  }
-
-  .site-title {
-    font-size: 54px;
-  }
-
-  .menu-btn {
-    font-size: 54px; /* maior */
-    left: 48px;
-  }
-
-  .main-logo {
-    max-width: 540px; /* maior */
-    padding-top: 6vh; /* menos espaço no topo */
-  }
-
-  .content {
-    padding: 40px 20px; /* aumenta área visível */
-    font-size: 42px; /* fonte maior */
-  }
-
-  .footer {
-    padding: 54px 0;
-    bottom: 0;
-    width: 100%;
-  }
-
-  .footer img {
-    width: 64px;
-    height: 64px;
-    transition: transform 0.3s ease;
-  }
-
-  .footer img:hover {
-    transform: scale(1.2);
-  }
-
-  h3 {
-    font-size: 32px;
-  }
-
-  .cards-container {
-    gap: 18px;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  }
-  .card {
-    max-width: 280px;
-  }
-
-  .popup {
+  .account-popup {
     flex-direction: column;
-    align-items: center;
-  }
-
-  .popup img {
-    width: 90%;
-  }
-
-  .popup-content {
-    width: 50%;
+    justify-content: center;  /* centraliza o conteúdo */
+    min-height: 50vh;
   }
 }
