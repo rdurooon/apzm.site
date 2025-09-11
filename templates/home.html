@@ -196,7 +196,10 @@
                 <button class="auth-btn">Entrar</button>
                 <p class="auth-switch">
                     Ainda sem uma conta?
-                    <span id="switch-to-register">Cadastrar-se</span>
+                    <span id="switch-to-register">Cadastrar-se</span><br><br>
+                </p>
+                <p class="forgot-password">
+                    <a href="#" id="forgot-password-link">Esqueceu sua senha?</a>
                 </p>
             </div>
 
@@ -257,6 +260,27 @@
                 <p class="auth-switch">
                     Já possui uma conta? <span id="switch-to-login">Entrar</span>
                 </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay do popup de recuperação -->
+    <div id="forgot-password-overlay" class="popup-overlay">
+        <div id="forgot-password-popup" class="auth-popup">
+            <span id="close-forgot-password" class="popup-close">&times;</span>
+            <h2 class="auth-title">Recuperar Senha</h2>
+            <input 
+            type="email" 
+            id="forgot-password-email" 
+            class="auth-input" 
+            placeholder="Digite seu e-mail" 
+            />
+            <button id="forgot-password-btn" class="auth-btn">
+            Enviar Link de Recuperação
+            </button>
+            <div id="forgot-password-loading" class="loading-overlay" style="display:none;">
+            <div class="spinner"></div>
+            Enviando...
             </div>
         </div>
     </div>

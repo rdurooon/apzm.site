@@ -843,6 +843,62 @@ header {
     color: #333;
 }
 
+/* ================= FORGOT PASSWORD POPUP ================= */
+#forgot-password-overlay {
+  display: none; /* escondido por padrão */
+  align-items: center;
+  justify-content: center;
+}
+
+#forgot-password-overlay.show {
+  display: flex;
+}
+
+#forgot-password-popup {
+  width: 90%;
+  max-width: 400px;
+}
+
+/* Link esqueci minha senha */
+#forgot-password-link {
+  color: darkgreen;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  text-decoration: none;
+}
+
+#forgot-password-link:hover {
+  color: #004d00;
+  text-decoration: underline;
+}
+
+.loading-overlay {
+  position: absolute;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:1.2em;
+  z-index:1000;
+  flex-direction: column;
+}
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #fff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 10px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
+
 /* Fade-in keyframes */
 @keyframes fadeIn {
   from {
