@@ -6,6 +6,11 @@ document.addEventListener("DOMContentLoaded", () => {
     password_masked: null,
   };
 
+  function hideAllOverlays() {
+      const overlays = document.querySelectorAll(".overlay"); // todas as divs de overlay
+      overlays.forEach(ov => ov.classList.remove("show"));
+  }
+
   // Atualiza quando o login é bem-sucedido
   function onLoginSuccess(data) {
     const username = data.message.split(", ")[1].replace("!", "");
@@ -20,6 +25,10 @@ document.addEventListener("DOMContentLoaded", () => {
       LOGGED_USER.password_masked
     );
   }
+
+  const loginPopup = document.getElementById("login-popup");
+  const registerPopup = document.getElementById("register-popup");
+
   // ================= SLIDES =================
   const slideshowContainer = document.getElementById("background-slideshow");
 
@@ -227,9 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
       authOverlay.classList.add("show");
     });
   }
-
-  const loginPopup = document.getElementById("login-popup");
-  const registerPopup = document.getElementById("register-popup");
 
   const switchToRegister = document.getElementById("switch-to-register");
   const switchToLogin = document.getElementById("switch-to-login");
@@ -899,4 +905,71 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // ================= RESET DE SENHA =================
+  const forgotLink = document.getElementById("forgot-password-link");
+  const forgotOverlay = document.getElementById("forgot-password-overlay");
+  const forgotBtn = document.getElementById("forgot-password-btn");
+  const forgotEmailInput = document.getElementById("forgot-password-email");
+  const forgotLoading = document.getElementById("forgot-password-loading");
+  const closeForgot = document.getElementById("close-forgot-password");
+
+  if (forgotLink) {
+    forgotLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        hideAllOverlays(); // fecha outros popups
+        authOverlay.classList.add("show"); // garante que o overlay geral esteja visível
+        forgotOverlay.classList.add("show"); // abre o popup de reset
+        loginPopup.style.display = "none";
+        registerPopup.style.display = "none";
+    });
+  }
+
+
+  if (closeForgot) {
+    closeForgot.addEventListener("click", () => {
+        forgotOverlay.classList.remove("show");
+        authOverlay.classList.add("show");
+        loginPopup.style.display = "flex";
+        registerPopup.style.display = "none";
+    });
+  }
+
+  if (forgotBtn) {
+    forgotBtn.addEventListener("click", async () => {
+        const emailVal = forgotEmailInput.value.trim();
+        if (!emailVal) {
+            showQuickWarning("Digite um email válido.", "error");
+            return;
+        }
+
+        forgotLoading.style.display = "flex";
+        forgotBtn.disabled = true;
+
+        try {
+            const res = await fetch("/forgot_password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: emailVal }),
+            });
+
+            const data = await res.json();
+            if (res.ok && data.status === "success") {
+                showQuickWarning(data.message, "success");
+                forgotOverlay.classList.remove("show");
+                authOverlay.classList.add("show");
+                loginPopup.style.display = "flex";
+            } else {
+                showQuickWarning(data.message || "Erro ao enviar email.", "error");
+            }
+        } catch (err) {
+            console.error(err);
+            showQuickWarning("Erro de conexão ao enviar email.", "error");
+        } finally {
+            forgotLoading.style.display = "none";
+            forgotBtn.disabled = false;
+        }
+    });
+  }
+
 });
