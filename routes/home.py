@@ -133,6 +133,64 @@ def home():
         slide_images=slide_images
     )
 
+# ==========================
+# Ratings (Sistema de Estrelas)
+# ==========================
+RATINGS_FILE = os.path.join(DATA_DIR, "ratings.json")
+
+def load_ratings():
+    """Carrega os ratings do arquivo JSON."""
+    if not os.path.exists(RATINGS_FILE):
+        return {}
+    try:
+        with open(RATINGS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_ratings(ratings):
+    """Salva os ratings no arquivo JSON."""
+    try:
+        with open(RATINGS_FILE, "w", encoding="utf-8") as f:
+            json.dump(ratings, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Erro ao salvar ratings: {e}")
+
+@home_bp.route("/rate/<item_id>", methods=["POST"])
+def rate_item(item_id):
+    user = get_user_from_session()
+    if not user:
+        return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
+
+    data = request.get_json(silent=True) or {}
+    rating = int(data.get("rating", 0))
+    if rating < 1 or rating > 5:
+        return jsonify({"success": False, "error": "Rating inválido"}), 400
+
+    ratings = load_ratings()
+
+    if item_id not in ratings:
+        ratings[item_id] = {"usuarios": {}, "media": 0}
+
+    # Atualiza ou cria o voto do usuário
+    ratings[item_id]["usuarios"][user["username"]] = rating
+
+    # Recalcula a média
+    notas = list(ratings[item_id]["usuarios"].values())
+    media = sum(notas) / len(notas)
+    ratings[item_id]["media"] = round(media, 2)
+
+    save_ratings(ratings)
+
+    return jsonify({"success": True, "average": ratings[item_id]["media"]})
+
+@home_bp.route("/get_rating/<item_id>")
+def get_rating(item_id):
+    ratings = load_ratings()
+    if item_id in ratings:
+        return jsonify(ratings[item_id])
+    return jsonify({"usuarios": {}, "media": 0})
+
 
 # ==========================
 # Template sessão negada
@@ -148,7 +206,6 @@ def session_denied():
 @home_bp.route("/api/<filename>")
 def serve_data(filename):
     return send_from_directory(DATA_DIR, filename)
-
 
 # ==========================
 # Toggle Site Online/Offline
