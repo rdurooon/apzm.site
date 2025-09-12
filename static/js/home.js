@@ -672,6 +672,28 @@ document.addEventListener("DOMContentLoaded", () => {
   sidebarOverlay.addEventListener("click", closeSidebar);
 
   // ======================= SIDEBAR =========================
+  // Quem Somos Popup
+  const btnWhoUs = document.getElementById('btn-who-us');
+  const whoUsOverlay = document.getElementById('who-us-popup-overlay');
+  const whoUsClose = document.getElementById('who-us-popup-close');
+
+  if (btnWhoUs && whoUsOverlay && whoUsClose) {
+    btnWhoUs.addEventListener('click', () => {
+        closeSidebar();
+        whoUsOverlay.classList.add('show');
+    });
+
+    whoUsClose.addEventListener('click', () => {
+        whoUsOverlay.classList.remove('show');
+    });
+
+    // Fecha ao clicar fora do popup
+    whoUsOverlay.addEventListener('click', (e) => {
+        if (e.target === whoUsOverlay) {
+            whoUsOverlay.classList.remove('show');
+        }
+    });
+  }
   // ================= SUA CONTA =================
   const accountBtn = document.getElementById("btn-user-account");
   const accountOverlay = document.getElementById("account-popup-overlay");

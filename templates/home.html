@@ -65,6 +65,7 @@
         </div>
         <div class="sidebar-content">
             <button id="btn-user-account" class="sidebar-guide">Sua Conta</button>
+            <button id="btn-who-us" class="sidebar-guide">Quem somos</button>
         </div>
     </div>
 
@@ -108,6 +109,23 @@
                         <button id="btn-download-map">Baixar mapa</button>
                         <button id="btn-read-story">Ler história</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Quem Somos -->
+    <div class="popup-overlay" id="who-us-popup-overlay">
+        <div class="popup who-us-popup" id="who-us-popup">
+            <span class="popup-close" id="who-us-popup-close">&times;</span>
+            <div class="who-us-content">
+                <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo" class="who-us-logo" />
+                <div class="who-us-text">
+                    <h2>Quem Somos</h2>
+                    <p>
+                        Somos o Amapá Zombies, um projeto dedicado a explorar histórias, mapas e conteúdos exclusivos sobre o universo de zumbis do Amapá.
+                        Nosso objetivo é conectar fãs, compartilhar experiências e criar aventuras inesquecíveis.
+                    </p>
                 </div>
             </div>
         </div>
@@ -191,8 +209,8 @@
             <!-- Login -->
             <div class="auth-content" id="login-popup">
                 <h2 class="auth-title">ENTRAR</h2>
-                <input type="email" placeholder="Email: exemplo@email.com" class="auth-input" />
-                <input type="password" placeholder="Senha: ********" class="auth-input" />
+                <input type="email" name="email" autocomplete="email" placeholder="Email: exemplo@email.com" class="auth-input" />
+                <input type="password" name="password" autocomplete="current-password" placeholder="Senha: ********" class="auth-input" />
                 <button class="auth-btn">Entrar</button>
                 <p class="auth-switch">
                     Ainda sem uma conta?
@@ -223,7 +241,7 @@
 
                 <!-- Campo Email -->
                 <div class="input-wrapper">
-                    <input type="email" id="email" placeholder="Email: exemplo@email.com" class="auth-input" />
+                    <input type="email" name="email" autocomplete="email" id="email" placeholder="Email: exemplo@email.com" class="auth-input" />
                     <div class="email-tooltip" id="email-tooltip">
                         <p id="rule-email-format">
                             • Email deve ser válido (ex: usuario@dominio.com)
@@ -233,7 +251,7 @@
 
                 <!-- Campo Senha -->
                 <div class="input-wrapper">
-                    <input type="password" id="password" placeholder="Senha: ********" class="auth-input" />
+                    <input type="password" name="password" autocomplete="new-password" id="password" placeholder="Senha: ********" class="auth-input" />
                     <div class="password-tooltip" id="password-tooltip">
                         <p id="rule-password-length">• Mínimo de 8 caracteres</p>
                         <p id="rule-password-upper">

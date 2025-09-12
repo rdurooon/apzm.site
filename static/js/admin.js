@@ -933,6 +933,9 @@ if(subguiaAtiva === "visao-geral") {
 // ===========================
 // Inicialização: Página Carregada
 // ===========================
+// Força estado inicial
 window.addEventListener("DOMContentLoaded", () => {
-  toggleSidebar(); // abre sidebar automaticamente na primeira vez
+  sidebar.classList.add("active");
+  hamburger.innerHTML = "✖";
+  hamburger.style.color = "white";
 });
