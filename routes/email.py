@@ -174,6 +174,7 @@ def reset_password(token):
         return f"""
         <html>
         <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
             <link rel="icon" type="image/png" href="https://amapazombies.com.br/static/images/icon.png" />
             <title>Token inválido - Amapá Zombies</title>
             <style>
@@ -245,6 +246,7 @@ def reset_password(token):
         reset_html = f"""
         <html>
         <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
             <link rel="icon" type="image/png" href="https://amapazombies.com.br/static/images/icon.png" />
             <title>Redefinir Senha - Amapá Zombies</title>
             <style>
@@ -421,6 +423,7 @@ def reset_password(token):
             return f"""
             <html>
             <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
                 <link rel="icon" type="image/png" href="https://amapazombies.com.br/static/images/icon.png" />
                 <title>Senha redefinida - Amapá Zombies</title>
                 <meta http-equiv="refresh" content="5; url=https://amapazombies.com.br">
