@@ -84,6 +84,9 @@
             {% for card in cards %}
             <div class="card" data-title="{{ card.title | e }}" data-description="{{ card.description | e }}"
                 data-visible="{{ 'true' if card.get('visible', True) else 'false' }}">
+                {% if card.get("is_new", False) %}
+                <div class="new-badge">Novo!</div>
+                {% endif %}
                 <img src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" alt="{{ card.title }}" />
             </div>
             {% endfor %}
@@ -123,8 +126,8 @@
                 <div class="who-us-text">
                     <h2>Quem Somos</h2>
                     <p>
-                        Somos o Amapá Zombies, um projeto dedicado a explorar histórias, mapas e conteúdos exclusivos sobre o universo de zumbis do Amapá.
-                        Nosso objetivo é conectar fãs, compartilhar experiências e criar aventuras inesquecíveis.
+                        Somos o Amapá Zombies, um projeto que mistura a cultura do Amapá com a jogabilidade e a narrativa inspiradas em CoD Zombies.
+                        Criamos histórias imersivas e mapas exclusivos para Minecraft Java, trazendo para o jogo elementos clássicos do modo Zombies — como perks, mecânicas e muito mais — em cenários únicos ambientados no Amapá.
                     </p>
                 </div>
             </div>

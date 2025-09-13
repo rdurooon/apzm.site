@@ -633,6 +633,44 @@ input:checked + .slider:before {
   font-size: 1.1rem;
 }
 
+.new-badge-toggle {
+  opacity: 0.4;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 60px;
+  height: 60px;
+  background: darkred; /* cor da medalha */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: 1000;
+  font-size: 12px;
+  clip-path: polygon(
+    50% 0%, 70% 15%, 100% 0, 85% 39%, 100% 50%, 85% 60%, 100% 100%, 70% 85%, 50% 100%, 30% 85%, 0 100%, 15% 60%, 0% 50%, 15% 35%, 0 0, 30% 15%
+  );
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  z-index: 9999;
+  transition: opacity 0.3s, transform 0.3s;
+  transform: rotate(-10deg);
+}
+.toggle-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; /* atrás do badge */
+    cursor: pointer;
+    opacity: 0.1;    
+}
+
+.new-badge-toggle.active {
+  opacity: 1;     /* marcado */
+  transform: rotate(-10deg);
+}
+
 /* ==============================
    Responsividade: Tablets e Celulares
    ============================== */

@@ -398,6 +398,7 @@ header {
 }
 
 .card {
+  position: relative;
   border-radius: 8px;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -943,6 +944,31 @@ header {
 .who-us-text p {
     font-size: 16px;
     line-height: 1.5;
+    text-align: justify ;
+}
+
+.new-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 60px;
+  height: 60px;
+  background: darkred; /* cor da medalha */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: 1000;
+  font-size: 12px;
+  clip-path: polygon(
+    50% 0%, 70% 15%, 100% 0, 85% 39%, 100% 50%, 85% 60%, 100% 100%, 70% 85%, 50% 100%, 30% 85%, 0 100%, 15% 60%, 0% 50%, 15% 35%, 0 0, 30% 15%
+  );
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transform: rotate(-10deg);
+}
+
+.new-badge span {
+  transform: rotate(15deg); /* compensa a rotação do selo */
 }
 
 /* ================= FOOTER ================= */

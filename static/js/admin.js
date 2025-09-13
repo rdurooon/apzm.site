@@ -11,6 +11,7 @@ const usersSubmenu = document.getElementById("users-submenu");
 const adminContainer = document.querySelector(".admin-container"); // logo + título
 const usersListContainer = document.getElementById("users-list-container");
 const listUsersItem = usersSubmenu.querySelector("li:first-child"); // "Listar Usuários"
+let subguiaAtiva = null; // ou um valor inicial adequado
 
 // ===========================
 // Função: Abrir/Fechar Sidebar
@@ -650,7 +651,38 @@ async function reorganizarCards() {
         <img src="/static/images/cards/${card.file}" alt="${card.title}">
         <button class="btn-left">&lt;</button>
         <button class="btn-right">&gt;</button>
+        
       `;
+
+      div.dataset.newSince = card.new_since || ""; // timestamp UTC do backend
+      div.dataset.file = card.file;  
+
+      // 🔹 Botão de selo "Novo!"
+      const badgeBtn = document.createElement("div");
+      badgeBtn.className = "new-badge-toggle" + (card.is_new ? " active" : "");
+      badgeBtn.textContent = "Novo!";
+      div.appendChild(badgeBtn);
+
+      // Toggle "Novo!"
+      badgeBtn.addEventListener("click", async (e) => {
+          e.stopPropagation(); // evita que o click alcance o overlay
+          const currentlyActive = badgeBtn.classList.contains("active");
+          badgeBtn.classList.toggle("active", !currentlyActive);
+
+          try {
+              await fetch(`/admin/toggle_card_new/${card.file}`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ is_new: !currentlyActive })
+              });
+              showQuickWarning(`Card ${card.title} ${!currentlyActive ? "marcado como 'Novo!'" : "removido de 'Novo!'"}`, "green");
+          } catch (err) {
+              console.error("Erro ao atualizar badge Novo!", err);
+              badgeBtn.classList.toggle("active", currentlyActive);
+              showQuickWarning("Erro ao atualizar badge Novo!", "red");
+          }
+      });
+
 
       // cria uma overlay que captura clicks para toggle (fica abaixo dos botões)
       const toggleOverlay = document.createElement('div');
@@ -675,27 +707,40 @@ async function reorganizarCards() {
 
       // Toggle de visibilidade via overlay (funciona mesmo se o card estiver 'invisible')
       toggleOverlay.addEventListener("click", async () => {
-        const currentlyVisible = div.dataset.visible === "true";
+      const currentlyVisible = div.dataset.visible === "true";
 
-        if (currentlyVisible) {
-          div.dataset.visible = "false";
-          div.classList.add("invisible");
-        } else {
-          div.dataset.visible = "true";
-          div.classList.remove("invisible");
-        }
+      // Toggle visual
+      div.dataset.visible = currentlyVisible ? "false" : "true";
+      div.classList.toggle("invisible", currentlyVisible);
 
-        // opcional: notifica backend sobre alteração de visibilidade
-        try {
-          await fetch(`/admin/toggle_card_visibility/${card.file}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ visible: !currentlyVisible })
+      // Desabilita botão "Novo!" se invisível
+      badgeBtn.style.pointerEvents = div.dataset.visible === "true" ? "auto" : "none";
+      badgeBtn.style.opacity = div.dataset.visible === "true" ? "1" : "0.4";
+
+      // Atualiza backend enviando todos os cards
+      const cardsList = Array.from(cardsListContainer.children).map(c => {
+          const imgEl = c.querySelector("img");
+          return {
+              file: imgEl ? imgEl.src.split("/").pop() : null,
+              visible: c.dataset.visible === "true"
+          };
+      }).filter(c => c.file);
+
+      try {
+          const res = await fetch("/admin/save_cards_order", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(cardsList)
           });
-        } catch (err) {
-          console.error("Erro ao alterar visibilidade do card:", err);
-        }
-      });
+          const data = await res.json();
+          if (!data.success) {
+              showQuickWarning("Erro ao salvar visibilidade!", "red");
+          }
+      } catch (err) {
+          console.error("Erro ao salvar visibilidade:", err);
+          showQuickWarning("Erro de rede ao salvar visibilidade.", "red");
+      }
+  });
 
       cardsListContainer.appendChild(div);
     });
@@ -718,6 +763,8 @@ async function reorganizarCards() {
     console.error("Erro ao listar/reorganizar cards:", err);
     showQuickWarning("Erro ao carregar cards!", "#e74c3c");
   }
+
+  initNewBadgeTimers(); // ativa o timer para cada card
 }
 
 // ===========================
@@ -767,10 +814,13 @@ function atualizarBotoes() {
 // Função: salvar ordem + visibilidade
 // ===========================
 async function salvarOrdemCards() {
-  const cards = Array.from(cardsListContainer.children).map(card => ({
-    file: card.querySelector("img").src.split("/").pop(), // só o filename
-    visible: card.dataset.visible === "true"
-  }));
+  const cards = Array.from(cardsListContainer.children).map(card => {
+      const imgEl = card.querySelector("img");
+      return {
+          file: imgEl ? imgEl.src.split("/").pop() : null,
+          visible: card.dataset.visible === "true"
+      };
+  }).filter(card => card.file);
 
   try {
     const res = await fetch("/admin/save_cards_order", {
@@ -939,3 +989,46 @@ window.addEventListener("DOMContentLoaded", () => {
   hamburger.innerHTML = "✖";
   hamburger.style.color = "white";
 });
+
+function initNewBadgeTimers() {
+  const cards = document.querySelectorAll(".reorganizar-card");
+  cards.forEach(card => {
+    const badge = card.querySelector(".new-badge-toggle");
+    if (!badge) return;
+
+    // Só ativa se is_new estiver true
+    if (!badge.classList.contains("active")) return;
+
+    const newSince = card.dataset.newSince;
+    if (!newSince) return;
+
+    const badgeTime = new Date(newSince).getTime();
+    updateBadge(card, badge, badgeTime);
+
+    const interval = setInterval(() => {
+      updateBadge(card, badge, badgeTime, interval);
+    }, 1000);
+  });
+}
+
+async function updateBadge(card, badge, badgeTime, interval = null) {
+  const now = Date.now();
+  const diffSeconds = (now - badgeTime) / 1000;
+
+  // Remove se passou 7 dias (ou 5 segundos para teste)
+  if (diffSeconds >= 5 && badge.classList.contains("active")) {
+    badge.classList.remove("active");
+    badge.style.pointerEvents = "none";
+    if (interval) clearInterval(interval);
+
+    try {
+      await fetch(`/admin/toggle_card_new/${card.dataset.file}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_new: false })
+      });
+    } catch (err) {
+      console.error("Erro ao atualizar badge Novo!", err);
+    }
+  }
+}
