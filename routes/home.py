@@ -54,6 +54,7 @@ def get_visible_cards():
                 "title": card.get("title", "Sem título"),
                 "description": card.get("description", ""),
                 "visible": True,
+                "is_new": card.get("is_new", False),
             })
     return visible_cards
 

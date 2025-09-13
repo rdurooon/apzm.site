@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import os
 import json
 import shutil
@@ -31,6 +32,24 @@ def write_json(path, data):
     """Salva JSON no arquivo com indentação e UTF-8."""
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+
+# =========================== FUNÇÃO PARA CHECAR "NOVA" ===========================
+def check_new_badges(cards):
+    now = datetime.utcnow()
+    changed = False
+    for card in cards:
+        if card.get("is_new") and card.get("new_since"):
+            try:
+                new_since = datetime.fromisoformat(card["new_since"])
+                if now - new_since > timedelta(days=7):
+                    card["is_new"] = False
+                    card["new_since"] = None
+                    changed = True
+            except Exception:
+                card["new_since"] = None
+    if changed:
+        write_json(DATA_FILE, cards)
+    return cards
 
 
 # =========================== ROTA PRINCIPAL ===========================
@@ -94,7 +113,10 @@ def delete(user_id):
 @admin_bp.route("/admin/list_cards")
 @admin_required
 def list_cards():
-    return jsonify(read_json(DATA_FILE, []))
+    cards = read_json(DATA_FILE, [])
+    # Atualiza status de "Novo!" baseado em new_since
+    cards = check_new_badges(cards)
+    return jsonify(cards)
 
 
 # =========================== ADICIONAR MAPA/HISTÓRIA ===========================
@@ -194,6 +216,28 @@ def save_cards_order():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
+# ===========================
+# Toggle "Novo!" do card
+# ===========================
+@admin_bp.route("/admin/toggle_card_new/<filename>", methods=["POST"])
+@admin_required
+def toggle_card_new(filename):
+    cards = read_json(DATA_FILE, [])
+    data = request.get_json()
+    is_new = data.get("is_new", False)
+
+    for card in cards:
+        if card["file"] == filename:
+            card["is_new"] = is_new
+            if is_new:
+                card["new_since"] = datetime.utcnow().isoformat()
+            else:
+                card["new_since"] = None
+            break
+
+    write_json(DATA_FILE, cards)
+    return jsonify({"success": True})
 
 
 # =========================== SALVAR LINKS ===========================
