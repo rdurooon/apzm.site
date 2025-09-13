@@ -61,14 +61,14 @@ def get_visible_cards():
 
 def get_user_from_session():
     """Recupera usuário logado via sessão, ou None."""
-    if not session.get("user_logged_in"):
-        return None
     username = session.get("username")
     if not username:
         return None
-
     users = load_users()
-    return next((u for u in users if u["username"] == username), None)
+    for u in users:
+        if u.get("username") == username:
+            return u
+    return None
 
 
 # ==========================
@@ -242,4 +242,167 @@ def current_user():
         "email": email,
         "password_masked": password_masked,
         "is_admin": user.get("is_admin", False),
+    })
+
+# ==========================
+# Comentários (Sistema de Comentários)
+# ==========================
+COMMENTS_FILE = os.path.join(DATA_DIR, "comments.json")
+
+# Garante que o arquivo existe
+if not os.path.exists(COMMENTS_FILE):
+    with open(COMMENTS_FILE, "w", encoding="utf-8") as f:
+        json.dump({}, f, indent=2, ensure_ascii=False)
+
+
+def load_comments():
+    """Carrega os comentários do arquivo JSON."""
+    if not os.path.exists(COMMENTS_FILE):
+        return {}
+    try:
+        with open(COMMENTS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_comments(comments):
+    """Salva os comentários no arquivo JSON."""
+    try:
+        with open(COMMENTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(comments, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"Erro ao salvar comentários: {e}")
+
+
+@home_bp.route("/api/comments/<card_id>", methods=["GET"])
+def get_comments(card_id):
+    comments = load_comments()
+    return jsonify(comments.get(card_id, {}))
+
+
+@home_bp.route("/api/comments/<card_id>", methods=["POST"])
+def add_comment(card_id):
+    user = get_user_from_session()
+    if not user:
+        return jsonify({"status": "error", "message": "Usuário não autenticado"}), 401
+
+    req = request.get_json(silent=True) or {}
+    username = user["username"]
+    comment = req.get("comment", "").strip()
+
+    if not comment:
+        return jsonify({"status": "error", "message": "Comentário vazio"}), 400
+
+    comments = load_comments()
+
+    if card_id not in comments:
+        comments[card_id] = {}
+
+    # sobrescreve se mesmo usuário já comentou
+    comments[card_id][username] = comment
+
+    save_comments(comments)
+
+    return jsonify({"status": "success", "message": "Comentário adicionado!"})
+
+@home_bp.route("/api/delete_comment", methods=["POST"])
+def delete_comment():
+    user = get_user_from_session()
+    if not user:
+        return jsonify({"status": "error", "message": "Usuário não autenticado"}), 401
+
+    req = request.get_json(silent=True) or {}
+    card_id = req.get("card")
+    target_user = req.get("user")
+
+    if not card_id or not target_user:
+        return jsonify({"status": "error", "message": "Dados insuficientes"}), 400
+
+    comments = load_comments()
+
+    if card_id not in comments or target_user not in comments[card_id]:
+        return jsonify({"status": "error", "message": "Comentário não encontrado"}), 404
+
+    # Apenas o dono do comentário ou admin pode deletar
+    if user["username"] != target_user and not user.get("is_admin", False):
+        return jsonify({"status": "error", "message": "Permissão negada"}), 403
+
+    # Deleta o comentário
+    del comments[card_id][target_user]
+
+    # Se não houver mais comentários para o card, remove a chave
+    if not comments[card_id]:
+        del comments[card_id]
+
+    save_comments(comments)
+    return jsonify({"status": "success", "message": "Comentário deletado."})
+
+# ==========================
+# Likes (Sistema de Curtidas com Toggle)
+# ==========================
+LIKES_FILE = os.path.join("data", "likes.json")
+
+
+def load_likes():
+    if not os.path.exists(LIKES_FILE):
+        return {}
+    try:
+        with open(LIKES_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_likes(likes_data):
+    try:
+        with open(LIKES_FILE, "w", encoding="utf-8") as f:
+            json.dump(likes_data, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Erro ao salvar likes: {e}")
+
+
+@home_bp.route("/get_likes/<filename>")
+def get_likes(filename):
+    user = get_user_from_session()
+    username = user["username"] if user else None
+
+    likes_data = load_likes()
+    card_likes = likes_data.get(filename, {"likes": 0, "liked_by": []})
+
+    return jsonify({
+        "likes": card_likes.get("likes", 0),
+        "user_liked": username in card_likes.get("liked_by", []) if username else False
+    })
+
+
+@home_bp.route("/like/<filename>", methods=["POST"])
+def like_card(filename):
+    user = get_user_from_session()
+    if not user:
+        return jsonify({"status": "error", "message": "Necessário login"}), 403
+
+    username = user["username"]
+    likes_data = load_likes()
+    card_likes = likes_data.get(filename, {"likes": 0, "liked_by": []})
+
+    if username in card_likes["liked_by"]:
+        # Usuário já curtiu → remove
+        card_likes["liked_by"].remove(username)
+        card_likes["likes"] -= 1
+        action = "unliked"
+    else:
+        # Usuário ainda não curtiu → adiciona
+        card_likes["liked_by"].append(username)
+        card_likes["likes"] += 1
+        action = "liked"
+
+    # Atualiza e salva
+    likes_data[filename] = card_likes
+    save_likes(likes_data)
+
+    return jsonify({
+        "status": "success",
+        "likes": card_likes["likes"],
+        "action": action
     })

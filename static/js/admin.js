@@ -929,7 +929,7 @@ const siteToggleContainer = document.createElement("div");
 siteToggleContainer.style.position = "absolute";
 siteToggleContainer.style.top = "20px";
 siteToggleContainer.style.right = "20px";
-siteToggleContainer.style.display = "flex";
+siteToggleContainer.style.display = "none";
 siteToggleContainer.style.alignItems = "center";
 siteToggleContainer.style.gap = "10px";
 
@@ -979,6 +979,18 @@ if(subguiaAtiva === "visao-geral") {
 } else {
     siteToggleContainer.style.display = "none";
 }
+
+const visaoGeralItem = document.querySelector('.sidebar-menu li:first-child .menu-item');
+visaoGeralItem.addEventListener('click', () => {
+    // Alterna visibilidade do toggle
+    if (siteToggleContainer.style.display === "none") {
+        siteToggleContainer.style.display = "flex";
+        subguiaAtiva = "visao-geral";
+    } else {
+        siteToggleContainer.style.display = "none";
+        subguiaAtiva = null;
+    }
+});
 
 // ===========================
 // Inicialização: Página Carregada

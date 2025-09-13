@@ -11,6 +11,11 @@ body {
   background: #ffffff; /* fundo branco para o resto da página */
 }
 
+body.no-scroll {
+  overflow: hidden;
+  touch-action: none; /* para impedir scroll em dispositivos móveis */
+}
+
 header {
   position: fixed;
   top: 0;
@@ -464,7 +469,7 @@ header {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* centraliza título + descrição verticalmente */
+  justify-content: flex-start; /* centraliza título + descrição verticalmente */
   align-items: center; /* centraliza horizontalmente */
   height: 100%;
   padding: 0 10px; /* espaço lateral */
@@ -486,10 +491,15 @@ header {
 
 .popup-description {
   font-family: "Arial";
-  font-size: 24px;
+  font-size: 20px;
   line-height: 1.6;
   text-align: justify; /* centraliza horizontalmente */
   margin: 20px 0; /* separação do título e do popup */
+}
+
+.popup-description,
+#comments-container {
+  margin-bottom: 20px;
 }
 
 .popup-buttons {
@@ -497,6 +507,7 @@ header {
   gap: 15px;
   justify-content: center;
   margin-top: auto; /* empurra os botões para o final do popup */
+  padding: 15px 0;
   padding-bottom: 10px; /* mantém distância mínima da borda inferior */
 }
 
@@ -514,6 +525,43 @@ header {
 .popup-buttons button:hover {
   background-color: #006400;
   transform: scale(1.05);
+}
+
+.like-btn {
+  background: transparent !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.like-btn .like-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: darkgreen; /* borda */
+  fill: none;       /* preenchido branco */
+  transition: fill 0.2s ease, transform 0.2s ease;
+}
+
+.like-btn.liked .like-icon svg {
+  fill: darkgreen;   /* preenchido verde */
+  stroke: darkgreen; /* borda continua */
+}
+
+.like-btn:hover {
+  transform: scale(1.1);
+}
+
+#like-count {
+  font-size: 22px;
+  color: darkgreen;
+  font-weight: bold;
+  display: inline-block; /* garante que o span apareça */
+  min-width: 20px;       /* evita que suma com zero */
+  text-align: center;
 }
 
 .popup-buttons button.disabled {
@@ -971,6 +1019,107 @@ header {
   transform: rotate(15deg); /* compensa a rotação do selo */
 }
 
+/* ================= COMENTÁRIOS ================= */
+#popup-comments {
+    background: white;
+    border: 2px solid darkgreen;
+    border-radius: 12px;
+    padding: 12px 15px;
+    margin: 12px 0;
+    width: 100%; /* ocupa toda largura disponível */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+#popup-comments h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+    color: darkgreen;
+    font-weight: 2000;
+}
+
+/* Lista de comentários */
+#comments-container {
+    max-height: 80px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding-right: 10px;
+    overflow-x: hidden;
+}
+
+/* Cada comentário */
+.comment {
+    background: white;
+    padding: 5px;
+    font-size: 15px;
+    text-align: left;
+    word-wrap: break-word;
+    width: 100%;
+    font-weight: 400;
+    border-bottom: 1px solid #ccc;
+}
+
+.comment strong {
+    color: darkgreen;
+    font-weight: 400;
+}
+
+/* Área de input + botão */
+.comment-input-area {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    width: 100%;
+}
+
+/* Campo de texto */
+#comment-input {
+    flex: 1;
+    border: 2px solid darkgreen; /* 🔹 agora garantido */
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 16px;
+    outline: none;
+}
+
+#comment-input:focus {
+    border-color: #006400;
+    box-shadow: 0 0 6px rgba(0, 100, 0, 0.5);
+}
+
+/* Botão de enviar */
+#comment-submit {
+    background: none;
+    border: none;
+    color: darkgreen;
+    font-size: 28px; /* seta maior */
+    cursor: pointer;
+    margin-left: 8px;
+    line-height: 1;
+    padding: 0;
+    transition: transform 0.2s ease, color 0.3s ease;
+}
+
+#comment-submit:hover {
+    color: #006400;
+    transform: scale(1.1);
+}
+
+/* Aviso login */
+.login-warning {
+    font-size: 14px;
+    color: #666;
+    background: #f2f2f2;
+    padding: 6px;
+    border-radius: 6px;
+    text-align: center;
+    margin: 0 auto; /* centraliza horizontalmente */
+}
+
 /* ================= FOOTER ================= */
 .footer {
   background-color: #f2f2f2; /* cinzento próximo do branco */
@@ -1134,13 +1283,17 @@ header {
     width: 40%; /* menor que 90%, mantém espaço para conteúdo */
   }
 
+  .popup img.card-image {
+    display: none;
+  }
+
   .popup-content {
     width: 90%; /* ocupa quase toda a largura */
     text-align: center; /* centraliza título e botões */
   }
 
   .popup-title {
-    font-size: 24px; /* reduz um pouco o título */
+    font-size: 18px; /* reduz um pouco o título */
   }
 
   .popup-description {
@@ -1175,5 +1328,43 @@ header {
     flex-direction: column;
     justify-content: center;  /* centraliza o conteúdo */
     min-height: 50vh;
+  }
+
+  #popup-comments {
+    width: 100%;         /* ocupa toda a largura visível */
+    max-width: 100%;     /* evita overflow */
+    box-sizing: border-box; /* padding incluso na largura */
+  }
+
+  #comments-container {
+    max-height: 50px; /* aumenta área visível sem estourar */
+    padding-right: 8px; /* evita scrollbar cortar conteúdo */
+    word-wrap:break-word;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overflow-wrap: break-word; /* força quebra se necessário */
+    hyphens: auto;           /* adiciona hífens se cabível */
+  }
+
+  .comment {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    white-space: pre-wrap;   /* mantém quebras de linha do usuário */
+  }
+
+  .comment-input-area {
+    flex-direction: row; /* empilha input e botão */
+    gap: 6px;               /* separação entre input e botão */
+  }
+
+  #comment-input {
+    width: 80%; /* ocupa toda largura */
+  }
+
+  #comment-submit {
+    font-size: 24px;  /* menor para caber */
+    align-self: flex-end; /* botão alinhado à direita */
+    padding-bottom: 8px;
   }
 }
