@@ -1265,4 +1265,3 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => console.error("Erro ao dar Like:", err));
     });
   });
-updateCommentInterface();
