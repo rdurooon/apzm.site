@@ -34,6 +34,13 @@
     <script>
         const slideImages = JSON.parse('{{ slide_images | tojson | safe }}');
         let IS_LOGGED_IN = {{ 'true' if logged_in else 'false' }};
+
+        const LOGGED_USER = {
+            username: "{{ username | escape }}",
+            email: "{{ email | escape }}",
+            password_masked: "{{ password_masked | escape }}",
+            is_admin: {{ 'true' if is_admin else 'false' }}
+        };
     </script>
     <header class="header">
         <div class="menu-btn" id="menu-btn">☰</div>
@@ -107,10 +114,37 @@
                     amet, consectetur adipiscing elit. Curabitur non nulla sit amet nisl
                     tempus convallis quis ac lectus.
                 </div>
+                <!-- Comentários -->
+                <div id="popup-comments">
+                    <h3>Comentários</h3>
+                    <div id="comments-container">
+                        <!-- Comentários carregados dinamicamente aqui -->
+                    </div>
+                    
+                    <!-- Área de envio -->
+                    <div class="comment-input-area">
+                        {% if logged_in %}
+                        <input type="text" id="comment-input" maxlength="120" placeholder="Escreva um comentário..." />
+                        <button id="comment-submit">➤</button>
+                        {% else %}
+                        <p class="login-warning">
+                            Você precisa realizar o <span id="login-link" style="color: darkgreen; font-weight: 2000; text-decoration: underline; cursor: pointer;">login</span> para comentar/curtir.
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
                 <div class="popup-buttons">
                     <div class="popup-buttons">
                         <button id="btn-download-map">Baixar mapa</button>
                         <button id="btn-read-story">Ler história</button>
+                        <button id="btn-like" class="like-btn">
+                            <span class="like-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="darkgreen" stroke-width="1.5" class="bi bi-hand-thumbs-up" viewBox="0 0 16 16">
+                                <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2 2 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a10 10 0 0 0-.443.05 9.4 9.4 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111z"/>
+                            </svg>
+                            </span>
+                            <span id="like-count">0</span>
+                        </button>
                     </div>
                 </div>
             </div>
