@@ -19,7 +19,7 @@ STATUS_FILE = os.path.join(DATA_DIR, "site_status.json")
 CARDS_FILE = os.path.join(DATA_DIR, "cards.json")
 CARDS_FOLDER = os.path.join(STATIC_DIR, "cards")
 BACKGROUND_FOLDER = os.path.join(STATIC_DIR, "background")
-
+COMMENTS_FILE = os.path.join(DATA_DIR, "comments.json")
 
 # ==========================
 # Funções auxiliares
@@ -70,6 +70,21 @@ def get_user_from_session():
             return u
     return None
 
+def load_comments():
+    """Carrega comentários do JSON."""
+    try:
+        with open(COMMENTS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_comments(comments):
+    """Salva comentários no JSON."""
+    try:
+        with open(COMMENTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(comments, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"Erro ao salvar comentários: {e}")
 
 # ==========================
 # Sitemap
@@ -245,93 +260,62 @@ def current_user():
     })
 
 # ==========================
-# Comentários (Sistema de Comentários)
+# Pega comentários de um card
 # ==========================
-COMMENTS_FILE = os.path.join(DATA_DIR, "comments.json")
-
-# Garante que o arquivo existe
-if not os.path.exists(COMMENTS_FILE):
-    with open(COMMENTS_FILE, "w", encoding="utf-8") as f:
-        json.dump({}, f, indent=2, ensure_ascii=False)
-
-
-def load_comments():
-    """Carrega os comentários do arquivo JSON."""
-    if not os.path.exists(COMMENTS_FILE):
-        return {}
-    try:
-        with open(COMMENTS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
-
-
-def save_comments(comments):
-    """Salva os comentários no arquivo JSON."""
-    try:
-        with open(COMMENTS_FILE, "w", encoding="utf-8") as f:
-            json.dump(comments, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        print(f"Erro ao salvar comentários: {e}")
-
-
 @home_bp.route("/api/comments/<card_id>", methods=["GET"])
 def get_comments(card_id):
     comments = load_comments()
     return jsonify(comments.get(card_id, {}))
 
-
+# ==========================
+# Adiciona / sobrescreve comentário
+# ==========================
 @home_bp.route("/api/comments/<card_id>", methods=["POST"])
 def add_comment(card_id):
     user = get_user_from_session()
     if not user:
         return jsonify({"status": "error", "message": "Usuário não autenticado"}), 401
 
-    req = request.get_json(silent=True) or {}
-    username = user["username"]
-    comment = req.get("comment", "").strip()
-
-    if not comment:
+    data = request.get_json(silent=True) or {}
+    comment_text = data.get("comment", "").strip()
+    if not comment_text:
         return jsonify({"status": "error", "message": "Comentário vazio"}), 400
 
     comments = load_comments()
-
     if card_id not in comments:
         comments[card_id] = {}
 
-    # sobrescreve se mesmo usuário já comentou
-    comments[card_id][username] = comment
-
+    # Sobrescreve comentário do usuário
+    comments[card_id][user["username"]] = comment_text
     save_comments(comments)
 
     return jsonify({"status": "success", "message": "Comentário adicionado!"})
 
+# ==========================
+# Deleta comentário
+# ==========================
 @home_bp.route("/api/delete_comment", methods=["POST"])
 def delete_comment():
     user = get_user_from_session()
     if not user:
         return jsonify({"status": "error", "message": "Usuário não autenticado"}), 401
 
-    req = request.get_json(silent=True) or {}
-    card_id = req.get("card")
-    target_user = req.get("user")
+    data = request.get_json(silent=True) or {}
+    card_id = data.get("card")
+    target_user = data.get("user")
 
     if not card_id or not target_user:
         return jsonify({"status": "error", "message": "Dados insuficientes"}), 400
 
     comments = load_comments()
-
     if card_id not in comments or target_user not in comments[card_id]:
         return jsonify({"status": "error", "message": "Comentário não encontrado"}), 404
 
-    # Apenas o dono do comentário ou admin pode deletar
+    # Apenas dono do comentário ou admin
     if user["username"] != target_user and not user.get("is_admin", False):
         return jsonify({"status": "error", "message": "Permissão negada"}), 403
 
-    # Deleta o comentário
     del comments[card_id][target_user]
-
-    # Se não houver mais comentários para o card, remove a chave
     if not comments[card_id]:
         del comments[card_id]
 
