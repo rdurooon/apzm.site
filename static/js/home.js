@@ -12,17 +12,31 @@ document.addEventListener("DOMContentLoaded", () => {
       overlays.forEach(ov => ov.classList.remove("show"));
   }
 
-  function updateCommentInterface() {
-    if (IS_LOGGED_IN && LOGGED_USER.username) {
-      commentInput.disabled = false;
-      commentBtn.disabled = false;
-      commentInput.placeholder = "Escreva seu comentário...";
-    } else {
-      commentInput.disabled = true;
-      commentBtn.disabled = true;
-      commentInput.placeholder = "Faça login para comentar";
-    }
+  function enableCardButtonsAfterLogin() {
+    if (!cardLinks) return;
+    cards.forEach((card) => {
+      const cardFileName = card.querySelector("img")?.src.split("/").pop();
+      if (cardFileName && cardLinks[cardFileName]) {
+        setPopupLinks(cardFileName);
+      }
+    });
   }
+
+    function updateCommentInterface() {
+      const commentInput = document.getElementById("comment-input");
+      const commentBtn = document.getElementById("comment-submit");
+      if (!commentInput || !commentBtn) return;
+
+      if (IS_LOGGED_IN && LOGGED_USER.username) {
+        commentInput.disabled = false;
+        commentBtn.disabled = false;
+        commentInput.placeholder = "Escreva seu comentário...";
+      } else {
+        commentInput.disabled = true;
+        commentBtn.disabled = true;
+        commentInput.placeholder = "Faça login para comentar";
+      }
+    }
 
   // Carregar contagem ao abrir popup
   function loadLikes(cardFileName) {
@@ -205,7 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function setPopupLinks(cardTitle) {
     const links = cardLinks[cardTitle];
 
-    // Baixar mapa
     if (links && links.mapa) {
       btnDownloadMap.onclick = () => window.open(links.mapa, "_blank");
       btnDownloadMap.classList.remove("disabled");
@@ -214,7 +227,6 @@ document.addEventListener("DOMContentLoaded", () => {
       btnDownloadMap.classList.add("disabled");
     }
 
-    // Ler história
     if (links && links.historia) {
       btnReadStory.onclick = () => window.open(links.historia, "_blank");
       btnReadStory.classList.remove("disabled");
@@ -237,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const cardImgSrc = img ? img.src : "";
 
           // 🔹 Pega o nome do arquivo do card
-          const cardFileName = cardImgSrc.split("/").pop(); // ex: bacabeiras.jpg
+           const cardFileName = popupImage.src.split("/").pop(); // só 'bacabeiras'
 
           let titleImgSrc = getTitleImage(cardFileName.split(".")[0]);
           if (!titleImgSrc) titleImgSrc = card.dataset.title;
@@ -679,6 +691,7 @@ document.addEventListener("DOMContentLoaded", () => {
           document.querySelector(".auth-buttons").innerHTML = buttonsHTML;
 
           onLoginSuccess(data); // 🔹 Atualiza global e campos do popup
+          enableCardButtonsAfterLogin();
 
           setTimeout(() => location.reload(), 100);
           updateCommentInterface();
