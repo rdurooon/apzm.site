@@ -41,7 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Carregar contagem ao abrir popup
   function loadLikes(cardFileName) {
     currentCardFile = cardFileName;
-    fetch(`/get_likes/${cardFileName}`)
+    fetch(`/get_likes/${encodeURIComponent(cardFileName)}`, {
+      credentials: "same-origin"
+    })
       .then((res) => res.json())
       .then((data) => {
         likeCount.textContent = data.likes;
@@ -1067,7 +1069,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadComments(cardFileName) {
     if (!cardFileName) return;
 
-    fetch(`${window.location.origin}/api/comments/${cardFileName}`)
+    fetch(`${window.location.origin}/api/comments/${encodeURIComponent(cardFileName)}`, {
+      credentials: "same-origin",
+      cache: "no-store"
+    })
       .then((res) => res.json())
       .then((data) => {
         commentsContainer.innerHTML = "";
