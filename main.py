@@ -17,7 +17,7 @@ def criar_app():
                 filename = values.get('filename')
                 if filename:
                     # Aplica apenas para CSS ou JS nas pastas corretas
-                    if filename.startswith("css/") or filename.startswith("js/"):
+                    if filename.startswith("css/"):
                         file_path = os.path.join(app.root_path, 'static', filename)
                         if os.path.exists(file_path):
                             values['v'] = int(os.path.getmtime(file_path))
