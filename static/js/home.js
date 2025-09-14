@@ -8,8 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   function hideAllOverlays() {
-      const overlays = document.querySelectorAll(".overlay"); // todas as divs de overlay
-      overlays.forEach(ov => ov.classList.remove("show"));
+    const overlays = document.querySelectorAll(".overlay"); // todas as divs de overlay
+    overlays.forEach((ov) => ov.classList.remove("show"));
   }
 
   function enableCardButtonsAfterLogin() {
@@ -22,28 +22,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-    function updateCommentInterface() {
-      const commentInput = document.getElementById("comment-input");
-      const commentBtn = document.getElementById("comment-submit");
-      if (!commentInput || !commentBtn) return;
+  function updateCommentInterface() {
+    const commentInput = document.getElementById("comment-input");
+    const commentBtn = document.getElementById("comment-submit");
+    if (!commentInput || !commentBtn) return;
 
-      if (IS_LOGGED_IN && LOGGED_USER.username) {
-        commentInput.disabled = false;
-        commentBtn.disabled = false;
-        commentInput.placeholder = "Escreva seu comentário...";
-      } else {
-        commentInput.disabled = true;
-        commentBtn.disabled = true;
-        commentInput.placeholder = "Faça login para comentar";
-      }
+    if (IS_LOGGED_IN && LOGGED_USER.username) {
+      commentInput.disabled = false;
+      commentBtn.disabled = false;
+      commentInput.placeholder = "Escreva seu comentário...";
+    } else {
+      commentInput.disabled = true;
+      commentBtn.disabled = true;
+      commentInput.placeholder = "Faça login para comentar";
     }
+  }
 
   // Carregar contagem ao abrir popup
   function loadLikes(cardFileName) {
     currentCardFile = cardFileName;
     fetch(`/get_likes/${cardFileName}`)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         likeCount.textContent = data.likes;
 
         // ✅ Atualiza botão de like baseado no que o usuário já fez
@@ -54,9 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
           btnLike.classList.remove("liked");
         }
       })
-      .catch(err => console.error("Erro ao carregar likes:", err));
+      .catch((err) => console.error("Erro ao carregar likes:", err));
   }
-  
+
   // Atualiza quando o login é bem-sucedido
   function onLoginSuccess(data) {
     const username = data.message.split(", ")[1].replace("!", "");
@@ -188,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const baseName = cardImgSrc.split("/").pop().split(".")[0];
       let titleImgSrc = getTitleImage(baseName);
       if (!titleImgSrc) titleImgSrc = card.dataset.title;
-      
+
       const description = card.dataset.description;
 
       const cardFileName = cardImgSrc.split("/").pop(); // ✅ adiciona isso
@@ -249,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const cardImgSrc = img ? img.src : "";
 
           // 🔹 Pega o nome do arquivo do card
-           const cardFileName = popupImage.src.split("/").pop(); // só 'bacabeiras'
+          const cardFileName = popupImage.src.split("/").pop(); // só 'bacabeiras'
 
           let titleImgSrc = getTitleImage(cardFileName.split(".")[0]);
           if (!titleImgSrc) titleImgSrc = card.dataset.title;
@@ -639,7 +639,8 @@ document.addEventListener("DOMContentLoaded", () => {
         LOGGED_USER.username = data.username;
         LOGGED_USER.email = data.email || "";
         LOGGED_USER.password_masked = data.password_masked || "";
-        LOGGED_USER.is_admin = data.is_admin === true || data.is_admin === "true"; // ✅
+        LOGGED_USER.is_admin =
+          data.is_admin === true || data.is_admin === "true"; // ✅
 
         updateAccountPopupFields(
           LOGGED_USER.username,
@@ -734,25 +735,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ======================= SIDEBAR =========================
   // Quem Somos Popup
-  const btnWhoUs = document.getElementById('btn-who-us');
-  const whoUsOverlay = document.getElementById('who-us-popup-overlay');
-  const whoUsClose = document.getElementById('who-us-popup-close');
+  const btnWhoUs = document.getElementById("btn-who-us");
+  const whoUsOverlay = document.getElementById("who-us-popup-overlay");
+  const whoUsClose = document.getElementById("who-us-popup-close");
 
   if (btnWhoUs && whoUsOverlay && whoUsClose) {
-    btnWhoUs.addEventListener('click', () => {
-        closeSidebar();
-        whoUsOverlay.classList.add('show');
+    btnWhoUs.addEventListener("click", () => {
+      closeSidebar();
+      whoUsOverlay.classList.add("show");
     });
 
-    whoUsClose.addEventListener('click', () => {
-        whoUsOverlay.classList.remove('show');
+    whoUsClose.addEventListener("click", () => {
+      whoUsOverlay.classList.remove("show");
     });
 
     // Fecha ao clicar fora do popup
-    whoUsOverlay.addEventListener('click', (e) => {
-        if (e.target === whoUsOverlay) {
-            whoUsOverlay.classList.remove('show');
-        }
+    whoUsOverlay.addEventListener("click", (e) => {
+      if (e.target === whoUsOverlay) {
+        whoUsOverlay.classList.remove("show");
+      }
     });
   }
   // ================= SUA CONTA =================
@@ -937,7 +938,9 @@ document.addEventListener("DOMContentLoaded", () => {
   });*/
   // ================= DELETE ACCOUNT =================
   const deleteAccountBtn = document.getElementById("btn-delete-account");
-  const deleteAccountOverlay = document.getElementById("delete-account-popup-overlay");
+  const deleteAccountOverlay = document.getElementById(
+    "delete-account-popup-overlay"
+  );
   const confirmDeleteBtn = document.getElementById("confirm-delete-account");
   const cancelDeleteBtn = document.getElementById("cancel-delete-account");
 
@@ -958,15 +961,15 @@ document.addEventListener("DOMContentLoaded", () => {
       fetch("/delete_account", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"   // 🔹 avisa que é JSON
+          "Content-Type": "application/json", // 🔹 avisa que é JSON
         },
-        body: JSON.stringify({ username: LOGGED_USER.username }) // 🔹 manda um body qualquer
+        body: JSON.stringify({ username: LOGGED_USER.username }), // 🔹 manda um body qualquer
       })
-        .then(res => {
+        .then((res) => {
           if (!res.ok) throw new Error("Falha na requisição");
           return res.json();
         })
-        .then(data => {
+        .then((data) => {
           if (data.status === "success") {
             showQuickWarning("Conta deletada com sucesso.", "success");
             window.location.href = "/"; // redireciona
@@ -974,7 +977,7 @@ document.addEventListener("DOMContentLoaded", () => {
             showQuickWarning(data.message, "error");
           }
         })
-        .catch(err => {
+        .catch((err) => {
           console.error(err);
           showQuickWarning("Erro ao deletar conta.", "error");
         });
@@ -999,59 +1002,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (forgotLink) {
     forgotLink.addEventListener("click", (e) => {
-        e.preventDefault();
-        hideAllOverlays(); // fecha outros popups
-        authOverlay.classList.add("show"); // garante que o overlay geral esteja visível
-        forgotOverlay.classList.add("show"); // abre o popup de reset
-        loginPopup.style.display = "none";
-        registerPopup.style.display = "none";
+      e.preventDefault();
+      hideAllOverlays(); // fecha outros popups
+      authOverlay.classList.add("show"); // garante que o overlay geral esteja visível
+      forgotOverlay.classList.add("show"); // abre o popup de reset
+      loginPopup.style.display = "none";
+      registerPopup.style.display = "none";
     });
   }
 
-
   if (closeForgot) {
     closeForgot.addEventListener("click", () => {
-        forgotOverlay.classList.remove("show");
-        authOverlay.classList.add("show");
-        loginPopup.style.display = "flex";
-        registerPopup.style.display = "none";
+      forgotOverlay.classList.remove("show");
+      authOverlay.classList.add("show");
+      loginPopup.style.display = "flex";
+      registerPopup.style.display = "none";
     });
   }
 
   if (forgotBtn) {
     forgotBtn.addEventListener("click", async () => {
-        const emailVal = forgotEmailInput.value.trim();
-        if (!emailVal) {
-            showQuickWarning("Digite um email válido.", "error");
-            return;
+      const emailVal = forgotEmailInput.value.trim();
+      if (!emailVal) {
+        showQuickWarning("Digite um email válido.", "error");
+        return;
+      }
+
+      forgotLoading.style.display = "flex";
+      forgotBtn.disabled = true;
+
+      try {
+        const res = await fetch("/forgot_password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: emailVal }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.status === "success") {
+          showQuickWarning(data.message, "success");
+          forgotOverlay.classList.remove("show");
+          authOverlay.classList.add("show");
+          loginPopup.style.display = "flex";
+        } else {
+          showQuickWarning(data.message || "Erro ao enviar email.", "error");
         }
-
-        forgotLoading.style.display = "flex";
-        forgotBtn.disabled = true;
-
-        try {
-            const res = await fetch("/forgot_password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: emailVal }),
-            });
-
-            const data = await res.json();
-            if (res.ok && data.status === "success") {
-                showQuickWarning(data.message, "success");
-                forgotOverlay.classList.remove("show");
-                authOverlay.classList.add("show");
-                loginPopup.style.display = "flex";
-            } else {
-                showQuickWarning(data.message || "Erro ao enviar email.", "error");
-            }
-        } catch (err) {
-            console.error(err);
-            showQuickWarning("Erro de conexão ao enviar email.", "error");
-        } finally {
-            forgotLoading.style.display = "none";
-            forgotBtn.disabled = false;
-        }
+      } catch (err) {
+        console.error(err);
+        showQuickWarning("Erro de conexão ao enviar email.", "error");
+      } finally {
+        forgotLoading.style.display = "none";
+        forgotBtn.disabled = false;
+      }
     });
   }
 
@@ -1062,15 +1064,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const commentInput = document.getElementById("comment-input");
   const commentBtn = document.getElementById("comment-submit");
 
-  // Função para carregar comentários de um card
   function loadComments(cardFileName) {
-    console.log(LOGGED_USER.is_admin)
     if (!cardFileName) return;
-    
+
     fetch(`${window.location.origin}/api/comments/${cardFileName}`)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         commentsContainer.innerHTML = "";
+
         if (!data || Object.keys(data).length === 0) {
           commentsContainer.innerHTML = `<p class="no-comments" style="color:gray; padding-top: 8px;">Nenhum comentário ainda.</p>`;
           return;
@@ -1079,11 +1080,8 @@ document.addEventListener("DOMContentLoaded", () => {
         for (const [user, comment] of Object.entries(data)) {
           const div = document.createElement("div");
           div.classList.add("comment");
-
-          // Conteúdo do comentário
           div.innerHTML = `<strong>${user}:</strong> ${comment}`;
 
-          // 🔹 Adiciona botão de deletar apenas se for o usuário logado ou admin
           if (LOGGED_USER.username === user || LOGGED_USER.is_admin) {
             const delBtn = document.createElement("button");
             delBtn.innerHTML = `
@@ -1091,44 +1089,38 @@ document.addEventListener("DOMContentLoaded", () => {
               <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
               <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
             </svg>
-            `;
+            `; // mantenha seu ícone
 
-            delBtn.style.marginLeft = "10px";
-            delBtn.style.cursor = "pointer";
-            delBtn.style.background = "none";
-            delBtn.style.border = "none";
-            delBtn.style.padding = "4px"; // adiciona área clicável
-            delBtn.style.outline = "none";
-            delBtn.style.borderRadius = "4px"; // cantos arredondados
-            delBtn.style.transition = "all 0.2s ease"; // transição suave
+            delBtn.style.cssText = `
+            margin-left:10px; cursor:pointer; background:none; border:none;
+            padding:4px; outline:none; border-radius:4px; transition:all 0.2s ease;
+          `;
 
-            // Hover effect
             delBtn.addEventListener("mouseenter", () => {
-                delBtn.style.backgroundColor = "rgba(255, 77, 77, 0.2)";
-                delBtn.querySelector("svg").setAttribute("fill", "#ff1a1a");
+              delBtn.style.backgroundColor = "rgba(255,77,77,0.2)";
+              delBtn.querySelector("svg").setAttribute("fill", "#ff1a1a");
             });
             delBtn.addEventListener("mouseleave", () => {
-                delBtn.style.backgroundColor = "transparent";
-                delBtn.querySelector("svg").setAttribute("fill", "#ff4d4d");
+              delBtn.style.backgroundColor = "transparent";
+              delBtn.querySelector("svg").setAttribute("fill", "#ff4d4d");
             });
 
-            // 🔹 Envia o username correto (dono do comentário) para deletar
             delBtn.addEventListener("click", () => {
               fetch(`/api/delete_comment`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ card: cardFileName, user: user }) // ✅ aqui
+                body: JSON.stringify({ card: cardFileName, user: user }),
               })
-                .then(res => res.json())
-                .then(resp => {
+                .then((res) => res.json())
+                .then((resp) => {
                   if (resp.status === "success") {
-                    div.remove(); // remove do DOM imediatamente
+                    div.remove();
                     showQuickWarning("Comentário deletado.", "success");
                   } else {
                     showQuickWarning(resp.message, "error");
                   }
                 })
-                .catch(err => console.error(err));
+                .catch((err) => console.error(err));
             });
 
             div.appendChild(delBtn);
@@ -1137,7 +1129,7 @@ document.addEventListener("DOMContentLoaded", () => {
           commentsContainer.appendChild(div);
         }
       })
-      .catch(err => console.error("Erro ao carregar comentários:", err));
+      .catch((err) => console.error("Erro ao carregar comentários:", err));
   }
 
   const badwordsComments = [
@@ -1151,52 +1143,43 @@ document.addEventListener("DOMContentLoaded", () => {
     return !badwordsComments.some(word => lower.includes(word));
   }
 
-  // Enviar comentário
+  // Envio de comentário
   if (commentBtn) {
     commentBtn.addEventListener("click", () => {
-      if (!IS_LOGGED_IN) {
-        showQuickWarning("Faça login para comentar.", "error");
-        return;
-      }
+      if (!IS_LOGGED_IN)
+        return showQuickWarning("Faça login para comentar.", "error");
 
       const commentText = commentInput.value.trim();
-      if (!commentText) {
-        showQuickWarning("Digite um comentário.", "error");
-        return;
-      }
+      if (!commentText)
+        return showQuickWarning("Digite um comentário.", "error");
 
-      // 🔹 Validação de palavras inapropriadas
-      if (!isCommentClean(commentText)) {
-        showQuickWarning("Comentário contém palavras proibidas.", "error");
-        return;
-      }
+      if (!isCommentClean(commentText))
+        return showQuickWarning(
+          "Comentário contém palavras proibidas.",
+          "error"
+        );
 
-      // 🔹 Pega card atualmente aberto
-      const cardFileName = popupImage.src.split("/").pop(); // seu card_id
+      const cardFileName = popupImage.src.split("/").pop();
 
       fetch(`${window.location.origin}/api/comments/${cardFileName}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          card: cardFileName, 
-          user: LOGGED_USER.username, 
-          comment: commentText 
+        body: JSON.stringify({ comment: commentText }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "success") {
+            commentInput.value = "";
+            loadComments(cardFileName);
+            showQuickWarning("Comentário enviado!", "success");
+          } else {
+            showQuickWarning(data.message, "error");
+          }
         })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === "success") {
-          commentInput.value = "";
-          loadComments(cardFileName); // recarrega comentários
-          showQuickWarning("Comentário enviado!", "success");
-        } else {
-          showQuickWarning(data.message, "error");
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        showQuickWarning("Erro ao enviar comentário.", "error");
-      });
+        .catch((err) => {
+          console.error(err);
+          showQuickWarning("Erro ao enviar comentário.", "error");
+        });
     });
   }
 
@@ -1229,7 +1212,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Função para verificar se há algum overlay visível
   function updateScrollLock() {
-    const anyOverlayShown = document.querySelectorAll(".overlay.show, #auth-popup-overlay.show, #who-us-popup-overlay.show, #account-popup-overlay.show, #delete-account-popup-overlay.show, #forgot-password-overlay.show").length > 0;
+    const anyOverlayShown =
+      document.querySelectorAll(
+        ".overlay.show, #auth-popup-overlay.show, #who-us-popup-overlay.show, #account-popup-overlay.show, #delete-account-popup-overlay.show, #forgot-password-overlay.show"
+      ).length > 0;
     if (anyOverlayShown) {
       blockScroll();
     } else {
@@ -1241,8 +1227,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Atualiza interface de comentários
   // =====================
 
-  // Chamada inicial ao carregar a página
-  
   updateCommentInterface();
 
   // ================= LIKES =================
@@ -1251,30 +1235,30 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentCardFile = null;
   let userLiked = false;
 
-    // Evento de clique no botão de like
-    btnLike.addEventListener("click", () => {
-      if (!IS_LOGGED_IN || !LOGGED_USER.username) {
-        showQuickWarning("Faça login para dar Like!", "error");
-        return;
-      }
+  // Evento de clique no botão de like
+  btnLike.addEventListener("click", () => {
+    if (!IS_LOGGED_IN || !LOGGED_USER.username) {
+      showQuickWarning("Faça login para dar Like!", "error");
+      return;
+    }
 
-      fetch(`/like/${currentCardFile}`, { method: "POST" })
-        .then(res => res.json())
-        .then(data => {
-          if (data.status === "success") {
-            likeCount.textContent = data.likes;
+    fetch(`/like/${currentCardFile}`, { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success") {
+          likeCount.textContent = data.likes;
 
-            if (data.action === "liked") {
-              btnLike.classList.add("liked");
-              userLiked = true;
-            } else {
-              btnLike.classList.remove("liked");
-              userLiked = false;
-            }
+          if (data.action === "liked") {
+            btnLike.classList.add("liked");
+            userLiked = true;
           } else {
-            showQuickWarning(data.message, "error");
+            btnLike.classList.remove("liked");
+            userLiked = false;
           }
-        })
-        .catch(err => console.error("Erro ao dar Like:", err));
-    });
+        } else {
+          showQuickWarning(data.message, "error");
+        }
+      })
+      .catch((err) => console.error("Erro ao dar Like:", err));
   });
+});
