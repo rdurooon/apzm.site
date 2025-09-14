@@ -9,6 +9,14 @@ from tools.crypto_utils import decrypt_value
 
 home_bp = Blueprint("home", __name__)
 
+@home_bp.after_request
+def add_no_cache_headers(response):
+    if request.path.startswith(("/api/", "/get_", "/rate")):  
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 # ==========================
 # Constantes
 # ==========================
