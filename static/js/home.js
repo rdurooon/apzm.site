@@ -1067,7 +1067,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log(LOGGED_USER.is_admin)
     if (!cardFileName) return;
     
-    fetch(`/api/comments/${cardFileName}`)
+    fetch(`${window.location.origin}/api/comments/${cardFileName}`)
       .then(res => res.json())
       .then(data => {
         commentsContainer.innerHTML = "";
@@ -1174,7 +1174,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // 🔹 Pega card atualmente aberto
       const cardFileName = popupImage.src.split("/").pop(); // seu card_id
 
-      fetch(`/api/comments/${cardFileName}`, {
+      fetch(`${window.location.origin}/api/comments/${cardFileName}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
