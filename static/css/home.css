@@ -1436,8 +1436,14 @@ body.dark-mode #comment-submit {
   }
 
   .menu-btn {
+    margin-bottom: 35px;
     font-size: 24px; /* maior */
     left: 28px;
+  }
+  
+  .dark-mode-btn {
+    left: 21px; /* ao lado do menu hamburguer */
+    margin-top: 35px;
   }
 
   .main-logo {
@@ -1472,10 +1478,10 @@ body.dark-mode #comment-submit {
 
   .cards-container {
     gap: 10px;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   }
   .card {
-    max-width: 180px;
+    max-width: 200px;
   }
 
   .popup {
@@ -1570,6 +1576,172 @@ body.dark-mode #comment-submit {
     font-size: 24px; /* menor para caber */
     align-self: flex-end; /* botão alinhado à direita */
     padding-bottom: 8px;
+  }
+}
+
+@media (max-width: 320px){
+  .auth-popup {
+    width: 70%; /* aumenta ocupação da tela */
+    max-width: 400px;
+    padding: 50px 30px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #register-popup {
+    height: 50%;
+    min-height: 480px; /* maior altura */
+    max-height: 100vh; /* para não estourar na tela */
+  }
+
+  .auth-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .auth-title {
+    font-size: 20px;
+    width: 100%;
+  }
+
+  .auth-input {
+    font-size: 12px;
+  }
+
+  .auth-btn {
+    font-size: 20px;
+  }
+
+  .auth-buttons button {
+    height: 26px;
+    font-size: 10px; /* maior que o original */
+    padding: 2px 0px; /* aumenta área clicável */
+    width: 70px; /* largura uniforme */
+  }
+
+  .auth-checkbox {
+    font-size: 12px;
+  }
+
+  .auth-checkbox input {
+    min-width: 16px;
+    min-height: 16px;
+  }
+
+  .username-tooltip {
+    font-size: 12px;
+  }
+
+  .email-tooltip {
+    font-size: 12px;
+  }
+
+  .password-tooltip {
+    font-size: 12px;
+  }
+
+  .auth-switch {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .site-title {
+    font-size: 15px;
+    padding-right: 30px;
+  }
+
+  .menu-btn {
+    margin-bottom: 35px;
+    font-size: 24px; /* maior */
+    left: 20px;
+  }
+  
+  .dark-mode-btn {
+    left: 13px; /* ao lado do menu hamburguer */
+    margin-top: 35px;
+  }
+
+  .main-logo {
+    max-width: 180px; /* maior */
+    padding-top: 6vh; /* menos espaço no topo */
+  }
+
+  .footer img {
+    width: 32px;
+    height: 32px;
+    transition: transform 0.3s ease;
+  }
+
+  .footer img:hover {
+    transform: scale(1.2);
+  }
+
+  h3 {
+    font-size: 24px;
+  }
+
+  .cards-container {
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+
+  .popup img {
+    width: 50%; /* menor que 90%, mantém espaço para conteúdo */
+  }
+
+  /* ================= LOGADO ====================== */
+  /* Botão Logout: darkgreen com borda branca */
+  .btn-logout {
+    margin-top: 16px;
+  }
+
+  #popup-comments {
+    width: 100%; /* ocupa toda a largura visível */
+    max-width: 100%; /* evita overflow */
+    box-sizing: border-box; /* padding incluso na largura */
+  }
+
+  #comments-container {
+    max-height: 40px; /* aumenta área visível sem estourar */
+    padding-right: 8px; /* evita scrollbar cortar conteúdo */
+    word-wrap: break-word;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overflow-wrap: break-word; /* força quebra se necessário */
+    hyphens: auto; /* adiciona hífens se cabível */
+  }
+
+  .comment {
+    font-size: 12px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    white-space: pre-wrap; /* mantém quebras de linha do usuário */
+  }
+
+  .comment-input-area {
+    flex-direction: row; /* empilha input e botão */
+  }
+
+  #comment-input {
+    width: 80%; /* ocupa toda largura */
+  }
+
+  #comment-submit {
+    font-size: 24px; /* menor para caber */
+    align-self: flex-end; /* botão alinhado à direita */
+    padding-bottom: 8px;
+  }
+}
+
+@media (max-width: 375px){
+  .site-title {
+    font-size: 18px;
+  }
+
+  .cards-container {
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   }
 }
 
