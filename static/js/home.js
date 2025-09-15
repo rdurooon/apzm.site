@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadLikes(cardFileName) {
     currentCardFile = cardFileName;
     fetch(`/get_likes/${encodeURIComponent(cardFileName)}`, {
-      credentials: "same-origin"
+      credentials: "same-origin",
     })
       .then((res) => res.json())
       .then((data) => {
@@ -80,6 +80,27 @@ document.addEventListener("DOMContentLoaded", () => {
     LOGGED_USER.email = email;
     LOGGED_USER.password_masked = password_masked;
   }
+
+  const toggleBtn = document.getElementById("dark-mode-toggle");
+  const body = document.body;
+  const footer = document.querySelector("footer"); // <- faltava isso
+
+  // Carregar preferência salva
+  if (localStorage.getItem("dark-mode") === "enabled") {
+      body.classList.add("dark-mode");
+      footer.classList.add("dark-mode"); // aplica no footer também
+  }
+
+  toggleBtn.addEventListener("click", () => {
+      body.classList.toggle("dark-mode");
+      footer.classList.toggle("dark-mode");
+
+      if (body.classList.contains("dark-mode")) {
+          localStorage.setItem("dark-mode", "enabled");
+      } else {
+          localStorage.setItem("dark-mode", "disabled");
+      }
+  });
 
   const loginPopup = document.getElementById("login-popup");
   const registerPopup = document.getElementById("register-popup");
@@ -1069,10 +1090,15 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadComments(cardFileName) {
     if (!cardFileName) return;
 
-    fetch(`${window.location.origin}/api/comments/${encodeURIComponent(cardFileName)}`, {
-      credentials: "same-origin",
-      cache: "no-store"
-    })
+    fetch(
+      `${window.location.origin}/api/comments/${encodeURIComponent(
+        cardFileName
+      )}`,
+      {
+        credentials: "same-origin",
+        cache: "no-store",
+      }
+    )
       .then((res) => res.json())
       .then((data) => {
         commentsContainer.innerHTML = "";
@@ -1138,14 +1164,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const badwordsComments = [
-    "puta", "caralho", "merda", "porra", "cu", "bosta",
-    "idiota", "burro", "otario", "palhaco", "lixo"
+    "puta",
+    "caralho",
+    "merda",
+    "porra",
+    "cu",
+    "bosta",
+    "idiota",
+    "burro",
+    "otario",
+    "palhaco",
+    "lixo",
   ];
 
   // Função para validar comentário
   function isCommentClean(comment) {
     const lower = comment.toLowerCase();
-    return !badwordsComments.some(word => lower.includes(word));
+    return !badwordsComments.some((word) => lower.includes(word));
   }
 
   // Envio de comentário

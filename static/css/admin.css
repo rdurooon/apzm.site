@@ -438,27 +438,27 @@ body {
   background: rgba(0, 0, 0, 0.4); /* fundo preto translúcido */
   border: none;
   color: #fff;
-  font-size: 2.2rem;             /* tamanho equilibrado */
+  font-size: 2.2rem; /* tamanho equilibrado */
   cursor: pointer;
   z-index: 10;
-  padding: 8px 12px;             /* clique mais confortável */
-  border-radius: 8px;            /* cantos arredondados */
+  padding: 8px 12px; /* clique mais confortável */
+  border-radius: 8px; /* cantos arredondados */
   transition: transform 0.2s ease, background 0.3s, color 0.3s;
 }
 
 .reorganizar-card button:hover {
   transform: translateY(-50%) scale(1.2); /* animação suave no hover */
-  background: rgba(0, 0, 0, 0.6);         /* fundo mais escuro ao passar o mouse */
-  color: darkgreen;                         /* destaque no hover */
+  background: rgba(0, 0, 0, 0.6); /* fundo mais escuro ao passar o mouse */
+  color: darkgreen; /* destaque no hover */
 }
 
 /* Ajusta distância da borda */
 .reorganizar-card .btn-left {
-  left: 15px;   /* afastado da borda esquerda */
+  left: 15px; /* afastado da borda esquerda */
 }
 
 .reorganizar-card .btn-right {
-  right: 15px;  /* afastado da borda direita */
+  right: 15px; /* afastado da borda direita */
 }
 
 /* overlay para capturar clique e permitir toggle mesmo quando "esmaecido" */
@@ -468,7 +468,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 5;            /* abaixo dos botões (que estão em z-index:10) */
+  z-index: 5; /* abaixo dos botões (que estão em z-index:10) */
   background: transparent;
   cursor: pointer;
 }
@@ -483,8 +483,8 @@ body {
 .btn-save-cards {
   display: block;
   margin: 30px auto 0 auto; /* centralizado, abaixo dos cards */
-  padding: 18px 40px;        /* maior */
-  font-size: 1.3rem;         /* fonte grande */
+  padding: 18px 40px; /* maior */
+  font-size: 1.3rem; /* fonte grande */
   font-weight: bold;
   background-color: darkgreen; /* verde destaque */
   color: #fff;
@@ -502,87 +502,90 @@ body {
    Linkar Cards (Aumentado)
    =========================== */
 .linkar-card-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    padding: 25px;              /* maior padding */
-    background: #f9f9f9;
-    gap: 30px;                   /* maior espaço entre imagem e conteúdo */
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 180px;           /* garante altura mínima */
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 25px; /* maior padding */
+  background: #f9f9f9;
+  gap: 30px; /* maior espaço entre imagem e conteúdo */
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 180px; /* garante altura mínima */
 }
 
 /* Lado esquerdo (imagem) */
 .linkar-card-left {
-    flex-shrink: 0;
-    width: 180px;                /* imagem maior */
+  flex-shrink: 0;
+  width: 180px; /* imagem maior */
 }
 
 .linkar-card-left img {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-    border-radius: 10px;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: 10px;
 }
 
 /* Lado direito (conteúdo) */
 .linkar-card-right {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;                   /* aumenta espaçamento interno */
-    flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* aumenta espaçamento interno */
+  flex: 1;
 }
 
 .linkar-card-title {
-    font-weight: 600;
-    margin-bottom: 12px;
-    font-size: 1.2rem;           /* aumenta fonte do título */
+  font-weight: 600;
+  margin-bottom: 12px;
+  font-size: 1.2rem; /* aumenta fonte do título */
 }
 
 .link-fields label {
-    display: block;
-    margin-top: 12px;
-    font-size: 1rem;             /* aumenta fonte dos labels */
+  display: block;
+  margin-top: 12px;
+  font-size: 1rem; /* aumenta fonte dos labels */
 }
 
 .link-fields input {
-    width: 100%;
-    padding: 10px;               /* inputs maiores */
-    margin-top: 6px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-    font-size: 1rem;             /* aumenta fonte do input */
+  width: 100%;
+  padding: 10px; /* inputs maiores */
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 1rem; /* aumenta fonte do input */
 }
 
 .save-links {
-    margin-top: 16px;
-    background: darkgreen;
-    color: white;
-    padding: 10px 16px;          /* botão maior */
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;             /* fonte maior */
-    width: fit-content;
+  margin-top: 16px;
+  background: darkgreen;
+  color: white;
+  padding: 10px 16px; /* botão maior */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem; /* fonte maior */
+  width: fit-content;
 }
 
 .save-links:hover {
-    background: #2ecc71;
+  background: #2ecc71;
 }
 
 .linkar-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* colunas maiores */
-    gap: 30px;                   /* maior espaço entre cards */
-    width: 100%;
-    max-width: 1400px;           /* maior container */
-    margin: 15px auto;           /* mais espaçamento externo */
-    box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(350px, 1fr)
+  ); /* colunas maiores */
+  gap: 30px; /* maior espaço entre cards */
+  width: 100%;
+  max-width: 1400px; /* maior container */
+  margin: 15px auto; /* mais espaçamento externo */
+  box-sizing: border-box;
 }
 
 .switch {
@@ -648,26 +651,41 @@ input:checked + .slider:before {
   font-weight: 1000;
   font-size: 12px;
   clip-path: polygon(
-    50% 0%, 70% 15%, 100% 0, 85% 39%, 100% 50%, 85% 60%, 100% 100%, 70% 85%, 50% 100%, 30% 85%, 0 100%, 15% 60%, 0% 50%, 15% 35%, 0 0, 30% 15%
+    50% 0%,
+    70% 15%,
+    100% 0,
+    85% 39%,
+    100% 50%,
+    85% 60%,
+    100% 100%,
+    70% 85%,
+    50% 100%,
+    30% 85%,
+    0 100%,
+    15% 60%,
+    0% 50%,
+    15% 35%,
+    0 0,
+    30% 15%
   );
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   z-index: 9999;
   transition: opacity 0.3s, transform 0.3s;
   transform: rotate(-10deg);
 }
 .toggle-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1; /* atrás do badge */
-    cursor: pointer;
-    opacity: 0.1;    
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* atrás do badge */
+  cursor: pointer;
+  opacity: 0.1;
 }
 
 .new-badge-toggle.active {
-  opacity: 1;     /* marcado */
+  opacity: 1; /* marcado */
   transform: rotate(-10deg);
 }
 

@@ -643,7 +643,9 @@ async function reorganizarCards() {
       div.dataset.index = index; // salvar posição
 
       // usa flag do JSON se existir, senão visível por padrão
-      const isInitiallyVisible = card.hasOwnProperty('visible') ? !!card.visible : true;
+      const isInitiallyVisible = card.hasOwnProperty("visible")
+        ? !!card.visible
+        : true;
       div.dataset.visible = isInitiallyVisible ? "true" : "false";
       if (!isInitiallyVisible) div.classList.add("invisible");
 
@@ -655,7 +657,7 @@ async function reorganizarCards() {
       `;
 
       div.dataset.newSince = card.new_since || ""; // timestamp UTC do backend
-      div.dataset.file = card.file;  
+      div.dataset.file = card.file;
 
       // 🔹 Botão de selo "Novo!"
       const badgeBtn = document.createElement("div");
@@ -665,28 +667,32 @@ async function reorganizarCards() {
 
       // Toggle "Novo!"
       badgeBtn.addEventListener("click", async (e) => {
-          e.stopPropagation(); // evita que o click alcance o overlay
-          const currentlyActive = badgeBtn.classList.contains("active");
-          badgeBtn.classList.toggle("active", !currentlyActive);
+        e.stopPropagation(); // evita que o click alcance o overlay
+        const currentlyActive = badgeBtn.classList.contains("active");
+        badgeBtn.classList.toggle("active", !currentlyActive);
 
-          try {
-              await fetch(`/admin/toggle_card_new/${card.file}`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ is_new: !currentlyActive })
-              });
-              showQuickWarning(`Card ${card.title} ${!currentlyActive ? "marcado como 'Novo!'" : "removido de 'Novo!'"}`, "green");
-          } catch (err) {
-              console.error("Erro ao atualizar badge Novo!", err);
-              badgeBtn.classList.toggle("active", currentlyActive);
-              showQuickWarning("Erro ao atualizar badge Novo!", "red");
-          }
+        try {
+          await fetch(`/admin/toggle_card_new/${card.file}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ is_new: !currentlyActive }),
+          });
+          showQuickWarning(
+            `Card ${card.title} ${
+              !currentlyActive ? "marcado como 'Novo!'" : "removido de 'Novo!'"
+            }`,
+            "green"
+          );
+        } catch (err) {
+          console.error("Erro ao atualizar badge Novo!", err);
+          badgeBtn.classList.toggle("active", currentlyActive);
+          showQuickWarning("Erro ao atualizar badge Novo!", "red");
+        }
       });
 
-
       // cria uma overlay que captura clicks para toggle (fica abaixo dos botões)
-      const toggleOverlay = document.createElement('div');
-      toggleOverlay.className = 'toggle-overlay';
+      const toggleOverlay = document.createElement("div");
+      toggleOverlay.className = "toggle-overlay";
       div.appendChild(toggleOverlay);
 
       // Botão esquerda
@@ -707,40 +713,43 @@ async function reorganizarCards() {
 
       // Toggle de visibilidade via overlay (funciona mesmo se o card estiver 'invisible')
       toggleOverlay.addEventListener("click", async () => {
-      const currentlyVisible = div.dataset.visible === "true";
+        const currentlyVisible = div.dataset.visible === "true";
 
-      // Toggle visual
-      div.dataset.visible = currentlyVisible ? "false" : "true";
-      div.classList.toggle("invisible", currentlyVisible);
+        // Toggle visual
+        div.dataset.visible = currentlyVisible ? "false" : "true";
+        div.classList.toggle("invisible", currentlyVisible);
 
-      // Desabilita botão "Novo!" se invisível
-      badgeBtn.style.pointerEvents = div.dataset.visible === "true" ? "auto" : "none";
-      badgeBtn.style.opacity = div.dataset.visible === "true" ? "1" : "0.4";
+        // Desabilita botão "Novo!" se invisível
+        badgeBtn.style.pointerEvents =
+          div.dataset.visible === "true" ? "auto" : "none";
+        badgeBtn.style.opacity = div.dataset.visible === "true" ? "1" : "0.4";
 
-      // Atualiza backend enviando todos os cards
-      const cardsList = Array.from(cardsListContainer.children).map(c => {
-          const imgEl = c.querySelector("img");
-          return {
+        // Atualiza backend enviando todos os cards
+        const cardsList = Array.from(cardsListContainer.children)
+          .map((c) => {
+            const imgEl = c.querySelector("img");
+            return {
               file: imgEl ? imgEl.src.split("/").pop() : null,
-              visible: c.dataset.visible === "true"
-          };
-      }).filter(c => c.file);
+              visible: c.dataset.visible === "true",
+            };
+          })
+          .filter((c) => c.file);
 
-      try {
+        try {
           const res = await fetch("/admin/save_cards_order", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(cardsList)
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cardsList),
           });
           const data = await res.json();
           if (!data.success) {
-              showQuickWarning("Erro ao salvar visibilidade!", "red");
+            showQuickWarning("Erro ao salvar visibilidade!", "red");
           }
-      } catch (err) {
+        } catch (err) {
           console.error("Erro ao salvar visibilidade:", err);
           showQuickWarning("Erro de rede ao salvar visibilidade.", "red");
-      }
-  });
+        }
+      });
 
       cardsListContainer.appendChild(div);
     });
@@ -748,17 +757,16 @@ async function reorganizarCards() {
     // Ajusta botões iniciais
     atualizarBotoes();
 
-  // Remove botão antigo apenas dentro da subguia
-  const existingSaveBtn = cardsListContainer.querySelector(".btn-save-cards");
-  if (existingSaveBtn) existingSaveBtn.remove();
+    // Remove botão antigo apenas dentro da subguia
+    const existingSaveBtn = cardsListContainer.querySelector(".btn-save-cards");
+    if (existingSaveBtn) existingSaveBtn.remove();
 
-  // cria botão de salvar apenas dentro de cardsListContainer
-  const saveBtn = document.createElement("button");
-  saveBtn.textContent = "Salvar Alterações";
-  saveBtn.classList.add("btn-save-cards");
-  saveBtn.addEventListener("click", salvarOrdemCards);
-  cardsListContainer.appendChild(saveBtn);
-
+    // cria botão de salvar apenas dentro de cardsListContainer
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "Salvar Alterações";
+    saveBtn.classList.add("btn-save-cards");
+    saveBtn.addEventListener("click", salvarOrdemCards);
+    cardsListContainer.appendChild(saveBtn);
   } catch (err) {
     console.error("Erro ao listar/reorganizar cards:", err);
     showQuickWarning("Erro ao carregar cards!", "#e74c3c");
@@ -814,19 +822,21 @@ function atualizarBotoes() {
 // Função: salvar ordem + visibilidade
 // ===========================
 async function salvarOrdemCards() {
-  const cards = Array.from(cardsListContainer.children).map(card => {
+  const cards = Array.from(cardsListContainer.children)
+    .map((card) => {
       const imgEl = card.querySelector("img");
       return {
-          file: imgEl ? imgEl.src.split("/").pop() : null,
-          visible: card.dataset.visible === "true"
+        file: imgEl ? imgEl.src.split("/").pop() : null,
+        visible: card.dataset.visible === "true",
       };
-  }).filter(card => card.file);
+    })
+    .filter((card) => card.file);
 
   try {
     const res = await fetch("/admin/save_cards_order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cards)
+      body: JSON.stringify(cards),
     });
 
     const data = await res.json();
@@ -848,76 +858,82 @@ const linkarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(4)"); // cria
 const linkarContainer = document.getElementById("linkarContainer");
 
 async function abrirSubguiaLinkar() {
-    limparConteudoPrincipal();
-    fecharSidebar();
+  limparConteudoPrincipal();
+  fecharSidebar();
 
-    linkarContainer.innerHTML = ""; // limpa container
+  linkarContainer.innerHTML = ""; // limpa container
 
-    try {
-        const res = await fetch("/admin/list_links");
-        const cards = await res.json();
+  try {
+    const res = await fetch("/admin/list_links");
+    const cards = await res.json();
 
-        if (!cards.length) {
-            linkarContainer.innerHTML = "<p>Nenhum card encontrado.</p>";
-            return;
-        }
+    if (!cards.length) {
+      linkarContainer.innerHTML = "<p>Nenhum card encontrado.</p>";
+      return;
+    }
 
-        cards.forEach(card => {
-          const div = document.createElement("div");
-          div.classList.add("linkar-card-container");
+    cards.forEach((card) => {
+      const div = document.createElement("div");
+      div.classList.add("linkar-card-container");
 
-          div.innerHTML = `
+      div.innerHTML = `
               <div class="linkar-card-left">
-                  <img src="/static/images/cards/${card.file}" alt="${card.title}">
+                  <img src="/static/images/cards/${card.file}" alt="${
+        card.title
+      }">
               </div>
               <div class="linkar-card-right">
                   <h3 class="linkar-card-title">${card.title}</h3>
                   <div class="link-fields">
                       <label>Linkar História</label>
-                      <input type="text" placeholder="Cole o link da história" value="${card.link_historia || ""}" class="historia-link">
+                      <input type="text" placeholder="Cole o link da história" value="${
+                        card.link_historia || ""
+                      }" class="historia-link">
                       
                       <label>Linkar Mapa</label>
-                      <input type="text" placeholder="Cole o link do mapa" value="${card.link_mapa || ""}" class="mapa-link">
+                      <input type="text" placeholder="Cole o link do mapa" value="${
+                        card.link_mapa || ""
+                      }" class="mapa-link">
                   </div>
                   <button class="save-links">Salvar Alterações</button>
               </div>
           `;
 
-          const btnSave = div.querySelector(".save-links");
-          const inputHistoria = div.querySelector(".historia-link");
-          const inputMapa = div.querySelector(".mapa-link");
+      const btnSave = div.querySelector(".save-links");
+      const inputHistoria = div.querySelector(".historia-link");
+      const inputMapa = div.querySelector(".mapa-link");
 
-          btnSave.addEventListener("click", async () => {
-              btnSave.disabled = true;
-              btnSave.textContent = "Salvando...";
-              try {
-                  const res = await fetch(`/admin/save_card_links/${card.file}`, {
-                      method: "POST",
-                      headers: {"Content-Type": "application/json"},
-                      body: JSON.stringify({
-                          historia: inputHistoria.value.trim(),
-                          mapa: inputMapa.value.trim()
-                      })
-                  });
-                  const data = await res.json();
-                  if (data.success) showQuickWarning("Links salvos com sucesso!", "green");
-                  else showQuickWarning("Erro ao salvar links!", "red");
-              } catch(err) {
-                  console.error(err);
-                  showQuickWarning("Erro de rede!", "red");
-              } finally {
-                  btnSave.disabled = false;
-                  btnSave.textContent = "Salvar Alterações";
-              }
+      btnSave.addEventListener("click", async () => {
+        btnSave.disabled = true;
+        btnSave.textContent = "Salvando...";
+        try {
+          const res = await fetch(`/admin/save_card_links/${card.file}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              historia: inputHistoria.value.trim(),
+              mapa: inputMapa.value.trim(),
+            }),
           });
-
-          linkarContainer.appendChild(div);
+          const data = await res.json();
+          if (data.success)
+            showQuickWarning("Links salvos com sucesso!", "green");
+          else showQuickWarning("Erro ao salvar links!", "red");
+        } catch (err) {
+          console.error(err);
+          showQuickWarning("Erro de rede!", "red");
+        } finally {
+          btnSave.disabled = false;
+          btnSave.textContent = "Salvar Alterações";
+        }
       });
 
-    } catch(err) {
-        console.error(err);
-        showQuickWarning("Erro ao carregar cards!", "red");
-    }
+      linkarContainer.appendChild(div);
+    });
+  } catch (err) {
+    console.error(err);
+    showQuickWarning("Erro ao carregar cards!", "red");
+  }
 }
 
 linkarMapStoryItem.addEventListener("click", abrirSubguiaLinkar);
@@ -947,11 +963,11 @@ document.body.appendChild(siteToggleContainer);
 
 // Inicializa estado
 fetch("/api/site_status.json")
-  .then(res => res.json())
-  .then(data => {
+  .then((res) => res.json())
+  .then((data) => {
     siteToggle.checked = data.online;
   })
-  .catch(err => console.error(err));
+  .catch((err) => console.error(err));
 
 // Evento de mudança
 siteToggle.addEventListener("change", async () => {
@@ -959,37 +975,42 @@ siteToggle.addEventListener("change", async () => {
   try {
     const res = await fetch("/admin/toggle_site", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({online})
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ online }),
     });
     const data = await res.json();
     if (data.success) {
-      showQuickWarning(`Site ${online ? "online" : "offline"}!`, online ? "green" : "red");
+      showQuickWarning(
+        `Site ${online ? "online" : "offline"}!`,
+        online ? "green" : "red"
+      );
     } else {
       showQuickWarning("Erro ao alterar status do site!", "red");
     }
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     showQuickWarning("Erro de rede!", "red");
   }
 });
 
-if(subguiaAtiva === "visao-geral") {
-    siteToggleContainer.style.display = "flex";
+if (subguiaAtiva === "visao-geral") {
+  siteToggleContainer.style.display = "flex";
 } else {
-    siteToggleContainer.style.display = "none";
+  siteToggleContainer.style.display = "none";
 }
 
-const visaoGeralItem = document.querySelector('.sidebar-menu li:first-child .menu-item');
-visaoGeralItem.addEventListener('click', () => {
-    // Alterna visibilidade do toggle
-    if (siteToggleContainer.style.display === "none") {
-        siteToggleContainer.style.display = "flex";
-        subguiaAtiva = "visao-geral";
-    } else {
-        siteToggleContainer.style.display = "none";
-        subguiaAtiva = null;
-    }
+const visaoGeralItem = document.querySelector(
+  ".sidebar-menu li:first-child .menu-item"
+);
+visaoGeralItem.addEventListener("click", () => {
+  // Alterna visibilidade do toggle
+  if (siteToggleContainer.style.display === "none") {
+    siteToggleContainer.style.display = "flex";
+    subguiaAtiva = "visao-geral";
+  } else {
+    siteToggleContainer.style.display = "none";
+    subguiaAtiva = null;
+  }
 });
 
 // ===========================
@@ -1004,7 +1025,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 function initNewBadgeTimers() {
   const cards = document.querySelectorAll(".reorganizar-card");
-  cards.forEach(card => {
+  cards.forEach((card) => {
     const badge = card.querySelector(".new-badge-toggle");
     if (!badge) return;
 
@@ -1037,7 +1058,7 @@ async function updateBadge(card, badge, badgeTime, interval = null) {
       await fetch(`/admin/toggle_card_new/${card.dataset.file}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_new: false })
+        body: JSON.stringify({ is_new: false }),
       });
     } catch (err) {
       console.error("Erro ao atualizar badge Novo!", err);

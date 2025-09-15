@@ -542,12 +542,12 @@ header {
   width: 22px;
   height: 22px;
   stroke: darkgreen; /* borda */
-  fill: none;       /* preenchido branco */
+  fill: none; /* preenchido branco */
   transition: fill 0.2s ease, transform 0.2s ease;
 }
 
 .like-btn.liked .like-icon svg {
-  fill: darkgreen;   /* preenchido verde */
+  fill: darkgreen; /* preenchido verde */
   stroke: darkgreen; /* borda continua */
 }
 
@@ -560,12 +560,12 @@ header {
   color: darkgreen;
   font-weight: bold;
   display: inline-block; /* garante que o span apareça */
-  min-width: 20px;       /* evita que suma com zero */
+  min-width: 20px; /* evita que suma com zero */
   text-align: center;
 }
 
 .popup-buttons button.disabled {
-  opacity: 0.5;       /* deixa meio apagado */
+  opacity: 0.5; /* deixa meio apagado */
   cursor: not-allowed; /* mostra cursor de não clicável */
   pointer-events: none; /* desativa clique */
 }
@@ -587,87 +587,87 @@ header {
 
 /* ================= SIDEBAR ================= */
 .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    z-index: 999; /* atrás da sidebar */
-    display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999; /* atrás da sidebar */
+  display: none;
 }
 
 .sidebar-overlay.show {
-    display: block;
+  display: block;
 }
 
 /* Sidebar principal */
 .sidebar {
-    position: fixed;
-    top: 0;
-    left: -250px; /* largura inicial fora da tela */
-    width: 250px;
-    height: 100%;
-    background-color: darkgreen;
-    color: white;
-    z-index: 1000; /* na frente do cabeçalho */
-    transition: left 0.3s ease;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-    padding-top: 20px;
-    overflow-y: auto;
+  position: fixed;
+  top: 0;
+  left: -250px; /* largura inicial fora da tela */
+  width: 250px;
+  height: 100%;
+  background-color: darkgreen;
+  color: white;
+  z-index: 1000; /* na frente do cabeçalho */
+  transition: left 0.3s ease;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+  padding-top: 20px;
+  overflow-y: auto;
 }
 
 /* Quando aberta */
 .sidebar.open {
-    left: 0;
+  left: 0;
 }
 
 /* Protrusão sempre visível */
 .sidebar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: -20px; /* 20px visíveis */
-    width: 20px;
-    height: 100%;
-    background-color: darkgreen;
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -20px; /* 20px visíveis */
+  width: 20px;
+  height: 100%;
+  background-color: darkgreen;
 }
 
 /* Header da sidebar */
 .sidebar-header {
-    display: flex;
-    justify-content: flex-start; /* X à esquerda */
-    align-items: center;
-    padding: 0 15px;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: flex-start; /* X à esquerda */
+  align-items: center;
+  padding: 0 15px;
+  margin-bottom: 20px;
 }
 
 .sidebar-close {
-    font-size: 48px;
-    cursor: pointer;
-    color: white;
+  font-size: 48px;
+  cursor: pointer;
+  color: white;
 }
 
 /* Conteúdo da sidebar */
 .sidebar-content {
-    padding: 0 15px;
+  padding: 0 15px;
 }
 
 .sidebar-content h2 {
-    margin: 20px 0 10px 0;
-    padding: 10px 0;
-    border-top: 1px solid white;
-    border-bottom: 1px solid white;
+  margin: 20px 0 10px 0;
+  padding: 10px 0;
+  border-top: 1px solid white;
+  border-bottom: 1px solid white;
 }
 
 .sidebar-content p {
-    margin: 5px 0 15px 0;
+  margin: 5px 0 15px 0;
 }
 
 /* Substituir o hamburguer pelo X */
 .menu-btn.open {
-    font-size: 2rem;
-    color: white;
+  font-size: 2rem;
+  color: white;
 }
 
 /* ================= SIDEBAR GUIDES ================= */
@@ -712,16 +712,16 @@ header {
 
 /* ================= POPUP CONTA ================= */
 .account-popup {
-  width: 600px;       
+  width: 600px;
   max-width: 90%;
-  padding: 30px 25px;       /* laterais menores */
+  padding: 30px 25px; /* laterais menores */
   background: #fff;
   border-radius: 16px;
   text-align: left;
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;  /* centraliza o conteúdo */
+  justify-content: center; /* centraliza o conteúdo */
   min-height: 400px;
 }
 
@@ -737,10 +737,10 @@ header {
 
 /* Container centralizado */
 .account-content {
-  flex: 1;                         /* ocupa espaço disponível */
+  flex: 1; /* ocupa espaço disponível */
   display: flex;
   flex-direction: column;
-  justify-content: center;         /* centraliza verticalmente */
+  justify-content: center; /* centraliza verticalmente */
 }
 
 /* Labels maiores e em negrito */
@@ -784,11 +784,21 @@ header {
   font-size: 16px;
 }
 
-.btn-green { background-color: #4CAF50; color: #fff; }
-.btn-green:hover { background-color: #3e8e41; }
+.btn-green {
+  background-color: #4caf50;
+  color: #fff;
+}
+.btn-green:hover {
+  background-color: #3e8e41;
+}
 
-.btn-red { background-color: #f44336; color: #fff; }
-.btn-red:hover { background-color: #d32f2f; }
+.btn-red {
+  background-color: #f44336;
+  color: #fff;
+}
+.btn-red:hover {
+  background-color: #d32f2f;
+}
 
 #btn-save-account,
 #btn-cancel-edit {
@@ -815,7 +825,7 @@ header {
   border-radius: 6px;
   font-size: 0.9rem;
   z-index: 99999;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 /* Mostra tooltip quando ativado */
@@ -834,62 +844,62 @@ header {
 
 /* Popup delete account */
 #delete-account-popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
 
 #delete-account-popup-overlay.show {
-    display: flex;
+  display: flex;
 }
 
 .delete-popup {
-    background: #fff;
-    padding: 25px;
-    border-radius: 15px;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  background: #fff;
+  padding: 25px;
+  border-radius: 15px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .delete-popup-text {
-    margin-top: 14px;
-    margin-bottom: 20px;
-    font-size: 16px;
-    color: black;
+  margin-top: 14px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  color: black;
 }
 
 .delete-popup-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
 .delete-popup-buttons button {
-    padding: 10px 25px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 14px;
+  padding: 10px 25px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
 }
 
 .delete-popup-buttons .btn-red {
-    background: #ff5555;
-    color: white;
+  background: #ff5555;
+  color: white;
 }
 
 .delete-popup-buttons .btn-gray {
-    background: #ccc;
-    color: #333;
+  background: #ccc;
+  color: #333;
 }
 
 /* ================= FORGOT PASSWORD POPUP ================= */
@@ -924,14 +934,17 @@ header {
 
 .loading-overlay {
   position: absolute;
-  top:0; left:0; right:0; bottom:0;
-  background: rgba(0,0,0,0.6);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:1.2em;
-  z-index:1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2em;
+  z-index: 1000;
   flex-direction: column;
 }
 .spinner {
@@ -944,8 +957,12 @@ header {
   animation: spin 1s linear infinite;
 }
 @keyframes spin {
-  0% { transform: rotate(0deg);}
-  100% { transform: rotate(360deg);}
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Fade-in keyframes */
@@ -962,37 +979,37 @@ header {
 
 /* Popup Quem Somos */
 .who-us-popup {
-    background-color: white;
-    border-radius: 15px;
-    padding: 30px;
-    max-width: 500px;
-    width: 90%;
-    text-align: center;
-    position: relative;
+  background-color: white;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  position: relative;
 }
 
 .who-us-popup .popup-close {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 28px;
-    cursor: pointer;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  cursor: pointer;
 }
 
 .who-us-logo {
-    max-width: 200px;
-    margin-bottom: 20px;
+  max-width: 200px;
+  margin-bottom: 20px;
 }
 
 .who-us-text h2 {
-    margin-bottom: 15px;
-    font-size: 24px;
+  margin-bottom: 15px;
+  font-size: 24px;
 }
 
 .who-us-text p {
-    font-size: 16px;
-    line-height: 1.5;
-    text-align: justify ;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: justify;
 }
 
 .new-badge {
@@ -1009,9 +1026,24 @@ header {
   font-weight: 1000;
   font-size: 12px;
   clip-path: polygon(
-    50% 0%, 70% 15%, 100% 0, 85% 39%, 100% 50%, 85% 60%, 100% 100%, 70% 85%, 50% 100%, 30% 85%, 0 100%, 15% 60%, 0% 50%, 15% 35%, 0 0, 30% 15%
+    50% 0%,
+    70% 15%,
+    100% 0,
+    85% 39%,
+    100% 50%,
+    85% 60%,
+    100% 100%,
+    70% 85%,
+    50% 100%,
+    30% 85%,
+    0 100%,
+    15% 60%,
+    0% 50%,
+    15% 35%,
+    0 0,
+    30% 15%
   );
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   transform: rotate(-10deg);
 }
 
@@ -1021,103 +1053,103 @@ header {
 
 /* ================= COMENTÁRIOS ================= */
 #popup-comments {
-    background: white;
-    border: 2px solid darkgreen;
-    border-radius: 12px;
-    padding: 12px 15px;
-    margin: 12px 0;
-    width: 100%; /* ocupa toda largura disponível */
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
+  background: white;
+  border: 2px solid darkgreen;
+  border-radius: 12px;
+  padding: 12px 15px;
+  margin: 12px 0;
+  width: 100%; /* ocupa toda largura disponível */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 #popup-comments h3 {
-    font-size: 16px;
-    margin-bottom: 6px;
-    color: darkgreen;
-    font-weight: 2000;
+  font-size: 16px;
+  margin-bottom: 6px;
+  color: darkgreen;
+  font-weight: 2000;
 }
 
 /* Lista de comentários */
 #comments-container {
-    max-height: 80px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 10px;
-    padding-right: 10px;
-    overflow-x: hidden;
+  max-height: 80px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-right: 10px;
+  overflow-x: hidden;
 }
 
 /* Cada comentário */
 .comment {
-    background: white;
-    padding: 5px;
-    font-size: 15px;
-    text-align: left;
-    word-wrap: break-word;
-    width: 100%;
-    font-weight: 400;
-    border-bottom: 1px solid #ccc;
+  background: white;
+  padding: 5px;
+  font-size: 15px;
+  text-align: left;
+  word-wrap: break-word;
+  width: 100%;
+  font-weight: 400;
+  border-bottom: 1px solid #ccc;
 }
 
 .comment strong {
-    color: darkgreen;
-    font-weight: 400;
+  color: darkgreen;
+  font-weight: 400;
 }
 
 /* Área de input + botão */
 .comment-input-area {
-    display: flex;
-    align-items: center;
-    margin-top: 8px;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  width: 100%;
 }
 
 /* Campo de texto */
 #comment-input {
-    flex: 1;
-    border: 2px solid darkgreen; /* 🔹 agora garantido */
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 16px;
-    outline: none;
+  flex: 1;
+  border: 2px solid darkgreen; /* 🔹 agora garantido */
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 16px;
+  outline: none;
 }
 
 #comment-input:focus {
-    border-color: #006400;
-    box-shadow: 0 0 6px rgba(0, 100, 0, 0.5);
+  border-color: #006400;
+  box-shadow: 0 0 6px rgba(0, 100, 0, 0.5);
 }
 
 /* Botão de enviar */
 #comment-submit {
-    background: none;
-    border: none;
-    color: darkgreen;
-    font-size: 28px; /* seta maior */
-    cursor: pointer;
-    margin-left: 8px;
-    line-height: 1;
-    padding: 0;
-    transition: transform 0.2s ease, color 0.3s ease;
+  background: none;
+  border: none;
+  color: darkgreen;
+  font-size: 28px; /* seta maior */
+  cursor: pointer;
+  margin-left: 8px;
+  line-height: 1;
+  padding: 0;
+  transition: transform 0.2s ease, color 0.3s ease;
 }
 
 #comment-submit:hover {
-    color: #006400;
-    transform: scale(1.1);
+  color: #006400;
+  transform: scale(1.1);
 }
 
 /* Aviso login */
 .login-warning {
-    font-size: 14px;
-    color: #666;
-    background: #f2f2f2;
-    padding: 6px;
-    border-radius: 6px;
-    text-align: center;
-    margin: 0 auto; /* centraliza horizontalmente */
+  font-size: 14px;
+  color: #666;
+  background: #f2f2f2;
+  padding: 6px;
+  border-radius: 6px;
+  text-align: center;
+  margin: 0 auto; /* centraliza horizontalmente */
 }
 
 /* ================= FOOTER ================= */
@@ -1145,6 +1177,178 @@ header {
   transform: scale(1.2);
 }
 
+/* Botão do modo noturno */
+.dark-mode-btn {
+  position: absolute;
+  margin-top: 3px;
+  left: 65px; /* ao lado do menu hamburguer */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.dark-mode-btn:hover svg {
+  transform: rotate(20deg);
+}
+
+/* ============================= */
+/* MODO ESCURO                   */
+/* ============================= */
+body.dark-mode {
+  background: #121212; /* fundo geral escuro */
+  color: #f0f0f0; /* texto mais claro */
+}
+
+footer.dark-mode {
+  background: #121212; /* fundo geral escuro */
+  color: #f0f0f0; /* texto mais claro */
+}
+
+/* Conteúdo principal */
+body.dark-mode .content {
+  background: #1e1e1e;
+  color: #f0f0f0;
+}
+
+/* Popups brancos */
+body.dark-mode .auth-popup,
+body.dark-mode .popup,
+body.dark-mode .account-popup {
+  background: #1e1e1e;
+  color: #f0f0f0;
+  border-color: #444;
+}
+
+/* Inputs e caixas dentro de popups */
+body.dark-mode .auth-input,
+body.dark-mode .account-input {
+  background: #2a2a2a;
+  color: #f0f0f0;
+  border: 2px solid #555;
+}
+
+body.dark-mode .auth-input:focus,
+body.dark-mode .account-input:focus {
+  border-color: #888;
+  box-shadow: 0 0 8px rgba(200, 200, 200, 0.4);
+}
+
+/* Descrições / textos dentro de popups */
+body.dark-mode .popup-description {
+  color: #ddd;
+}
+
+/* Comentários e containers internos */
+body.dark-mode #comments-container {
+  color: #f0f0f0;
+}
+
+/* Footer no modo escuro */
+body.dark-mode footer {
+  background: #121212;
+  color: #f0f0f0;
+}
+
+/* Ícones sociais no footer - inverte as cores */
+body.dark-mode footer img {
+  filter: invert(1);
+}
+
+body.dark-mode footer img:hover {
+  filter: invert(0.6); /* mantém destaque no hover */
+}
+
+body.dark-mode .auth-title,
+body.dark-mode .auth-input,
+body.dark-mode .auth-btn,
+body.dark-mode .auth-switch span,
+body.dark-mode .username-tooltip,
+body.dark-mode .email-tooltip,
+body.dark-mode .password-tooltip,
+body.dark-mode .account-guide,
+body.dark-mode .account-input,
+body.dark-mode .popup-buttons button,
+body.dark-mode .like-btn .like-icon svg,
+body.dark-mode #like-count,
+body.dark-mode .forgot-password,
+body.dark-mode #login-link,
+body.dark-mode #popup-comments h3,
+body.dark-mode #forgot-password-link,
+body.dark-mode .delete-popup-text {
+  color: white !important; /* antes eram darkgreen */
+  border-color: white !important;
+  stroke: white !important; /* ícones de like */
+}
+
+body.dark-mode .like-btn.liked .like-icon svg {
+  fill: white; /* preenchido verde */
+  stroke: white; /* borda continua */
+}
+
+body.dark-mode #comment-input {
+  border-color: #555;
+  background-color: #1e1e1e;
+  color: white;
+}
+
+body.dark-mode .comment {
+  color: white;
+  font-weight: 400;
+  background-color: #1e1e1e;
+}
+
+body.dark-mode .comment strong {
+  color: #808080;
+  font-weight: 400;
+}
+
+body.dark-mode .popup-close {
+  color: white;
+}
+
+body.dark-mode .popup-close:hover {
+  color: red;
+}
+
+/* Botões que eram darkgreen → ajusta o fundo */
+body.dark-mode .auth-btn,
+body.dark-mode .popup-buttons button {
+  border-color: #1e1e1e;
+}
+
+body.dark-mode #popup-comments {
+  background-color: #1e1e1e;
+}
+
+body.dark-mode .login-warning {
+  background-color: #181818;
+}
+
+body.dark-mode #popup-comments {
+  border-color: #555;
+}
+
+/* Inputs no darkmode */
+body.dark-mode .auth-input,
+body.dark-mode .account-input {
+  background-color: #1e1e1e;
+  border: 2px solid #555;
+  border-color: #555;
+  color: white;
+}
+
+body.dark-mode #comment-submit {
+  color: white;
+}
+
 /* ================= RESPONSIVIDADE ================= */
 
 /* Tablets e celulares */
@@ -1155,10 +1359,10 @@ header {
 
   .auth-popup {
     width: 85%; /* aumenta ocupação da tela */
-    max-width: 400px; 
+    max-width: 400px;
     padding: 50px 30px;
-    align-items: center; 
-    justify-content: center; 
+    align-items: center;
+    justify-content: center;
   }
 
   #register-popup {
@@ -1189,7 +1393,7 @@ header {
   .auth-buttons {
     top: 9px;
     right: 15px;
-    flex-direction: column; 
+    flex-direction: column;
     gap: 5px;
   }
 
@@ -1326,36 +1530,36 @@ header {
 
   .account-popup {
     flex-direction: column;
-    justify-content: center;  /* centraliza o conteúdo */
+    justify-content: center; /* centraliza o conteúdo */
     min-height: 50vh;
   }
 
   #popup-comments {
-    width: 100%;         /* ocupa toda a largura visível */
-    max-width: 100%;     /* evita overflow */
+    width: 100%; /* ocupa toda a largura visível */
+    max-width: 100%; /* evita overflow */
     box-sizing: border-box; /* padding incluso na largura */
   }
 
   #comments-container {
     max-height: 50px; /* aumenta área visível sem estourar */
     padding-right: 8px; /* evita scrollbar cortar conteúdo */
-    word-wrap:break-word;
+    word-wrap: break-word;
     overflow-y: auto;
     overflow-x: hidden;
     overflow-wrap: break-word; /* força quebra se necessário */
-    hyphens: auto;           /* adiciona hífens se cabível */
+    hyphens: auto; /* adiciona hífens se cabível */
   }
 
   .comment {
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
-    white-space: pre-wrap;   /* mantém quebras de linha do usuário */
+    white-space: pre-wrap; /* mantém quebras de linha do usuário */
   }
 
   .comment-input-area {
     flex-direction: row; /* empilha input e botão */
-    gap: 6px;               /* separação entre input e botão */
+    gap: 6px; /* separação entre input e botão */
   }
 
   #comment-input {
@@ -1363,8 +1567,33 @@ header {
   }
 
   #comment-submit {
-    font-size: 24px;  /* menor para caber */
+    font-size: 24px; /* menor para caber */
     align-self: flex-end; /* botão alinhado à direita */
     padding-bottom: 8px;
+  }
+}
+
+/* Telas até 1280px (720p) */
+@media (max-width: 1492px) {
+  .card {
+    max-width: 240px;
+  }
+
+  .popup .popup-title {
+    width: 50%;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+
+  .popup img.card-image {
+    max-width: 38%;
+  }
+
+  .popup-buttons {
+    padding: 5px;
+  }
+
+  #comments-container {
+    max-height: 70px;
   }
 }
