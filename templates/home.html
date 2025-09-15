@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}" />
     <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{url_for('static', filename='css/home.css')}}" />
@@ -26,9 +26,8 @@
     <meta name="twitter:description" content="{{ seo.description }}" />
     <meta name="twitter:image" content="{{ url_for('static', filename='images/share_banner.jpg', _external=True) }}" />
 
-    <meta property="og:logo" content="{{ url_for('static', filename='images/icon.png', _external=True) }}">
+    <meta property="og:logo" content="{{ url_for('static', filename='images/icon.png', _external=True) }}" />
 </head>
-
 
 <body>
     <script>
@@ -40,10 +39,17 @@
             email: "{{ email | escape }}",
             password_masked: "{{ password_masked | escape }}",
             is_admin: {{ 'true' if is_admin else 'false' }}
-        };
+      };
     </script>
     <header class="header">
         <div class="menu-btn" id="menu-btn">☰</div>
+        <button id="dark-mode-toggle" class="dark-mode-btn" aria-label="Alternar modo noturno">
+            <svg id="dark-mode-icon" xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24">
+                <!-- Metade preenchida -->
+                <circle cx="12" cy="12" r="10" fill="white" stroke="black" stroke-width="2" />
+                <path d="M12 2 A10 10 0 0 1 12 22 Z" fill="black" />
+            </svg>
+        </button>
         <h1 class="site-title">Amapá Zombies</h1>
         <div class="auth-buttons">
             {% if not logged_in %}
@@ -81,7 +87,6 @@
         <div class="background-slideshow" id="background-slideshow"></div>
         <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo"
             class="main-logo" />
-
     </section>
 
     <!-- Conteúdo abaixo -->
@@ -120,7 +125,7 @@
                     <div id="comments-container">
                         <!-- Comentários carregados dinamicamente aqui -->
                     </div>
-                    
+
                     <!-- Área de envio -->
                     <div class="comment-input-area">
                         {% if logged_in %}
@@ -128,7 +133,14 @@
                         <button id="comment-submit">➤</button>
                         {% else %}
                         <p class="login-warning">
-                            Você precisa realizar o <span id="login-link" style="color: darkgreen; font-weight: 2000; text-decoration: underline; cursor: pointer;">login</span> para comentar/curtir.
+                            Você precisa realizar o
+                            <span id="login-link" style="
+                    color: darkgreen;
+                    font-weight: 2000;
+                    text-decoration: underline;
+                    cursor: pointer;
+                  ">login</span>
+                            para comentar/curtir.
                         </p>
                         {% endif %}
                     </div>
@@ -139,9 +151,12 @@
                         <button id="btn-read-story">Ler história</button>
                         <button id="btn-like" class="like-btn">
                             <span class="like-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="darkgreen" stroke-width="1.5" class="bi bi-hand-thumbs-up" viewBox="0 0 16 16">
-                                <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2 2 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a10 10 0 0 0-.443.05 9.4 9.4 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111z"/>
-                            </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
+                                    stroke="darkgreen" stroke-width="1.5" class="bi bi-hand-thumbs-up"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2 2 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a10 10 0 0 0-.443.05 9.4 9.4 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111z" />
+                                </svg>
                             </span>
                             <span id="like-count">0</span>
                         </button>
@@ -156,12 +171,17 @@
         <div class="popup who-us-popup" id="who-us-popup">
             <span class="popup-close" id="who-us-popup-close">&times;</span>
             <div class="who-us-content">
-                <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo" class="who-us-logo" />
+                <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo"
+                    class="who-us-logo" />
                 <div class="who-us-text">
                     <h2>Quem Somos</h2>
                     <p>
-                        Somos o Amapá Zombies, um projeto que mistura a cultura do Amapá com a jogabilidade e a narrativa inspiradas em CoD Zombies.
-                        Criamos histórias imersivas e mapas exclusivos para Minecraft Java, trazendo para o jogo elementos clássicos do modo Zombies — como perks, mecânicas e muito mais — em cenários únicos ambientados no Amapá.
+                        Somos o Amapá Zombies, um projeto que mistura a cultura do Amapá
+                        com a jogabilidade e a narrativa inspiradas em CoD Zombies.
+                        Criamos histórias imersivas e mapas exclusivos para Minecraft
+                        Java, trazendo para o jogo elementos clássicos do modo Zombies —
+                        como perks, mecânicas e muito mais — em cenários únicos
+                        ambientados no Amapá.
                     </p>
                 </div>
             </div>
@@ -174,32 +194,47 @@
             <span class="popup-close" id="account-popup-close">&times;</span>
             <div class="account-guide">📌 Sua Conta</div>
             <div class="account-content">
-
                 <!-- Usuário -->
                 <label>Usuário</label>
                 <div class="account-input-wrapper">
-                    <input type="text" id="account-username-popup" class="account-input" value="{{ username or '' }}" data-username="{{ username or '' }}" readonly>
+                    <input type="text" id="account-username-popup" class="account-input" value="{{ username or '' }}"
+                        data-username="{{ username or '' }}" readonly />
                     <div id="account-username-tooltip-popup" class="tooltip">
-                        <p id="rule-length-popup">• Nome deve ter entre 5 e 20 caracteres</p>
-                        <p id="rule-special-popup">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
-                        <p id="rule-first-upper-popup">• Primeira letra deve ser maiúscula</p>
-                        <p id="rule-no-number-start-popup">• Não pode começar com número</p>
-                        <p id="rule-badwords-popup">• Não pode conter palavras ofensivas</p>
+                        <p id="rule-length-popup">
+                            • Nome deve ter entre 5 e 20 caracteres
+                        </p>
+                        <p id="rule-special-popup">
+                            • Não pode conter caracteres especiais ($, #, @, etc.)
+                        </p>
+                        <p id="rule-first-upper-popup">
+                            • Primeira letra deve ser maiúscula
+                        </p>
+                        <p id="rule-no-number-start-popup">
+                            • Não pode começar com número
+                        </p>
+                        <p id="rule-badwords-popup">
+                            • Não pode conter palavras ofensivas
+                        </p>
                     </div>
                 </div>
 
                 <!-- Email -->
                 <label>Email</label>
                 <div class="account-input-wrapper">
-                    <input type="email" id="account-email-popup" class="account-input" value="{{ email or '' }}" data-email="{{ email or '' }}" readonly>
+                    <input type="email" id="account-email-popup" class="account-input" value="{{ email or '' }}"
+                        data-email="{{ email or '' }}" readonly />
                     <div id="account-email-tooltip-popup" class="tooltip">
-                        <p id="rule-email-format-popup">• Email deve ser válido (ex: usuario@dominio.com)</p>
+                        <p id="rule-email-format-popup">
+                            • Email deve ser válido (ex: usuario@dominio.com)
+                        </p>
                     </div>
                 </div>
 
                 <!-- Senha -->
                 <label id="account-password-label">Senha</label>
-                <input type="password" id="account-password" class="account-input" value="{{ password_masked or '********' }}" data-password="{{ password_masked or '********' }}" readonly>
+                <input type="password" id="account-password" class="account-input"
+                    value="{{ password_masked or '********' }}" data-password="{{ password_masked or '********' }}"
+                    readonly />
             </div>
 
             <div class="account-buttons">
@@ -214,9 +249,14 @@
     <!-- Popup de confirmação de exclusão -->
     <div class="popup-overlay" id="delete-account-popup-overlay">
         <div class="popup delete-popup">
-            <p class="delete-popup-text">Tem certeza que deseja deletar sua conta? Esta ação não pode ser desfeita.</p>
+            <p class="delete-popup-text">
+                Tem certeza que deseja deletar sua conta? Esta ação não pode ser
+                desfeita.
+            </p>
             <div class="delete-popup-buttons">
-                <button id="confirm-delete-account" class="btn-red">Sim, quero deletar</button>
+                <button id="confirm-delete-account" class="btn-red">
+                    Sim, quero deletar
+                </button>
                 <button id="cancel-delete-account" class="btn-gray">Cancelar</button>
             </div>
         </div>
@@ -246,12 +286,14 @@
             <!-- Login -->
             <div class="auth-content" id="login-popup">
                 <h2 class="auth-title">ENTRAR</h2>
-                <input type="email" name="email" autocomplete="email" placeholder="Email: exemplo@email.com" class="auth-input" />
-                <input type="password" name="password" autocomplete="current-password" placeholder="Senha: ********" class="auth-input" />
+                <input type="email" name="email" autocomplete="email" placeholder="Email: exemplo@email.com"
+                    class="auth-input" />
+                <input type="password" name="password" autocomplete="current-password" placeholder="Senha: ********"
+                    class="auth-input" />
                 <button class="auth-btn">Entrar</button>
                 <p class="auth-switch">
                     Ainda sem uma conta?
-                    <span id="switch-to-register">Cadastrar-se</span><br><br>
+                    <span id="switch-to-register">Cadastrar-se</span><br /><br />
                 </p>
                 <p class="forgot-password">
                     <a href="#" id="forgot-password-link">Esqueceu sua senha?</a>
@@ -268,17 +310,28 @@
                         class="auth-input" />
                     <!-- Cadastro -->
                     <div class="username-tooltip" id="username-tooltip">
-                        <p id="rule-username-length">• Nome deve ter entre 5 e 20 caracteres</p>
-                        <p id="rule-username-special">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
-                        <p id="rule-username-first-upper">• Primeira letra deve ser maiúscula</p>
-                        <p id="rule-username-no-number-start">• Não pode começar com número</p>
-                        <p id="rule-username-badwords">• Não pode conter palavras ofensivas</p>
+                        <p id="rule-username-length">
+                            • Nome deve ter entre 5 e 20 caracteres
+                        </p>
+                        <p id="rule-username-special">
+                            • Não pode conter caracteres especiais ($, #, @, etc.)
+                        </p>
+                        <p id="rule-username-first-upper">
+                            • Primeira letra deve ser maiúscula
+                        </p>
+                        <p id="rule-username-no-number-start">
+                            • Não pode começar com número
+                        </p>
+                        <p id="rule-username-badwords">
+                            • Não pode conter palavras ofensivas
+                        </p>
                     </div>
                 </div>
 
                 <!-- Campo Email -->
                 <div class="input-wrapper">
-                    <input type="email" name="email" autocomplete="email" id="email" placeholder="Email: exemplo@email.com" class="auth-input" />
+                    <input type="email" name="email" autocomplete="email" id="email"
+                        placeholder="Email: exemplo@email.com" class="auth-input" />
                     <div class="email-tooltip" id="email-tooltip">
                         <p id="rule-email-format">
                             • Email deve ser válido (ex: usuario@dominio.com)
@@ -288,7 +341,8 @@
 
                 <!-- Campo Senha -->
                 <div class="input-wrapper">
-                    <input type="password" name="password" autocomplete="new-password" id="password" placeholder="Senha: ********" class="auth-input" />
+                    <input type="password" name="password" autocomplete="new-password" id="password"
+                        placeholder="Senha: ********" class="auth-input" />
                     <div class="password-tooltip" id="password-tooltip">
                         <p id="rule-password-length">• Mínimo de 8 caracteres</p>
                         <p id="rule-password-upper">
@@ -324,18 +378,13 @@
         <div id="forgot-password-popup" class="auth-popup">
             <span id="close-forgot-password" class="popup-close">&times;</span>
             <h2 class="auth-title">Recuperar Senha</h2>
-            <input 
-            type="email" 
-            id="forgot-password-email" 
-            class="auth-input" 
-            placeholder="Digite seu e-mail" 
-            />
+            <input type="email" id="forgot-password-email" class="auth-input" placeholder="Digite seu e-mail" />
             <button id="forgot-password-btn" class="auth-btn">
-            Enviar Link de Recuperação
+                Enviar Link de Recuperação
             </button>
-            <div id="forgot-password-loading" class="loading-overlay" style="display:none;">
-            <div class="spinner"></div>
-            Enviando...
+            <div id="forgot-password-loading" class="loading-overlay" style="display: none">
+                <div class="spinner"></div>
+                Enviando...
             </div>
         </div>
     </div>
@@ -360,7 +409,11 @@
 
     <script>
         if (window.location.search.includes("utm_")) {
-            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            const cleanUrl =
+                window.location.protocol +
+                "//" +
+                window.location.host +
+                window.location.pathname;
             window.history.replaceState({}, document.title, cleanUrl);
         }
     </script>
