@@ -1301,4 +1301,65 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .catch((err) => console.error("Erro ao dar Like:", err));
   });
+
+  // ===== POPUP PARCEIROS =====
+  const partnerOverlay = document.getElementById("partner-popup-overlay");
+
+  document.querySelectorAll(".parceiro").forEach(parceiro => {
+      parceiro.addEventListener("click", () => {
+          const file = parceiro.dataset.file;
+          const nome = parceiro.dataset.nome;
+          const descricao = parceiro.dataset.descricao;
+          const site = parceiro.dataset.site;
+          const instagram = parceiro.dataset.instagram;
+          const twitter = parceiro.dataset.twitter;
+
+          document.getElementById("partner-logo").src = `/static/images/parceiros/logo/${file}.png`;
+          document.getElementById("partner-nome").textContent = nome;
+          document.getElementById("partner-descricao").textContent = descricao;
+
+          // Função helper para mostrar ou esconder ícone
+          function toggleLink(id, url) {
+              const el = document.getElementById(id);
+              if (url && url.trim() !== "") {
+                  el.href = url;
+                  el.style.display = "flex"; // mostra o ícone
+              } else {
+                  el.style.display = "none"; // esconde o ícone
+              }
+          }
+
+          toggleLink("partner-site", site);
+          toggleLink("partner-instagram", instagram);
+          toggleLink("partner-twitter", twitter);
+
+          partnerOverlay.style.display = "flex";
+          setTimeout(() => partnerOverlay.classList.add("show"), 10);
+      });
+  });
+
+  document.getElementById("partner-popup-close").addEventListener("click", () => {
+      partnerOverlay.classList.remove("show");
+
+      // Espera animação e depois esconde
+      setTimeout(() => partnerOverlay.style.display = "none", 300);
+  });
+
+    // Fecha popup ao clicar no "X"
+  document.getElementById("partner-popup-close").addEventListener("click", () => {
+      closePartnerPopup();
+  });
+
+  // Fecha popup ao clicar fora do conteúdo
+  partnerOverlay.addEventListener("click", (e) => {
+      if (e.target === partnerOverlay) {
+          closePartnerPopup();
+      }
+  });
+
+  // Função de fechamento
+  function closePartnerPopup() {
+      partnerOverlay.classList.remove("show");
+      setTimeout(() => partnerOverlay.style.display = "none", 300); // espera animação
+  }
 });
