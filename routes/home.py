@@ -28,6 +28,7 @@ CARDS_FILE = os.path.join(DATA_DIR, "cards.json")
 CARDS_FOLDER = os.path.join(STATIC_DIR, "cards")
 BACKGROUND_FOLDER = os.path.join(STATIC_DIR, "background")
 COMMENTS_FILE = os.path.join(DATA_DIR, "comments.json")
+PARCEIROS_FILE = os.path.join(DATA_DIR, "parceiros.json")
 
 # ==========================
 # Funções auxiliares
@@ -145,6 +146,8 @@ def home():
         if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))
     ]
 
+    parceiros = load_parceiros()
+
     return render_template(
         "home.html",
         seo=seo,
@@ -154,7 +157,8 @@ def home():
         email=email,
         password_masked=password_masked,
         is_admin=is_admin,
-        slide_images=slide_images
+        slide_images=slide_images,
+        parceiros=parceiros
     )
 
 # ==========================
@@ -398,3 +402,31 @@ def like_card(filename):
         "likes": card_likes["likes"],
         "action": action
     })
+
+# ==========================
+# Parceiros
+# ==========================
+def load_parceiros():
+    """Carrega lista de parceiros do JSON."""
+    parceiros = load_json_file(PARCEIROS_FILE, default=[]) or []
+    result = []
+    for p in parceiros:
+        result.append({
+            "nome": p.get("nome", "Sem nome"),
+            "file": p.get("file", ""),  # novo campo
+            "descricao": p.get("descricao", ""),
+            "site": p.get("site", ""),
+            "instagram": p.get("instagram", ""),
+            "twitter": p.get("twitter", ""),
+            "email": p.get("email", ""),
+        })
+    return result
+
+
+def save_parceiros(parceiros):
+    """Salva lista de parceiros no JSON."""
+    try:
+        with open(PARCEIROS_FILE, "w", encoding="utf-8") as f:
+            json.dump(parceiros, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"Erro ao salvar parceiros: {e}")

@@ -390,7 +390,6 @@ header {
   background: white; /* garante fundo branco depois da Hero */
   padding: 50px 20px;
   text-align: center;
-  min-height: 100vh;
 }
 
 /* ================= CARDS ================= */
@@ -403,6 +402,7 @@ header {
 }
 
 .card {
+  cursor: pointer;
   position: relative;
   border-radius: 8px;
   overflow: hidden;
@@ -1152,6 +1152,165 @@ header {
   margin: 0 auto; /* centraliza horizontalmente */
 }
 
+/* ===== PARCEIROS ===== */
+.parceiros {
+  margin: 50px auto;
+  text-align: center;
+}
+
+.parceiros h2 {
+  font-family: 'Arial';
+  color: darkgreen;
+  font-size: 28px;
+  margin-top: 60px;
+  margin-bottom: 60px;
+}
+
+.parceiros-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  justify-content: center;
+  align-items: center;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.parceiro {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.parceiro:hover {
+  transform: scale(1.05);
+}
+
+.parceiro-bg {
+  width: 100%;
+  height: 180px;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Fundo borrado apenas no pseudo-elemento */
+.parceiro-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: inherit; /* puxa a mesma imagem inline */
+  background-size: cover;
+  background-position: center;
+  filter: blur(3px); /* só o fundo fica borrado */
+  z-index: 1;
+  border-radius: 12px;
+}
+
+/* Logo nítida acima */
+.parceiro-logo {
+  position: relative;
+  z-index: 2; /* acima do pseudo-elemento */
+  max-height: 100px;
+  max-width: 80%;
+  object-fit: contain;
+  filter: none; /* garante nitidez */
+}
+
+/* ===== POPUP PARCEIROS ===== */
+#partner-popup-overlay {
+    display: none; /* escondido por padrão */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 999999;
+
+    /* flexbox centralizado */
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Conteúdo do popup */
+.partner-popup {
+    background: #fff;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    padding: 20px;
+    position: relative;
+    text-align: center;
+    max-height: 90vh;
+    overflow-y: auto;
+
+    /* Força para aparecer acima de tudo */
+    z-index: 1000000;
+
+    /* Opcional: animação suave */
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Quando o overlay estiver visível, anima o popup */
+#partner-popup-overlay.show .partner-popup {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.partner-logo {
+    max-width: 180px;
+    margin-bottom: 15px;
+}
+
+.partner-content h2 {
+    margin-bottom: 10px;
+}
+
+#partner-descricao {
+  font-size: 20px;
+  text-align: justify;
+}
+
+#partner-social {
+  margin-top: 14px;
+  margin-bottom: 14px;
+}
+
+/* ===== LINKS DE PARCEIROS ===== */
+.partner-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* espaço entre os ícones */
+    margin-top: 15px;
+}
+
+/* Ícones apenas, sem fundo, cor controlada via CSS */
+.partner-links a.partner-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: darkgreen; /* cor dos ícones */
+    font-size: 0; /* remove texto se houver */
+    transition: color 0.3s;
+}
+
+.partner-links a.partner-link:hover {
+    color: green; /* hover dos ícones */
+}
+
+.partner-links a.partner-link .icon {
+    width: 32px;  /* tamanho do ícone */
+    height: 32px;
+    fill: currentColor; /* usa a cor definida no a.partner-link */
+}
+
 /* ================= FOOTER ================= */
 .footer {
   background-color: #f2f2f2; /* cinzento próximo do branco */
@@ -1203,7 +1362,7 @@ header {
 /* MODO ESCURO                   */
 /* ============================= */
 body.dark-mode {
-  background: #121212; /* fundo geral escuro */
+  background: #1e1e1e; /* fundo geral escuro */
   color: #f0f0f0; /* texto mais claro */
 }
 
@@ -1257,6 +1416,10 @@ body.dark-mode footer {
   color: #f0f0f0;
 }
 
+body.dark-mode .parceiros {
+  background: #1e1e1e;
+}
+
 /* Ícones sociais no footer - inverte as cores */
 body.dark-mode footer img {
   filter: invert(1);
@@ -1291,6 +1454,19 @@ body.dark-mode .delete-popup-text {
 body.dark-mode .like-btn.liked .like-icon svg {
   fill: white; /* preenchido verde */
   stroke: white; /* borda continua */
+}
+
+body.dark-mode .partner-popup {
+    background: #1e1e1e;
+    border-color: #555;
+}
+
+body.dark-mode .parceiros h2 {
+  color: white;
+}
+
+body.dark-mode .partner-links a.partner-link {
+  color: white;
 }
 
 body.dark-mode #comment-input {
