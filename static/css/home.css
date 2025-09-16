@@ -1181,6 +1181,14 @@ header {
   transition: transform 0.3s ease;
 }
 
+.parceiros-line {
+  color: darkgreen;
+  font-family: 'Arial';
+  font-size: 30px;
+  margin-top: 60px;
+  margin-bottom: 60px;
+}  
+
 .parceiro:hover {
   transform: scale(1.05);
 }
@@ -1229,9 +1237,6 @@ header {
     height: 100%;
     background: rgba(0,0,0,0.6);
     z-index: 999999;
-
-    /* flexbox centralizado */
-    display: none;
     justify-content: center;
     align-items: center;
 }
@@ -1752,6 +1757,29 @@ body.dark-mode #comment-submit {
     font-size: 24px; /* menor para caber */
     align-self: flex-end; /* botão alinhado à direita */
     padding-bottom: 8px;
+  }
+
+  .parceiros h2 {
+    font-size: 16px;
+  }
+
+  .parceiros-line {
+    font-size: 14px;
+    color: darkgreen;
+    font-family: 'Arial';
+  }  
+
+  .parceiros-container {
+    max-width: 370px;
+  }
+  /* Logo nítida acima */
+  .parceiro-logo {
+    max-width: 90%;
+  }
+
+  /* Conteúdo do popup */
+  .partner-popup {
+      width: 80%;
   }
 }
 
