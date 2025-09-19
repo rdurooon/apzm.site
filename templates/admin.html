@@ -45,6 +45,18 @@
                     <li>Alterar Usuários</li>
                 </ul>
             </li>
+            <li>
+                <div class="menu-item" id="partners">
+                    <span>Parceiros</span>
+                    <span class="arrow">&#9654;</span>
+                </div>
+                <ul class="submenu" id="partners-submenu">
+                    <li class="add-partner">Adicionar</li>
+                    <li class="remove-partner">Remover</li>
+                    <li class="edit-partner">Editar</li>
+                    <li class="reorder-partner">Reorganizar</li>
+                </ul>
+            </li>
             <!-- Botão Voltar para Home -->
             <div class="sidebar-footer">
                 <a href="{{ url_for('home.home') }}" class="back-home-btn">Voltar para página principal</a>
@@ -57,6 +69,8 @@
         <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Logo Amapá Zombies"
             class="admin-logo" />
         <h1 class="admin-title">Página da Administração</h1>
+
+        <div id="admin-content"></div>
     </div>
 
     <div id="users-list-container" class="users-list-container"></div>
