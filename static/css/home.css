@@ -1341,6 +1341,72 @@ header {
   transform: scale(1.2);
 }
 
+/* Links extras do footer */
+.footer-links {
+  margin-top: 15px;
+}
+
+.footer-text {
+  display: inline-block;
+  margin: 0 10px;
+  color: darkgreen;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+
+.footer-text:hover {
+  color: green; /* destaque ao passar o mouse */
+}
+
+/* Popup FAQ */
+.faq-popup {
+  display: none; /* oculto inicialmente */
+  position: fixed;
+  z-index: 99999;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+}
+
+.faq-content {
+  background: #fff;
+  width: 60%;
+  max-width: 600px;
+  margin: 5% auto; /* diminuí um pouco para ganhar espaço */
+  padding: 20px;
+  border-radius: 10px;
+  text-align: left;
+  position: relative;
+
+  /* Limite de altura e rolagem */
+  max-height: 80vh;   /* ocupa no máximo 80% da altura da tela */
+  overflow-y: auto;   /* ativa scroll vertical quando necessário */
+}
+
+.faq-content h2 {
+  margin-top: 0;
+}
+
+.faq-content p {
+  font-weight: normal;
+  text-align: justify;
+}
+
+.close {
+  position: absolute;
+  top: 10px; right: 15px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+}
+.close:hover {
+  color: #ff0000;
+}
+
+
 /* Botão do modo noturno */
 .dark-mode-btn {
   position: absolute;
@@ -1385,7 +1451,8 @@ body.dark-mode .content {
 /* Popups brancos */
 body.dark-mode .auth-popup,
 body.dark-mode .popup,
-body.dark-mode .account-popup {
+body.dark-mode .account-popup,
+body.dark-mode .faq-content {
   background: #1e1e1e;
   color: #f0f0f0;
   border-color: #444;
@@ -1450,7 +1517,9 @@ body.dark-mode .forgot-password,
 body.dark-mode #login-link,
 body.dark-mode #popup-comments h3,
 body.dark-mode #forgot-password-link,
-body.dark-mode .delete-popup-text {
+body.dark-mode .delete-popup-text,
+body.dark-mode .parceiros-line,
+body.dark-mode .footer-text {
   color: white !important; /* antes eram darkgreen */
   border-color: white !important;
   stroke: white !important; /* ícones de like */

@@ -1362,4 +1362,23 @@ document.addEventListener("DOMContentLoaded", () => {
       partnerOverlay.classList.remove("show");
       setTimeout(() => partnerOverlay.style.display = "none", 300); // espera animação
   }
+
+  const faqBtn = document.getElementById("faq-btn");
+  const faqPopup = document.getElementById("faq-popup");
+  const closeFaq = document.getElementById("close-faq");
+
+  faqBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    faqPopup.style.display = "block";
+  });
+
+  closeFaq.addEventListener("click", () => {
+    faqPopup.style.display = "none";
+  });
+
+  window.addEventListener("click", (e) => {
+    if (e.target === faqPopup) {
+      faqPopup.style.display = "none";
+    }
+  });
 });

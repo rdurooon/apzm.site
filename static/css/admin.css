@@ -689,6 +689,100 @@ input:checked + .slider:before {
   transform: rotate(-10deg);
 }
 
+.partner-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 600px;
+  padding: 20px;
+  background: #fff;
+  border: 2px solid darkgreen;
+  border-radius: 10px;
+}
+
+.form-title {
+  color: darkgreen;
+  text-align: center;
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+}
+
+.upload-box {
+  position: relative;
+  border: 2px dashed darkgreen;
+  border-radius: 10px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  cursor: pointer;
+  color: darkgreen;
+  font-weight: bold;
+}
+
+.upload-box .plus {
+  font-size: 48px;
+  color: darkgreen;
+}
+
+.upload-box p {
+  margin-top: 8px;
+  font-size: 14px;
+  color: darkgreen;
+}
+
+.upload-box img.preview {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.hidden {
+  display: none;
+}
+
+#partner-desc {
+  border: 2px solid darkgreen;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 120px;
+  font-size: 16px;
+  resize: vertical;
+}
+
+.links label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: darkgreen;
+}
+
+.links input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.btn-save-partner {
+  background: darkgreen;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.btn-save-partner:hover {
+  background: #006400;
+}
+
+
 /* ==============================
    Responsividade: Tablets e Celulares
    ============================== */

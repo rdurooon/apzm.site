@@ -1065,3 +1065,112 @@ async function updateBadge(card, badge, badgeTime, interval = null) {
     }
   }
 }
+
+// ===========================
+// Elementos do DOM - Parceiros
+// ===========================
+const partnersItem = document.getElementById("partners");
+const partnersSubmenu = document.getElementById("partners-submenu");
+
+// ===========================
+// Função: Toggle Submenu Parceiros
+// ===========================
+function togglePartnersSubmenu() {
+  const isVisible = partnersSubmenu.style.display === "block";
+  partnersSubmenu.style.display = isVisible ? "none" : "block";
+  partnersItem.classList.toggle("open");
+}
+
+// ===========================
+// Eventos de clique - Parceiros
+// ===========================
+partnersItem.addEventListener("click", () => {
+  togglePartnersSubmenu();
+});
+
+// Selecionando subguias
+const addPartnerItem = partnersSubmenu.querySelector(".add-partner");
+const removePartnerItem = partnersSubmenu.querySelector(".remove-partner");
+const editPartnerItem = partnersSubmenu.querySelector(".edit-partner");
+const reorderPartnerItem = partnersSubmenu.querySelector(".reorder-partner");
+
+// ===========================
+// Ações de exemplo (ainda placeholders)
+// ===========================
+addPartnerItem.addEventListener("click", () => {
+  limparConteudoPrincipal();
+  fecharSidebar();
+
+  const main = document.querySelector("admin-content");
+
+  main.innerHTML = `
+    <div class="partner-form" style="display: flex;">
+      <h2 class="form-title">Adicionar Parceiro</h2>
+
+      <!-- Upload Logo -->
+      <label class="upload-box">
+        <input type="file" accept="image/*" hidden id="partner-logo">
+        <span class="plus">+</span>
+        <img id="preview-logo" class="preview hidden" />
+        <p>Adicionar Logo</p>
+      </label>
+
+      <!-- Upload Fundo -->
+      <label class="upload-box">
+        <input type="file" accept="image/*" hidden id="partner-bg">
+        <span class="plus">+</span>
+        <img id="preview-bg" class="preview hidden" />
+        <p>Adicionar Fundo</p>
+      </label>
+
+      <!-- Descrição -->
+      <textarea id="partner-desc" placeholder="Descrição do parceiro..."></textarea>
+
+      <!-- Links -->
+      <div class="links">
+        <label>Website: <input type="url" id="partner-site" placeholder="https://"></label>
+        <label>Instagram: <input type="url" id="partner-insta" placeholder="https://instagram.com/..."></label>
+        <label>Twitter/X: <input type="url" id="partner-twitter" placeholder="https://x.com/..."></label>
+      </div>
+
+      <button class="btn-save-partner">Salvar</button>
+    </div>
+  `;
+
+  // Função de preview
+  function handlePreview(inputId, previewId) {
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+
+    input.addEventListener("change", () => {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          preview.classList.remove("hidden");
+          preview.previousElementSibling.style.display = "none"; // esconde o "+"
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  handlePreview("partner-logo", "preview-logo");
+  handlePreview("partner-bg", "preview-bg");
+});
+
+removePartnerItem.addEventListener("click", () => {
+  limparConteudoPrincipal();
+  fecharSidebar();
+});
+
+editPartnerItem.addEventListener("click", () => {
+  limparConteudoPrincipal();
+  fecharSidebar();
+});
+
+reorderPartnerItem.addEventListener("click", () => {
+  limparConteudoPrincipal();
+  fecharSidebar();
+});
