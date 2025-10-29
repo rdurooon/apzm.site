@@ -41,6 +41,11 @@
             is_admin: {{ 'true' if is_admin else 'false' }}
       };
     </script>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay-screen">
+        <div class="spinner-loading"></div>
+    </div>
+
     <header class="header">
         <div class="menu-btn" id="menu-btn">☰</div>
         <button id="dark-mode-toggle" class="dark-mode-btn" aria-label="Alternar modo noturno">
@@ -78,7 +83,7 @@
         </div>
         <div class="sidebar-content">
             <button id="btn-user-account" class="sidebar-guide">Sua Conta</button>
-            <button id="btn-who-us" class="sidebar-guide">Quem somos</button>
+            <button id="btn-who-us" class="sidebar-guide">Sobre nós</button>
         </div>
     </div>
 
@@ -417,7 +422,7 @@
             <div class="partner-content">
                 <h2 id="partner-nome">Nome do Parceiro</h2>
                 <p id="partner-descricao">Descrição do parceiro...</p>
-                <h3 id="partner-social">Redes socias</h3>
+                <h3 id="partner-social">Redes sociais</h3>
                 <div class="partner-links">
                     <!-- Site -->
                     <a href="#" id="partner-site" target="_blank" class="partner-link">
@@ -476,13 +481,13 @@
             <h2>FAQ - Perguntas Frequentes</h2>
 
             <h3>1 - O que é Amapá Zombies?</h3>
-            <p>Amapá Zombies é um projeto que uni elementos do CoD Zombies com o estado do Amapá, trazendo historias contando a narrativa da historia completa do projeto e com mapas dentro do Minecraft para a imersão do jogador com a historia.</p>
+            <p>Amapá Zombies é um projeto que une elementos do CoD Zombies com o estado do Amapá, trazendo histórias contando a narrativa da história completa do projeto e com mapas dentro do Minecraft para a imersão do jogador na história.</p>
 
             <h3>2 - Como faço para baixar um conteúdo?</h3>
-            <p>Ao acessar o site, existe cards dos mapas/historias. Selecione aquele que lhe interessar e clique em "Ler historia" para baixar um arquivo PDF referente àquela história e/ou "Baixar mapa" para baixar o mapa referente àquela história.</p>
+            <p>Ao acessar o site, existem cards dos mapas/histórias. Selecione aquele que lhe interessar e clique em "Ler história" para baixar um arquivo PDF referente àquela história e/ou "Baixar mapa" para baixar o mapa referente a ela.</p>
 
             <h3>3 - O conteúdo do projeto é pago?</h3>
-            <p>Não. Todo conteúdo do projeto Amapá Zombies é gratuito ao público. Você pode baixar uma história ou mapa de forma gratuita através desse site.</p>
+            <p>Não. Todo conteúdo do projeto Amapá Zombies é gratuito para o público. Você pode baixar uma história ou mapa de forma gratuita através desse site.</p>
 
             <h3>4 - Quais versões do Minecraft são suportadas?</h3>
             <p>Os mapas do projeto são feitos para versões específicas do Minecraft Java Edition. Sempre confira a descrição do mapa antes de baixar para garantir compatibilidade.</p>
@@ -491,22 +496,22 @@
             <p>Sim. Os mapas podem ser jogados em modo multiplayer, desde que configurados em um servidor compatível com a versão do mapa.</p>
 
             <h3>6 - Posso redistribuir o conteúdo do projeto?</h3>
-            <p>É estritamente proibido você redistribuir o conteúdo oferecido pelo projeto. Todo conteúdo deve vir de fontes confiáveis ao projeto (redes sociais, parceiras, etc.).</p>
+            <p>É estritamente proibido a redistribuição do conteúdo oferecido pelo projeto. Todo conteúdo deve vir de fontes confiáveis ligadas ao projeto (redes sociais, parceiras, etc.).</p>
 
             <h3>7 - Posso divulgar o projeto?</h3>
-            <p>Você tem a liberdade de compartilhar o projeto Amapá Zombies para qualquer pessoa, desde que não haja spam ou divulgação alheia de nossa imagem.</p>
+            <p>Você tem a liberdade de compartilhar o projeto Amapá Zombies para qualquer pessoa, desde que não haja spam ou uso indevido de nossa imagem.</p>
 
             <h3>8 - Preciso criar uma conta para comentar?</h3>
             <p>Sim. É necessário que você tenha uma conta e esteja logado na mesma para realizar a ação de comentar e/ou curtir um mapa/história.</p>
 
             <h3>9 - É seguro inserir meus dados?</h3>
-            <p>Os únicos dados salvos são seu nome de usuário, email e senha. Todos eles criptografados e armazenados fora do site. Apenas não insira dados sensíveis em seu nome de usuário ou senha.</p>
+            <p>Os únicos dados salvos são seu nome de usuário, email e senha. Todos criptografados e armazenados fora do site. Apenas não insira dados sensíveis em seu nome de usuário ou senha.</p>
 
             <h3>10 - Terei suporte caso encontre algum erro?</h3>
             <p>Sim. Você pode relatar erros ou bugs através de nossas redes sociais ou pela aba de contato no site. Tentaremos corrigir os problemas o mais rápido possível.</p>
 
             <h3>11 - O projeto recebe atualizações?</h3>
-            <p>Sim. Novas historias e mapas são lançados ao longo do tempo. Fique atento às novidades no site e em nossas redes sociais.</p>
+            <p>Sim. Novas histórias e mapas são lançados ao longo do tempo. Fique atento às novidades no site e em nossas redes sociais.</p>
 
             <h3>12 - Como posso apoiar o projeto?</h3>
             <p>Você pode ajudar divulgando o projeto, dando feedback sobre as histórias e mapas, e acompanhando nossas redes sociais. Todo apoio da comunidade é bem-vindo.</p>
