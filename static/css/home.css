@@ -392,6 +392,38 @@ header {
   text-align: center;
 }
 
+/* ================= SORT BAR ================= */
+.cards-sort-bar {
+  width: 100%;
+  max-width: 1200px;
+  margin: 5px auto;
+  margin-right: 15px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+
+.cards-sort-bar label {
+  color: darkgreen;
+  font-weight: bold;
+}
+
+.cards-sort-bar select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 2px solid darkgreen;
+  background: white;
+  color: darkgreen;
+  cursor: pointer;
+}
+
+.cards-sort-bar select:focus {
+  outline: none;
+  box-shadow: 0 0 6px rgba(0, 100, 0, 0.4);
+}
+
 /* ================= CARDS ================= */
 .cards-container {
   display: grid;
@@ -1523,6 +1555,16 @@ body.dark-mode .footer-text {
   color: white !important; /* antes eram darkgreen */
   border-color: white !important;
   stroke: white !important; /* ícones de like */
+}
+
+body.dark-mode .cards-sort-bar label {
+  color: white;
+}
+
+body.dark-mode .cards-sort-bar select {
+  border: 2px solid white;
+  background: #1e1e1e;
+  color: white;
 }
 
 body.dark-mode .like-btn.liked .like-icon svg {

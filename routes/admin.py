@@ -83,7 +83,7 @@ def list_links():
 
     for card in cards:
         file = card["file"]
-        card_links = links_data.get(file, {})
+        card_links = links_data.get(file, {}) # type: ignore
         card["link_historia"] = card_links.get("historia", "")
         card["link_mapa"] = card_links.get("mapa", "")
 
@@ -130,14 +130,14 @@ def add_map_story():
         return jsonify({"success": False, "error": "Faltando descrição ou imagem do card"})
 
     # Salva imagem do card
-    card_filename = secure_filename(card_image.filename)
+    card_filename = secure_filename(card_image.filename) # type: ignore
     card_path = os.path.join(CARD_DIR, card_filename)
     card_image.save(card_path)
 
     # Salva imagem do título (ou usa o mesmo arquivo do card)
     title_image = request.files.get("title_image")
     if title_image:
-        title_filename = secure_filename(title_image.filename)
+        title_filename = secure_filename(title_image.filename) # type: ignore
         title_path = os.path.join(TITLE_DIR, title_filename)
         title_image.save(title_path)
     else:
