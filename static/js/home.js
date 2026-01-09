@@ -1601,4 +1601,42 @@ document.addEventListener("DOMContentLoaded", () => {
       faqPopup.style.display = "none";
     }
   });
+
+  // ================= SORT DOS CARDS (CLIENT-SIDE) =================
+  const sortSelect = document.getElementById("sort-select");
+  const cardsContainer = document.querySelector(".cards-container");
+
+  // Guarda a ordem original vinda do servidor
+  const originalCardsOrder = Array.from(cardsContainer.children);
+
+  sortSelect.addEventListener("change", () => {
+    const value = sortSelect.value;
+
+    let cards = Array.from(originalCardsOrder);
+
+    if (value === "az") {
+      cards.sort((a, b) =>
+        a.dataset.title.localeCompare(b.dataset.title, "pt-BR")
+      );
+    }
+
+    if (value === "za") {
+      cards.sort((a, b) =>
+        b.dataset.title.localeCompare(a.dataset.title, "pt-BR")
+      );
+    }
+
+    if (value === "recent") {
+      // Mais recente = últimos do servidor primeiro
+      cards.reverse();
+    }
+
+    if (value === "default") {
+      cards = [...originalCardsOrder];
+    }
+
+    // Re-renderiza os cards
+    cardsContainer.innerHTML = "";
+    cards.forEach((card) => cardsContainer.appendChild(card));
+  });
 });

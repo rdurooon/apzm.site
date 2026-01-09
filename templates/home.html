@@ -96,6 +96,16 @@
 
     <!-- Conteúdo abaixo -->
     <main class="content">
+        <!-- Barra de ordenação -->
+        <div class="cards-sort-bar">
+        <label for="sort-select">Ordenar por:</label>
+        <select id="sort-select">
+            <option value="default">Padrão</option>
+            <option value="recent">Mais recente</option>
+            <option value="az">Nome (A–Z)</option>
+            <option value="za">Nome (Z–A)</option>
+        </select>
+        </div>
         <!-- Cards Dinâmicos -->
         <div class="cards-container">
             {% for card in cards %}
