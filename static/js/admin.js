@@ -113,39 +113,85 @@ async function listarUsuarios() {
 const alterarUsersItem = usersSubmenu.querySelector("li:last-child"); // "Alterar Usuários"
 
 // ===========================
-// Função: Criar popup rápido customizado
+// Função: Criar popup rápido customizado (Toast)
 // ===========================
-function showQuickWarning(message, color = "#ff5555") {
-  let popup = document.getElementById("quick-warning");
-  if (!popup) {
-    popup = document.createElement("div");
-    popup.id = "quick-warning";
-    popup.style.position = "fixed";
-    popup.style.top = "20px";
-    popup.style.left = "50%";
-    popup.style.transform = "translateX(-50%)";
-    popup.style.background = color;
-    popup.style.color = "white";
-    popup.style.padding = "12px 20px";
-    popup.style.borderRadius = "8px";
-    popup.style.boxShadow = "0 5px 15px rgba(0,0,0,0.3)";
-    popup.style.zIndex = "9999";
-    popup.style.opacity = "0";
-    popup.style.transition = "opacity 0.5s";
-    document.body.appendChild(popup);
-  }
-  popup.textContent = message;
-  popup.style.background = color;
-  popup.style.display = "block";
+function showQuickWarning(message, type = "error") {
+  const toastContainer = document.getElementById("toast-container") || createToastContainer();
+  const toastId = "toast-" + Date.now();
+  
+  const toastEl = document.createElement("div");
+  toastEl.id = toastId;
+  toastEl.className = `toast toast-${type}`;
+  toastEl.setAttribute("role", "alert");
+  
+  const icons = {
+    success: "✓",
+    error: "✕",
+    warning: "⚠",
+    info: "ℹ"
+  };
+  
+  toastEl.innerHTML = `
+    <span class="toast-icon">${icons[type] || icons.error}</span>
+    <span class="toast-message">${escapeHtmlAdmin(message)}</span>
+    <button class="toast-close" aria-label="Fechar notificação">×</button>
+  `;
+  
+  toastContainer.appendChild(toastEl);
+  
+  // Trigger animação de entrada
   setTimeout(() => {
-    popup.style.opacity = "1";
+    toastEl.classList.add("show");
   }, 10);
-  setTimeout(() => {
-    popup.style.opacity = "0";
+  
+  // Fechar pelo botão
+  toastEl.querySelector(".toast-close").addEventListener("click", () => {
+    removeToastAdmin(toastId);
+  });
+  
+  // Fechar automaticamente após 3.5s
+  const autoCloseTimer = setTimeout(() => {
+    removeToastAdmin(toastId);
+  }, 3500);
+  
+  // Remover timer se o toast for fechado manualmente
+  toastEl.addEventListener("transitionend", () => {
+    if (!toastEl.classList.contains("show")) {
+      clearTimeout(autoCloseTimer);
+      toastEl.remove();
+    }
+  });
+}
+
+function createToastContainer() {
+  const container = document.createElement("div");
+  container.id = "toast-container";
+  container.className = "toast-container";
+  document.body.appendChild(container);
+  return container;
+}
+
+function removeToastAdmin(toastId) {
+  const toastEl = document.getElementById(toastId);
+  if (toastEl) {
+    toastEl.classList.remove("show");
     setTimeout(() => {
-      popup.style.display = "none";
-    }, 500);
-  }, 2000);
+      if (toastEl && toastEl.parentNode) {
+        toastEl.remove();
+      }
+    }, 300);
+  }
+}
+
+function escapeHtmlAdmin(text) {
+  const map = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char]);
 }
 
 // ===========================
@@ -307,9 +353,9 @@ async function alterarUsuarios() {
       // ===========================
       btnPromote.addEventListener("click", async () => {
         if (btnPromote.disabled)
-          return showQuickWarning("Usuário já é admin!", "#3498db");
+          return showQuickWarning("Usuário já é admin!", "info");
         await fetch(`/admin/promote/${user.id}`, { method: "POST" });
-        showQuickWarning(`${user.username} promovido a admin!`, "#3498db");
+        showQuickWarning(`${user.username} promovido a admin!`, "success");
         alterarUsuarios(); // refresh
       });
 
@@ -320,13 +366,13 @@ async function alterarUsuarios() {
         if (user.username === loggedInUser) {
           return showQuickWarning(
             "Você não pode remover seu próprio admin!",
-            "#e74c3c"
+            "error"
           );
         }
         if (btnDemote.disabled)
-          return showQuickWarning("Usuário não é admin!", "#e74c3c");
+          return showQuickWarning("Usuário não é admin!", "error");
         await fetch(`/admin/demote/${user.id}`, { method: "POST" });
-        showQuickWarning(`${user.username} removido de admin!`, "#e74c3c");
+        showQuickWarning(`${user.username} removido de admin!`, "error");
         alterarUsuarios(); // refresh
       });
 
@@ -337,14 +383,14 @@ async function alterarUsuarios() {
         if (user.username === loggedInUser) {
           return showQuickWarning(
             "Você não pode deletar sua própria conta!",
-            "#e74c3c"
+            "error"
           );
         }
         const confirmDelete = await showDeletePopup(user.username);
         if (confirmDelete) {
           await fetch(`/admin/delete/${user.id}`, { method: "DELETE" });
           card.remove();
-          showQuickWarning(`${user.username} deletado!`, "#e74c3c");
+          showQuickWarning(`${user.username} deletado!`, "success");
         }
       });
 
@@ -448,7 +494,7 @@ saveMapStoryBtn.addEventListener("click", async () => {
   const cardImgEl = cardPlaceholder.querySelector("img");
 
   if (!cardImgEl) {
-    showQuickWarning("Selecione a imagem do card!", "darkorange");
+    showQuickWarning("Selecione a imagem do card!", "warning");
     return;
   }
 
@@ -456,7 +502,7 @@ saveMapStoryBtn.addEventListener("click", async () => {
   if (!titleImgEl) {
     showQuickWarning(
       "Título não enviado, usando imagem do card como título.",
-      "darkorange"
+      "warning"
     );
     // Cria temporariamente uma referência à imagem do card
     const img = document.createElement("img");
@@ -472,7 +518,7 @@ saveMapStoryBtn.addEventListener("click", async () => {
     .getElementById("add-popup-description")
     .value.trim();
   if (!description) {
-    showQuickWarning("Preencha a descrição!", "darkorange");
+    showQuickWarning("Preencha a descrição!", "warning");
     return;
   }
 
@@ -489,7 +535,7 @@ saveMapStoryBtn.addEventListener("click", async () => {
 
     const data = await res.json();
     if (data.success) {
-      showQuickWarning("Mapa/História salvo com sucesso!", "darkgreen");
+      showQuickWarning("Mapa/História salvo com sucesso!", "success");
       addPopupOverlay.classList.remove("show");
 
       // Limpar popup
@@ -499,11 +545,11 @@ saveMapStoryBtn.addEventListener("click", async () => {
       titlePlaceholder.innerHTML =
         '<span>+</span><div class="tooltip">Inserir título</div>';
     } else {
-      showQuickWarning("Erro ao salvar!", "red");
+      showQuickWarning("Erro ao salvar!", "error");
     }
   } catch (err) {
     console.error(err);
-    showQuickWarning("Erro ao salvar!", "red");
+    showQuickWarning("Erro ao salvar!", "error");
   }
 });
 
@@ -599,9 +645,9 @@ async function removerCards() {
           const data = await resp.json();
           if (data.success) {
             div.remove();
-            showQuickWarning(`Card ${data.card_name} removido!`, "darkred");
+            showQuickWarning(`Card ${data.card_name} removido!`, "success");
           } else {
-            showQuickWarning(`Erro: ${data.error}`, "#e74c3c");
+            showQuickWarning(`Erro: ${data.error}`, "error");
           }
         }
       });
@@ -610,7 +656,7 @@ async function removerCards() {
     });
   } catch (err) {
     console.error("Erro ao listar/remover cards:", err);
-    showQuickWarning("Erro ao carregar cards!", "#e74c3c");
+    showQuickWarning("Erro ao carregar cards!", "error");
   }
 }
 
@@ -681,12 +727,12 @@ async function reorganizarCards() {
             `Card ${card.title} ${
               !currentlyActive ? "marcado como 'Novo!'" : "removido de 'Novo!'"
             }`,
-            "green"
+            "success"
           );
         } catch (err) {
           console.error("Erro ao atualizar badge Novo!", err);
           badgeBtn.classList.toggle("active", currentlyActive);
-          showQuickWarning("Erro ao atualizar badge Novo!", "red");
+          showQuickWarning("Erro ao atualizar badge Novo!", "error");
         }
       });
 
@@ -743,11 +789,11 @@ async function reorganizarCards() {
           });
           const data = await res.json();
           if (!data.success) {
-            showQuickWarning("Erro ao salvar visibilidade!", "red");
+            showQuickWarning("Erro ao salvar visibilidade!", "error");
           }
         } catch (err) {
           console.error("Erro ao salvar visibilidade:", err);
-          showQuickWarning("Erro de rede ao salvar visibilidade.", "red");
+          showQuickWarning("Erro de rede ao salvar visibilidade.", "error");
         }
       });
 
@@ -841,13 +887,13 @@ async function salvarOrdemCards() {
 
     const data = await res.json();
     if (data.success) {
-      showQuickWarning("Alterações salvas com sucesso!", "green");
+      showQuickWarning("Alterações salvas com sucesso!", "success");
     } else {
-      showQuickWarning("Erro ao salvar alterações!", "red");
+      showQuickWarning("Erro ao salvar alterações!", "error");
     }
   } catch (err) {
     console.error("Erro ao salvar ordem:", err);
-    showQuickWarning("Erro de rede ao salvar.", "red");
+    showQuickWarning("Erro de rede ao salvar.", "error");
   }
 }
 

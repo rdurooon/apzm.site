@@ -1,7 +1,5 @@
 # 🧟‍♂️ Amapá Zombies
 
-🌟 **Aviso:** O site está quase pronto para lançamento! Todo o conteúdo é propriedade do **Amapá Zombies**. **Proibida a reprodução sem autorização.**
-
 Acesse o site oficial: [🌐 amapazombies.com.br](https://amapazombies.com.br)
 
 ---
@@ -10,7 +8,7 @@ Acesse o site oficial: [🌐 amapazombies.com.br](https://amapazombies.com.br)
 
 **Amapá Zombies** é um projeto que envolve zumbis com o Amapá. O site é dedicado a ajudar os fãs do projeto a se aventurar pelas historias e mapas. Esses são os conteúdos presentes no site:
 
-- 🃏 **Cards de Mapas e Histórias**  
+- 🃏 **Cards de Mapas/Histórias**  
   Explore mapas e histórias com popups detalhados. Clique nos cards para descobrir imagens, títulos e descrições exclusivas.
 
 - 🎨 **Visual e Animações**  
@@ -47,7 +45,6 @@ Acesse o site oficial: [🌐 amapazombies.com.br](https://amapazombies.com.br)
 
 ## 🔧 Status do Projeto
 
-- O site está **quase pronto** para lançamento público!  
 - Backend completo para login, registro e gerenciamento de contas.  
 - Layout responsivo finalizado com animações suaves.  
 - Últimos ajustes de conteúdo e performance em andamento.
@@ -68,5 +65,3 @@ Acesse o site oficial: [🌐 amapazombies.com.br](https://amapazombies.com.br)
 - Wattpad: [AmapaZombies](https://wattpad.com/user/AmapaZombies)  
 
 ---
-
-✨ **Prepare-se! O universo de Amapá Zombies está chegando para você de forma interativa e imersiva!**

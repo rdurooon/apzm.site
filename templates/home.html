@@ -2,81 +2,94 @@
 <html lang="pt-br">
 
 <head>
+    <!-- Metadados básicos -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}" />
-    <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{{url_for('static', filename='css/home.css')}}" />
-    <script src="{{url_for('static', filename='js/home.js')}}" defer></script>
-
+    
+    <!-- SEO e metadados -->
     <title>{{ seo.title }}</title>
     <meta name="description" content="{{ seo.description }}" />
     <meta name="keywords" content="{{ seo.keywords }}" />
-
-    <!-- Open Graph (Facebook, WhatsApp, Discord, Instagram, etc.) -->
+    
+    <!-- Open Graph (redes sociais) -->
     <meta property="og:title" content="{{ seo.title }}" />
     <meta property="og:description" content="{{ seo.description }}" />
     <meta property="og:image" content="{{ url_for('static', filename='images/share_banner.jpg', _external=True) }}" />
     <meta property="og:url" content="https://amapazombies.com.br/" />
     <meta property="og:type" content="website" />
-
+    <meta property="og:logo" content="{{ url_for('static', filename='images/icon.png', _external=True) }}" />
+    
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{{ seo.title }}" />
     <meta name="twitter:description" content="{{ seo.description }}" />
     <meta name="twitter:image" content="{{ url_for('static', filename='images/share_banner.jpg', _external=True) }}" />
-
-    <meta property="og:logo" content="{{ url_for('static', filename='images/icon.png', _external=True) }}" />
+    
+    <!-- Fontes -->
+    <link href="https://fonts.googleapis.com/css2?family=Nosifer&display=swap" rel="stylesheet" />
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}" />
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/home.js') }}" defer></script>
 </head>
 
 <body>
+    <!-- Dados globais para o JavaScript -->
     <script>
         const slideImages = JSON.parse('{{ slide_images | tojson | safe }}');
         let IS_LOGGED_IN = {{ 'true' if logged_in else 'false' }};
-
         const LOGGED_USER = {
             username: "{{ username | escape }}",
             email: "{{ email | escape }}",
             password_masked: "{{ password_masked | escape }}",
             is_admin: {{ 'true' if is_admin else 'false' }}
-      };
+        };
     </script>
-    <!-- Loading Overlay -->
+    
+    <!-- Overlay de carregamento -->
     <div id="loading-overlay-screen">
         <div class="spinner-loading"></div>
     </div>
 
+    <!-- ==================== HEADER ==================== -->
     <header class="header">
+        <!-- Botão do menu hambúrguer -->
         <div class="menu-btn" id="menu-btn">☰</div>
+        
+        <!-- Botão para alternar modo escuro -->
         <button id="dark-mode-toggle" class="dark-mode-btn" aria-label="Alternar modo noturno">
             <svg id="dark-mode-icon" xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24">
-                <!-- Metade preenchida -->
                 <circle cx="12" cy="12" r="10" fill="white" stroke="black" stroke-width="2" />
                 <path d="M12 2 A10 10 0 0 1 12 22 Z" fill="black" />
             </svg>
         </button>
+        
+        <!-- Título do site -->
         <h1 class="site-title">Amapá Zombies</h1>
+        
+        <!-- Botões de autenticação/conta -->
         <div class="auth-buttons">
             {% if not logged_in %}
-            <button class="btn-register">Cadastrar</button>
-            <button class="btn-login">Entrar</button>
+                <button class="btn-register">Cadastrar</button>
+                <button class="btn-login">Entrar</button>
             {% else %}
-            <span class="welcome-message">Olá, {{ username }}!</span>
-            <button class="btn-logout" onclick="location.href='/logout'">
-                Sair
-            </button>
-            {% if is_admin %}
-            <button class="btn-admin" onclick="location.href='/admin'">
-                Admin
-            </button>
-            {% endif %} {% endif %}
+                <span class="welcome-message">Olá, {{ username }}!</span>
+                <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
+                {% if is_admin %}
+                    <button class="btn-admin" onclick="location.href='/admin'">Admin</button>
+                {% endif %}
+            {% endif %}
         </div>
     </header>
 
+    <!-- ==================== SIDEBAR ==================== -->
     <!-- Overlay da sidebar -->
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
-    <!-- Sidebar -->
+    <!-- Sidebar menu -->
     <div id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <span id="sidebar-close" class="sidebar-close">&times;</span>
@@ -87,107 +100,138 @@
         </div>
     </div>
 
-    <!-- Hero Section -->
+    <!-- ==================== HERO SECTION ==================== -->
     <section class="hero">
+        <!-- Slideshow de fundos -->
         <div class="background-slideshow" id="background-slideshow"></div>
-        <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo"
-            class="main-logo" />
+        
+        <!-- Logo principal -->
+        <img 
+            src="{{ url_for('static', filename='images/common/amapazombies.png') }}" 
+            alt="Amapá Zombies Logo"
+            class="main-logo" 
+        />
     </section>
 
-    <!-- Conteúdo abaixo -->
+    <!-- ==================== CONTEÚDO PRINCIPAL ==================== -->
     <main class="content">
         <!-- Barra de ordenação -->
         <div class="cards-sort-bar">
-        <label for="sort-select">Ordenar por:</label>
-        <select id="sort-select">
-            <option value="default">Padrão</option>
-            <option value="recent">Mais recente</option>
-            <option value="az">Nome (A–Z)</option>
-            <option value="za">Nome (Z–A)</option>
-        </select>
+            <label for="sort-select">Ordenar por:</label>
+            <select id="sort-select">
+                <option value="default">Padrão</option>
+                <option value="recent">Mais recente</option>
+                <option value="az">Nome (A–Z)</option>
+                <option value="za">Nome (Z–A)</option>
+            </select>
         </div>
-        <!-- Cards Dinâmicos -->
+        
+        <!-- Container de cards (mapas/histórias) -->
         <div class="cards-container">
             {% for card in cards %}
-            <div class="card" data-title="{{ card.title | e }}" data-description="{{ card.description | e }}"
-                data-visible="{{ 'true' if card.get('visible', True) else 'false' }}">
-                {% if card.get("is_new", False) %}
-                <div class="new-badge">Novo!</div>
-                {% endif %}
-                <img src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" alt="{{ card.title }}" />
-            </div>
+                <div 
+                    class="card" 
+                    data-title="{{ card.title | e }}" 
+                    data-description="{{ card.description | e }}"
+                    data-visible="{{ 'true' if card.get('visible', True) else 'false' }}"
+                >
+                    {% if card.get("is_new", False) %}
+                        <div class="new-badge">Novo!</div>
+                    {% endif %}
+                    <img 
+                        src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" 
+                        alt="{{ card.title }}" 
+                    />
+                </div>
             {% endfor %}
         </div>
     </main>
 
-    <!-- Popup Overlay -->
+    <!-- ==================== POPUP DE CARD ==================== -->
     <div class="popup-overlay" id="popup-overlay">
         <div class="popup" id="popup">
             <span class="popup-close" id="popup-close">&times;</span>
+            
+            <!-- Imagem do card -->
             <img src="" alt="Card Detalhe" id="popup-image" />
+            
+            <!-- Conteúdo do popup -->
             <div class="popup-content">
+                <!-- Título (imagem) -->
                 <div class="popup-title" id="popup-title">
                     Título do Mapa/História
                 </div>
+                
+                <!-- Descrição -->
                 <div class="popup-description" id="popup-description">
-                    Aqui vai o resumo ou sinopse do mapa/história. Lorem ipsum dolor sit
-                    amet, consectetur adipiscing elit. Curabitur non nulla sit amet nisl
-                    tempus convallis quis ac lectus.
+                    Descrição do mapa ou história
                 </div>
-                <!-- Comentários -->
+                
+                <!-- Sistema de comentários -->
                 <div id="popup-comments">
                     <h3>Comentários</h3>
                     <div id="comments-container">
-                        <!-- Comentários carregados dinamicamente aqui -->
+                        <!-- Comentários carregados dinamicamente -->
                     </div>
 
-                    <!-- Área de envio -->
+                    <!-- Área de envio de comentários -->
                     <div class="comment-input-area">
                         {% if logged_in %}
-                        <input type="text" id="comment-input" maxlength="120" placeholder="Escreva um comentário..." />
-                        <button id="comment-submit">➤</button>
+                            <input 
+                                type="text" 
+                                id="comment-input" 
+                                maxlength="120" 
+                                placeholder="Escreva um comentário..." 
+                            />
+                            <button id="comment-submit">➤</button>
                         {% else %}
-                        <p class="login-warning">
-                            Você precisa realizar o
-                            <span id="login-link" style="
-                    color: darkgreen;
-                    font-weight: 2000;
-                    text-decoration: underline;
-                    cursor: pointer;
-                  ">login</span>
-                            para comentar/curtir.
-                        </p>
+                            <p class="login-warning">
+                                Você precisa realizar o 
+                                <span id="login-link">login</span>
+                                para comentar/curtir.
+                            </p>
                         {% endif %}
                     </div>
                 </div>
+                
+                <!-- Botões de ação -->
                 <div class="popup-buttons">
-                    <div class="popup-buttons">
-                        <button id="btn-download-map">Baixar mapa</button>
-                        <button id="btn-read-story">Ler história</button>
-                        <button id="btn-like" class="like-btn">
-                            <span class="like-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none"
-                                    stroke="darkgreen" stroke-width="1.5" class="bi bi-hand-thumbs-up"
-                                    viewBox="0 0 16 16">
-                                    <path
-                                        d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2 2 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a10 10 0 0 0-.443.05 9.4 9.4 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111z" />
-                                </svg>
-                            </span>
-                            <span id="like-count">0</span>
-                        </button>
-                    </div>
+                    <button id="btn-download-map">Baixar mapa</button>
+                    <button id="btn-read-story">Ler história</button>
+                    <button id="btn-like" class="like-btn">
+                        <span class="like-icon">
+                            <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                width="22" 
+                                height="22" 
+                                fill="none"
+                                stroke="darkgreen" 
+                                stroke-width="1.5" 
+                                class="bi bi-hand-thumbs-up"
+                                viewBox="0 0 16 16"
+                            >
+                                <path d="M8.864.046C7.908-.193 7.02.53 6.956 1.466c-.072 1.051-.23 2.016-.428 2.59-.125.36-.479 1.013-1.04 1.639-.557.623-1.282 1.178-2.131 1.41C2.685 7.288 2 7.87 2 8.72v4.001c0 .845.682 1.464 1.448 1.545 1.07.114 1.564.415 2.068.723l.048.03c.272.165.578.348.97.484.397.136.861.217 1.466.217h3.5c.937 0 1.599-.477 1.934-1.064a1.86 1.86 0 0 0 .254-.912c0-.152-.023-.312-.077-.464.201-.263.38-.578.488-.901.11-.33.172-.762.004-1.149.069-.13.12-.269.159-.403.077-.27.113-.568.113-.857 0-.288-.036-.585-.113-.856a2 2 0 0 0-.138-.362 1.9 1.9 0 0 0 .234-1.734c-.206-.592-.682-1.1-1.2-1.272-.847-.282-1.803-.276-2.516-.211a10 10 0 0 0-.443.05 9.4 9.4 0 0 0-.062-4.509A1.38 1.38 0 0 0 9.125.111z" />
+                            </svg>
+                        </span>
+                        <span id="like-count">0</span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Popup Quem Somos -->
+    <!-- ==================== POPUP "QUEM SOMOS" ==================== -->
     <div class="popup-overlay" id="who-us-popup-overlay">
         <div class="popup who-us-popup" id="who-us-popup">
             <span class="popup-close" id="who-us-popup-close">&times;</span>
             <div class="who-us-content">
-                <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Amapá Zombies Logo"
-                    class="who-us-logo" />
+                <!-- Logo -->
+                <img 
+                    src="{{ url_for('static', filename='images/common/amapazombies.png') }}" 
+                    alt="Amapá Zombies Logo"
+                    class="who-us-logo" 
+                />
+                <!-- Conteúdo -->
                 <div class="who-us-text">
                     <h2>Quem Somos</h2>
                     <p>
@@ -203,108 +247,118 @@
         </div>
     </div>
 
-    <!-- Popup Sua Conta -->
+    <!-- ==================== POPUP "SUA CONTA" ==================== -->
     <div class="popup-overlay" id="account-popup-overlay">
         <div class="popup account-popup" id="account-popup">
             <span class="popup-close" id="account-popup-close">&times;</span>
             <div class="account-guide">📌 Sua Conta</div>
+            
             <div class="account-content">
-                <!-- Usuário -->
+                <!-- Campo: Usuário -->
                 <label>Usuário</label>
                 <div class="account-input-wrapper">
-                    <input type="text" id="account-username-popup" class="account-input" value="{{ username or '' }}"
-                        data-username="{{ username or '' }}" readonly />
+                    <input 
+                        type="text" 
+                        id="account-username-popup" 
+                        class="account-input" 
+                        value="{{ username or '' }}"
+                        data-username="{{ username or '' }}" 
+                        readonly 
+                    />
                     <div id="account-username-tooltip-popup" class="tooltip">
-                        <p id="rule-length-popup">
-                            • Nome deve ter entre 5 e 20 caracteres
-                        </p>
-                        <p id="rule-special-popup">
-                            • Não pode conter caracteres especiais ($, #, @, etc.)
-                        </p>
-                        <p id="rule-first-upper-popup">
-                            • Primeira letra deve ser maiúscula
-                        </p>
-                        <p id="rule-no-number-start-popup">
-                            • Não pode começar com número
-                        </p>
-                        <p id="rule-badwords-popup">
-                            • Não pode conter palavras ofensivas
-                        </p>
+                        <p id="rule-length-popup">• Nome deve ter entre 5 e 20 caracteres</p>
+                        <p id="rule-special-popup">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
+                        <p id="rule-first-upper-popup">• Primeira letra deve ser maiúscula</p>
+                        <p id="rule-no-number-start-popup">• Não pode começar com número</p>
+                        <p id="rule-badwords-popup">• Não pode conter palavras ofensivas</p>
                     </div>
                 </div>
 
-                <!-- Email -->
+                <!-- Campo: Email -->
                 <label>Email</label>
                 <div class="account-input-wrapper">
-                    <input type="email" id="account-email-popup" class="account-input" value="{{ email or '' }}"
-                        data-email="{{ email or '' }}" readonly />
+                    <input 
+                        type="email" 
+                        id="account-email-popup" 
+                        class="account-input" 
+                        value="{{ email or '' }}"
+                        data-email="{{ email or '' }}" 
+                        readonly 
+                    />
                     <div id="account-email-tooltip-popup" class="tooltip">
-                        <p id="rule-email-format-popup">
-                            • Email deve ser válido (ex: usuario@dominio.com)
-                        </p>
+                        <p id="rule-email-format-popup">• Email deve ser válido (ex: usuario@dominio.com)</p>
                     </div>
                 </div>
 
-                <!-- Senha -->
+                <!-- Campo: Senha -->
                 <label id="account-password-label">Senha</label>
-                <input type="password" id="account-password" class="account-input"
-                    value="{{ password_masked or '********' }}" data-password="{{ password_masked or '********' }}"
-                    readonly />
+                <input 
+                    type="password" 
+                    id="account-password" 
+                    class="account-input"
+                    value="{{ password_masked or '********' }}" 
+                    data-password="{{ password_masked or '********' }}"
+                    readonly 
+                />
             </div>
 
+            <!-- Botões de ação -->
             <div class="account-buttons">
-                <!-- <button id="btn-edit-account" class="btn-green">Editar</button>
-                <button id="btn-save-account" class="btn-green" style="display: none;">Salvar</button>
-                <button id="btn-cancel-edit" class="btn-red" style="display: none;">Cancelar</button> -->
                 <button id="btn-delete-account" class="btn-red">Deletar Conta</button>
             </div>
         </div>
     </div>
 
-    <!-- Popup de confirmação de exclusão -->
+    <!-- ==================== POPUP CONFIRMAÇÃO DE EXCLUSÃO ==================== -->
     <div class="popup-overlay" id="delete-account-popup-overlay">
         <div class="popup delete-popup">
             <p class="delete-popup-text">
-                Tem certeza que deseja deletar sua conta? Esta ação não pode ser
-                desfeita.
+                Tem certeza que deseja deletar sua conta? Esta ação não pode ser desfeita.
             </p>
             <div class="delete-popup-buttons">
-                <button id="confirm-delete-account" class="btn-red">
-                    Sim, quero deletar
-                </button>
+                <button id="confirm-delete-account" class="btn-red">Sim, quero deletar</button>
                 <button id="cancel-delete-account" class="btn-gray">Cancelar</button>
             </div>
         </div>
     </div>
 
-    <!-- Overlay de Login/Cadastro -->
+    <!-- ==================== SISTEMA DE NOTIFICAÇÕES TOAST ==================== -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- ==================== OVERLAY LOGIN/CADASTRO ==================== -->
     <div class="popup-overlay" id="auth-popup-overlay">
-        <!-- Aviso rápido -->
-        <div id="quick-warning" style="
-          display: none;
-          position: fixed;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: #ff5555;
-          color: white;
-          padding: 12px 20px;
-          border-radius: 8px;
-          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-          z-index: 9999;
-          opacity: 0;
-          transition: opacity 0.5s;
-        "></div>
         <div class="auth-popup">
             <span class="popup-close" id="auth-popup-close">&times;</span>
 
-            <!-- Login -->
+            <!-- ========== FORMULÁRIO DE LOGIN ========== -->
             <div class="auth-content" id="login-popup">
                 <h2 class="auth-title">ENTRAR</h2>
-                <input type="email" name="email" autocomplete="email" placeholder="Email: exemplo@email.com"
-                    class="auth-input" />
-                <input type="password" name="password" autocomplete="current-password" placeholder="Senha: ********"
-                    class="auth-input" />
+                <input 
+                    type="email" 
+                    name="email" 
+                    autocomplete="email" 
+                    placeholder="Email: exemplo@email.com"
+                    class="auth-input" 
+                />
+                <div class="password-wrapper">
+                    <input 
+                        type="password" 
+                        name="password" 
+                        autocomplete="current-password" 
+                        placeholder="Senha: ********"
+                        class="auth-input password-field" 
+                    />
+                    <button type="button" class="password-toggle" title="Mostrar/esconder senha">
+                        <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
                 <button class="auth-btn">Entrar</button>
                 <p class="auth-switch">
                     Ainda sem uma conta?
@@ -315,71 +369,79 @@
                 </p>
             </div>
 
-            <!-- Cadastro -->
+            <!-- ========== FORMULÁRIO DE CADASTRO ========== -->
             <div class="auth-content" id="register-popup" style="display: none">
                 <h2 class="auth-title">CADASTRO</h2>
 
-                <!-- Campo Usuário -->
+                <!-- Campo: Usuário -->
                 <div class="input-wrapper">
-                    <input type="text" id="username" placeholder="Nome de usuário: JucelinoPexeira"
-                        class="auth-input" />
-                    <!-- Cadastro -->
+                    <input 
+                        type="text" 
+                        id="username" 
+                        placeholder="Nome de usuário: JucelinoPexeira"
+                        class="auth-input" 
+                    />
                     <div class="username-tooltip" id="username-tooltip">
-                        <p id="rule-username-length">
-                            • Nome deve ter entre 5 e 20 caracteres
-                        </p>
-                        <p id="rule-username-special">
-                            • Não pode conter caracteres especiais ($, #, @, etc.)
-                        </p>
-                        <p id="rule-username-first-upper">
-                            • Primeira letra deve ser maiúscula
-                        </p>
-                        <p id="rule-username-no-number-start">
-                            • Não pode começar com número
-                        </p>
-                        <p id="rule-username-badwords">
-                            • Não pode conter palavras ofensivas
-                        </p>
+                        <p id="rule-username-length">• Nome deve ter entre 5 e 20 caracteres</p>
+                        <p id="rule-username-special">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
+                        <p id="rule-username-first-upper">• Primeira letra deve ser maiúscula</p>
+                        <p id="rule-username-no-number-start">• Não pode começar com número</p>
+                        <p id="rule-username-badwords">• Não pode conter palavras ofensivas</p>
                     </div>
                 </div>
 
-                <!-- Campo Email -->
+                <!-- Campo: Email -->
                 <div class="input-wrapper">
-                    <input type="email" name="email" autocomplete="email" id="email"
-                        placeholder="Email: exemplo@email.com" class="auth-input" />
+                    <input 
+                        type="email" 
+                        name="email" 
+                        autocomplete="email" 
+                        id="email"
+                        placeholder="Email: exemplo@email.com" 
+                        class="auth-input" 
+                    />
                     <div class="email-tooltip" id="email-tooltip">
-                        <p id="rule-email-format">
-                            • Email deve ser válido (ex: usuario@dominio.com)
-                        </p>
+                        <p id="rule-email-format">• Email deve ser válido (ex: usuario@dominio.com)</p>
                     </div>
                 </div>
 
-                <!-- Campo Senha -->
+                <!-- Campo: Senha -->
                 <div class="input-wrapper">
-                    <input type="password" name="password" autocomplete="new-password" id="password"
-                        placeholder="Senha: ********" class="auth-input" />
+                    <div class="password-wrapper">
+                        <input 
+                            type="password" 
+                            name="password" 
+                            autocomplete="new-password" 
+                            id="password"
+                            placeholder="Senha: ********" 
+                            class="auth-input password-field" 
+                        />
+                        <button type="button" class="password-toggle" title="Mostrar/esconder senha">
+                            <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="eye-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
                     <div class="password-tooltip" id="password-tooltip">
                         <p id="rule-password-length">• Mínimo de 8 caracteres</p>
-                        <p id="rule-password-upper">
-                            • Deve conter pelo menos uma letra maiúscula
-                        </p>
-                        <p id="rule-password-lower">
-                            • Deve conter pelo menos uma letra minúscula
-                        </p>
-                        <p id="rule-password-number">
-                            • Deve conter pelo menos um número
-                        </p>
-                        <p id="rule-password-special">
-                            • Deve conter pelo menos um caractere especial (!@#$%^&*)
-                        </p>
+                        <p id="rule-password-upper">• Deve conter pelo menos uma letra maiúscula</p>
+                        <p id="rule-password-lower">• Deve conter pelo menos uma letra minúscula</p>
+                        <p id="rule-password-number">• Deve conter pelo menos um número</p>
+                        <p id="rule-password-special">• Deve conter pelo menos um caractere especial (!@#$%^&*)</p>
                     </div>
                 </div>
 
+                <!-- Checkbox de confirmação -->
                 <label class="auth-checkbox">
                     <input type="checkbox" />
-                    Confirmo que a senha utilizada não é a mesma que é usada em outros
-                    lugares importantes
+                    Confirmo que a senha utilizada não é a mesma que é usada em outros lugares importantes
                 </label>
+                
                 <button class="auth-btn">Cadastrar</button>
                 <p class="auth-switch">
                     Já possui uma conta? <span id="switch-to-login">Entrar</span>
@@ -388,15 +450,18 @@
         </div>
     </div>
 
-    <!-- Overlay do popup de recuperação -->
+    <!-- ==================== POPUP RECUPERAÇÃO DE SENHA ==================== -->
     <div id="forgot-password-overlay" class="popup-overlay">
         <div id="forgot-password-popup" class="auth-popup">
             <span id="close-forgot-password" class="popup-close">&times;</span>
             <h2 class="auth-title">Recuperar Senha</h2>
-            <input type="email" id="forgot-password-email" class="auth-input" placeholder="Digite seu e-mail" />
-            <button id="forgot-password-btn" class="auth-btn">
-                Enviar Link de Recuperação
-            </button>
+            <input 
+                type="email" 
+                id="forgot-password-email" 
+                class="auth-input" 
+                placeholder="Digite seu e-mail" 
+            />
+            <button id="forgot-password-btn" class="auth-btn">Enviar Link de Recuperação</button>
             <div id="forgot-password-loading" class="loading-overlay" style="display: none">
                 <div class="spinner"></div>
                 Enviando...
@@ -404,38 +469,62 @@
         </div>
     </div>
 
-    <!-- Seção Parceiros -->
+    <!-- ==================== SEÇÃO PARCEIROS ==================== -->
     <section class="parceiros">
         <h2>⎯⎯⎯⎯⎯⎯⎯⎯ PARCEIROS ⎯⎯⎯⎯⎯⎯⎯⎯</h2>
+        
         <div class="parceiros-container">
             {% for parceiro in parceiros %}
-            <div class="parceiro" data-nome="{{ parceiro.nome }}" data-descricao="{{ parceiro.descricao }}"
-                data-site="{{ parceiro.site }}" data-instagram="{{ parceiro.instagram }}"
-                data-twitter="{{ parceiro.twitter }}" data-email="{{ parceiro.email }}" data-file="{{ parceiro.file }}">
-
-                <div class="parceiro-bg"
-                    style="background-image: url('{{ url_for('static', filename='images/parceiros/background/' ~ parceiro.file ~ '.jpg') }}');">
-                    <img src="{{ url_for('static', filename='images/parceiros/logo/' ~ parceiro.file ~ '.png') }}"
-                        alt="{{ parceiro.nome }}" class="parceiro-logo">
+                <div 
+                    class="parceiro" 
+                    data-nome="{{ parceiro.nome }}" 
+                    data-descricao="{{ parceiro.descricao }}"
+                    data-site="{{ parceiro.site }}" 
+                    data-instagram="{{ parceiro.instagram }}"
+                    data-twitter="{{ parceiro.twitter }}" 
+                    data-email="{{ parceiro.email }}" 
+                    data-file="{{ parceiro.file }}"
+                >
+                    <div 
+                        class="parceiro-bg"
+                        style="background-image: url('{{ url_for('static', filename='images/parceiros/background/' ~ parceiro.file ~ '.jpg') }}');"
+                    >
+                        <img 
+                            src="{{ url_for('static', filename='images/parceiros/logo/' ~ parceiro.file ~ '.png') }}"
+                            alt="{{ parceiro.nome }}" 
+                            class="parceiro-logo"
+                        />
+                    </div>
                 </div>
-            </div>
             {% endfor %}
         </div>
+        
         <p class="parceiros-line">⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯</p>
     </section>
 
-    <!-- Popup Parceiro -->
+    <!-- ==================== POPUP PARCEIROS ==================== -->
     <div class="popup-overlay" id="partner-popup-overlay">
         <div class="partner-popup">
             <span class="popup-close" id="partner-popup-close">&times;</span>
-            <img src="" alt="Logo Parceiro" id="partner-logo" class="partner-logo" />
+            
+            <!-- Logo do parceiro -->
+            <img 
+                src="" 
+                alt="Logo Parceiro" 
+                id="partner-logo" 
+                class="partner-logo" 
+            />
+            
+            <!-- Informações do parceiro -->
             <div class="partner-content">
                 <h2 id="partner-nome">Nome do Parceiro</h2>
                 <p id="partner-descricao">Descrição do parceiro...</p>
+                
+                <!-- Links sociais -->
                 <h3 id="partner-social">Redes sociais</h3>
                 <div class="partner-links">
                     <!-- Site -->
-                    <a href="#" id="partner-site" target="_blank" class="partner-link">
+                    <a href="#" id="partner-site" target="_blank" class="partner-link" title="Visitar site">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-globe" viewBox="0 0 16 16">
                             <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m7.5-6.923c-.67.204-1.335.82-1.887 1.855A8 8 0 0 0 5.145 4H7.5zM4.09 4a9.3 9.3 0 0 1 .64-1.539 7 7 0 0 1 .597-.933A7.03 7.03 0 0 0 2.255 4zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a7 7 0 0 0-.656 2.5zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5zM8.5 5v2.5h2.99a12.5 12.5 0 0 0-.337-2.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5zM5.145 12q.208.58.468 1.068c.552 1.035 1.218 1.65 1.887 1.855V12zm.182 2.472a7 7 0 0 1-.597-.933A9.3 9.3 0 0 1 4.09 12H2.255a7 7 0 0 0 3.072 2.472M3.82 11a13.7 13.7 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5zm6.853 3.472A7 7 0 0 0 13.745 12H11.91a9.3 9.3 0 0 1-.64 1.539 7 7 0 0 1-.597.933M8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855q.26-.487.468-1.068zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.7 13.7 0 0 1-.312 2.5m2.802-3.5a7 7 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7 7 0 0 0-3.072-2.472c.218.284.418.598.597.933M10.855 4a8 8 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4z"/>
                         </svg>
@@ -443,7 +532,7 @@
                     </a>
 
                     <!-- Instagram -->
-                    <a href="#" id="partner-instagram" target="_blank" class="partner-link">
+                    <a href="#" id="partner-instagram" target="_blank" class="partner-link" title="Seguir no Instagram">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-instagram" viewBox="0 0 16 16">
                             <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/>
                         </svg>
@@ -451,7 +540,7 @@
                     </a>
 
                     <!-- Twitter/X -->
-                    <a href="#" id="partner-twitter" target="_blank" class="partner-link">
+                    <a href="#" id="partner-twitter" target="_blank" class="partner-link" title="Seguir no Twitter">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-twitter-x" viewBox="0 0 16 16">
                             <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z"/>
                         </svg>
@@ -462,29 +551,41 @@
         </div>
     </div>
 
-    <!-- Rodapé -->
+    <!-- ==================== FOOTER ==================== -->
     <footer class="footer">
-        <h3>Nossa redes sociais</h3>
+        <h3>Nossas redes sociais</h3>
         <br />
-        <a href="https://instagram.com/amapazombies" target="_blank">
-            <img src="{{ url_for('static', filename='images/social/instagram.png') }}" alt="Instagram" />
+        
+        <!-- Links sociais -->
+        <a href="https://instagram.com/amapazombies" target="_blank" title="Instagram">
+            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.9 3.9 0 0 0-1.417.923A3.9 3.9 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.9 3.9 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.9 3.9 0 0 0-.923-1.417A3.9 3.9 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599s.453.546.598.92c.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.5 2.5 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.5 2.5 0 0 1-.92-.598 2.5 2.5 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233s.008-2.388.046-3.231c.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92s.546-.453.92-.598c.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92m-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217m0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334"/>
+            </svg>
         </a>
-        <a href="https://x.com/amapazombies" target="_blank">
-            <img src="{{ url_for('static', filename='images/social/twitter.png') }}" alt="Twitter/X" />
+        <a href="https://x.com/amapazombies" target="_blank" title="Twitter/X">
+            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z"/>
+            </svg>
         </a>
-        <a href="https://wattpad.com/user/AmapaZombies" target="_blank">
-            <img src="{{ url_for('static', filename='images/social/wattpad.png') }}" alt="Wattpad" />
+        <a href="https://wattpad.com/user/AmapaZombies" target="_blank" title="Wattpad">
+            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 100 100" class="wattpad-svg">
+                <path d="M96.454,21.887c-0.326-1.901-1.942-3.377-3.735-3.933c-8.423-3.022-22.049,12.647-27.215,19.882 c3.649-21.719-8.753-26.885-19.497-18.889c-6.885,5.298-14.343,15.972-18.641,23.446c0.641-6.504,1.855-16.442-2.307-21.282 c-4.057-4.716-13.576-4.665-17.683,3.282C1.308,36.01,0.047,78.234,18.339,84.241c16.519,3.282,18.935-16.184,28.7-32.151 c-1.954,24.722,14.479,28.713,22.589,19.653c4.131-4.061,6.99-14.141,16.302-29.334C93.548,29.986,97.64,26.844,96.454,21.887z"/>
+            </svg>
         </a>
-        <a href="mailto:contato@amapazombies.com.br" target="_blank">
-            <img src="{{ url_for('static', filename='images/social/email.png') }}" alt="Email" />
+        <a href="mailto:contato@amapazombies.com.br" target="_blank" title="Email">
+            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2zm13 2.383-4.708 2.825L15 11.105V5.383zm-.034 6.876-5.64-3.373L8 9.999l-1.326-.795-5.64 3.373A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741zM1 11.105l4.708-2.897L1 5.383v5.722z"/>
+            </svg>
         </a>
 
+        <!-- Links úteis -->
         <div class="footer-links">
             <a href="mailto:feedback@amapazombies.com.br" class="footer-text">Envie-nos um feedback!</a>
             <a href="#" id="faq-btn" class="footer-text">FAQ</a>
         </div>
     </footer>
 
+    <!-- ==================== POPUP FAQ ==================== -->
     <div id="faq-popup" class="faq-popup">
         <div class="faq-content">
             <span id="close-faq" class="close">&times;</span>
@@ -528,7 +629,9 @@
         </div>
     </div>
 
+    <!-- ==================== SCRIPTS ==================== -->
     <script>
+        // Remove parâmetros UTM da URL (rastreamento de marketing)
         if (window.location.search.includes("utm_")) {
             const cleanUrl =
                 window.location.protocol +
