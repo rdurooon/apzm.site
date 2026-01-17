@@ -1,26 +1,26 @@
 {
-    "fdu.jpg": {
-        "likes": 0,
-        "liked_by": []
-    },
-    "diefestung.jpg": {
-        "likes": 0,
-        "liked_by": []
-    },
-    "sacaca.jpg": {
-        "likes": 0,
-        "liked_by": []
-    },
-    "bacabeiras.jpg": {
-        "likes": 0,
-        "liked_by": []
-    },
-    "null": {
-        "likes": 0,
-        "liked_by": []
-    },
-    "gpcdertoten.jpg": {
-        "likes": 0,
-        "liked_by": []
-    }
+  "fdu.jpg": {
+    "likes": 0,
+    "liked_by": []
+  },
+  "diefestung.jpg": {
+    "likes": 0,
+    "liked_by": []
+  },
+  "sacaca.jpg": {
+    "likes": 0,
+    "liked_by": []
+  },
+  "bacabeiras.jpg": {
+    "likes": 0,
+    "liked_by": []
+  },
+  "null": {
+    "likes": 0,
+    "liked_by": []
+  },
+  "gpcdertoten.jpg": {
+    "likes": 0,
+    "liked_by": []
+  }
 }

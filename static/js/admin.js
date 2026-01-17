@@ -10,7 +10,6 @@ const usersSubmenu = document.getElementById("users-submenu");
 
 const adminContainer = document.querySelector(".admin-container"); // logo + título
 const usersListContainer = document.getElementById("users-list-container");
-const listUsersItem = usersSubmenu.querySelector("li:first-child"); // "Listar Usuários"
 let subguiaAtiva = null; // ou um valor inicial adequado
 
 // ===========================
@@ -98,7 +97,7 @@ async function listarUsuarios() {
 
       card.innerHTML = `
                 <span class="username">${user.username}</span>
-                <span class="created-at">Criado em: ${user.created_at}</span>
+                <span class="created-at">${user.created_at}</span>
             `;
       usersListContainer.appendChild(card);
     });
@@ -108,9 +107,193 @@ async function listarUsuarios() {
 }
 
 // ===========================
-// Elementos do DOM - Alterar Usuários
+// Elementos do DOM - Gerenciar Usuários
 // ===========================
-const alterarUsersItem = usersSubmenu.querySelector("li:last-child"); // "Alterar Usuários"
+const gerenciarUsersItem = usersSubmenu.querySelector("li#gerenciar-usuarios"); // "Gerenciar"
+
+// ===========================
+// Função: Gerenciar usuários (unificada)
+// ===========================
+async function gerenciarUsuarios() {
+  limparConteudoPrincipal();
+  fecharSidebar();
+
+  try {
+    const res = await fetch("/admin/list_users");
+    const allUsers = await res.json();
+
+    // Remover barra de pesquisa anterior se existir
+    const existingSearchContainer = document.querySelector("#users-search-container");
+    if (existingSearchContainer) {
+      existingSearchContainer.remove();
+    }
+
+    // Criar container com barra de pesquisa
+    const searchContainer = document.createElement("div");
+    searchContainer.id = "users-search-container";
+    searchContainer.style.width = "100%";
+    searchContainer.style.padding = "20px";
+    searchContainer.style.boxSizing = "border-box";
+    searchContainer.style.display = "flex";
+    searchContainer.style.justifyContent = "center";
+    searchContainer.style.marginBottom = "20px";
+
+    const searchBar = document.createElement("div");
+    searchBar.style.width = "100%";
+    searchBar.style.maxWidth = "500px";
+    searchBar.style.position = "relative";
+    searchBar.style.display = "flex";
+    searchBar.style.alignItems = "center";
+
+    const searchIcon = document.createElement("span");
+    searchIcon.textContent = "🔍";
+    searchIcon.style.position = "absolute";
+    searchIcon.style.left = "12px";
+    searchIcon.style.fontSize = "18px";
+    searchIcon.style.color = "#999";
+    searchIcon.style.pointerEvents = "none";
+
+    const searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.placeholder = "Pesquisar usuário...";
+    searchInput.style.width = "100%";
+    searchInput.style.padding = "12px 12px 12px 45px";
+    searchInput.style.border = "2px solid #ddd";
+    searchInput.style.borderRadius = "8px";
+    searchInput.style.fontSize = "16px";
+    searchInput.style.boxSizing = "border-box";
+    searchInput.style.transition = "border-color 0.3s";
+
+    searchInput.addEventListener("focus", () => {
+      searchInput.style.borderColor = "darkgreen";
+    });
+    searchInput.addEventListener("blur", () => {
+      searchInput.style.borderColor = "#ddd";
+    });
+
+    searchBar.appendChild(searchIcon);
+    searchBar.appendChild(searchInput);
+    searchContainer.appendChild(searchBar);
+    adminContainer.parentNode.insertBefore(searchContainer, usersListContainer);
+
+    // Função para renderizar cards com base na pesquisa
+    function renderUsers(usersToRender) {
+      usersListContainer.innerHTML = "";
+
+      if (usersToRender.length === 0) {
+        usersListContainer.innerHTML = "<p style='text-align: center; color: #999;'>Nenhum usuário encontrado</p>";
+        return;
+      }
+
+      usersToRender.forEach((user) => {
+        const card = document.createElement("div");
+        card.classList.add("user-card");
+
+        card.innerHTML = `
+                  <span class="username">${user.username}</span>
+                  <span class="created-at">${user.created_at}</span>
+                  <div class="user-actions">
+                      <button class="admin-toggle">Promover Admin</button>
+                      <button class="delete">&#128465;</button>
+                  </div>
+              `;
+
+        const btnAdminToggle = card.querySelector(".admin-toggle");
+        const btnDelete = card.querySelector(".delete");
+
+        // ===========================
+        // Atualizar estado do botão
+        // ===========================
+        function updateAdminButton() {
+          if (user.is_admin) {
+            btnAdminToggle.textContent = "Remover Admin";
+            btnAdminToggle.style.background = "#e74c3c";
+            createTooltip(btnAdminToggle, "Remover Admin", "#e74c3c");
+          } else {
+            btnAdminToggle.textContent = "Promover Admin";
+            btnAdminToggle.style.background = "#3498db";
+            createTooltip(btnAdminToggle, "Promover para Admin", "#3498db");
+          }
+        }
+
+        updateAdminButton();
+
+        // ===========================
+        // Toggle Admin
+        // ===========================
+        btnAdminToggle.addEventListener("click", async () => {
+          if (user.username === loggedInUser) {
+            return showQuickWarning(
+              "Você não pode mudar seu próprio status de admin!",
+              "error"
+            );
+          }
+
+          try {
+            if (user.is_admin) {
+              // Remover admin
+              await fetch(`/admin/demote/${user.id}`, { method: "POST" });
+              user.is_admin = false;
+              showQuickWarning(`${user.username} removido de admin!`, "success");
+            } else {
+              // Promover admin
+              await fetch(`/admin/promote/${user.id}`, { method: "POST" });
+              user.is_admin = true;
+              showQuickWarning(`${user.username} promovido a admin!`, "success");
+            }
+            updateAdminButton();
+          } catch (err) {
+            console.error(err);
+            showQuickWarning("Erro ao alterar status de admin!", "error");
+          }
+        });
+
+        // ===========================
+        // Deletar usuário
+        // ===========================
+        btnDelete.addEventListener("click", async () => {
+          if (user.username === loggedInUser) {
+            return showQuickWarning(
+              "Você não pode deletar sua própria conta!",
+              "error"
+            );
+          }
+          const confirmDelete = await showDeletePopup(user.username);
+          if (confirmDelete) {
+            await fetch(`/admin/delete/${user.id}`, { method: "DELETE" });
+            card.remove();
+            showQuickWarning(`${user.username} deletado!`, "success");
+          }
+        });
+
+        createTooltip(btnDelete, "Deletar Usuário", "#e74c3c");
+
+        usersListContainer.appendChild(card);
+      });
+    }
+
+    // Renderizar todos inicialmente
+    renderUsers(allUsers);
+
+    // ===========================
+    // Filtro em tempo real
+    // ===========================
+    searchInput.addEventListener("input", (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      const filteredUsers = allUsers.filter((user) =>
+        user.username.toLowerCase().startsWith(searchTerm)
+      );
+      renderUsers(filteredUsers);
+    });
+  } catch (err) {
+    console.error("Erro ao gerenciar usuários:", err);
+  }
+}
+
+// ===========================
+// Evento de clique - Gerenciar Usuários
+// ===========================
+gerenciarUsersItem.addEventListener("click", gerenciarUsuarios);
 
 // ===========================
 // Função: Criar popup rápido customizado (Toast)
@@ -305,106 +488,7 @@ function showDeletePopup(username) {
 // ===========================
 // Função: Alterar usuários (promover/remover admin e deletar) - atualizado
 // ===========================
-async function alterarUsuarios() {
-  limparConteudoPrincipal();
-  fecharSidebar(); // fecha sidebar ao clicar
 
-  try {
-    const res = await fetch("/admin/list_users");
-    const users = await res.json();
-
-    users.forEach((user) => {
-      const card = document.createElement("div");
-      card.classList.add("user-card");
-
-      card.innerHTML = `
-                <span class="username">${user.username}</span>
-                <div class="user-actions">
-                    <button class="promote">&#x25B2;</button>
-                    <button class="demote">&#x25BC;</button>
-                    <button class="delete">&#128465;</button>
-                </div>
-            `;
-
-      const btnPromote = card.querySelector(".promote");
-      const btnDemote = card.querySelector(".demote");
-      const btnDelete = card.querySelector(".delete");
-
-      // ===========================
-      // Bloqueios de botão conforme admin
-      // ===========================
-      if (user.is_admin) {
-        btnPromote.disabled = true;
-        btnPromote.style.opacity = "0.5";
-      } else {
-        btnDemote.disabled = true;
-        btnDemote.style.opacity = "0.5";
-      }
-
-      // ===========================
-      // Tooltips customizados
-      // ===========================
-      createTooltip(btnPromote, "Promover para Admin", "#3498db"); // azul
-      createTooltip(btnDemote, "Remover Admin", "#e74c3c"); // vermelho
-      createTooltip(btnDelete, "Deletar Usuário", "#e74c3c"); // vermelho
-
-      // ===========================
-      // Promover
-      // ===========================
-      btnPromote.addEventListener("click", async () => {
-        if (btnPromote.disabled)
-          return showQuickWarning("Usuário já é admin!", "info");
-        await fetch(`/admin/promote/${user.id}`, { method: "POST" });
-        showQuickWarning(`${user.username} promovido a admin!`, "success");
-        alterarUsuarios(); // refresh
-      });
-
-      // ===========================
-      // Remover admin
-      // ===========================
-      btnDemote.addEventListener("click", async () => {
-        if (user.username === loggedInUser) {
-          return showQuickWarning(
-            "Você não pode remover seu próprio admin!",
-            "error"
-          );
-        }
-        if (btnDemote.disabled)
-          return showQuickWarning("Usuário não é admin!", "error");
-        await fetch(`/admin/demote/${user.id}`, { method: "POST" });
-        showQuickWarning(`${user.username} removido de admin!`, "error");
-        alterarUsuarios(); // refresh
-      });
-
-      // ===========================
-      // Deletar usuário
-      // ===========================
-      btnDelete.addEventListener("click", async () => {
-        if (user.username === loggedInUser) {
-          return showQuickWarning(
-            "Você não pode deletar sua própria conta!",
-            "error"
-          );
-        }
-        const confirmDelete = await showDeletePopup(user.username);
-        if (confirmDelete) {
-          await fetch(`/admin/delete/${user.id}`, { method: "DELETE" });
-          card.remove();
-          showQuickWarning(`${user.username} deletado!`, "success");
-        }
-      });
-
-      usersListContainer.appendChild(card);
-    });
-  } catch (err) {
-    console.error("Erro ao alterar usuários:", err);
-  }
-}
-
-// ===========================
-// Evento de clique - Alterar Usuários
-// ===========================
-alterarUsersItem.addEventListener("click", alterarUsuarios);
 
 // ===========================
 // Eventos de clique
@@ -416,263 +500,26 @@ mapsItem.addEventListener("click", () => {
 usersItem.addEventListener("click", () => {
   toggleUsersSubmenu();
 });
-listUsersItem.addEventListener("click", listarUsuarios);
 
 // ===========================
-// Elementos do popup adicionar
+// Subguia "Adicionar" - Handler
 // ===========================
-const addPopupOverlay = document.getElementById("add-popup-overlay");
-const addPopupClose = document.getElementById("add-popup-close");
-const saveMapStoryBtn = document.getElementById("save-map-story");
-
-// Subguia "Adicionar"
-const addMapStoryItem = mapsSubmenu.querySelector("li.add-map-story"); // crie essa li no HTML do menu
-
-// ===========================
-// Abrir popup adicionar mapa/história
-// ===========================
-addMapStoryItem.addEventListener("click", () => {
-  addPopupOverlay.classList.add("show");
-  fecharSidebar(); // fecha sidebar ao abrir popup
-});
-
-// ===========================
-// Fechar popup adicionar
-// ===========================
-addPopupClose.addEventListener("click", () => {
-  addPopupOverlay.classList.remove("show");
-});
-
-// ===========================
-// Clique fora do popup fecha
-// ===========================
-addPopupOverlay.addEventListener("click", (e) => {
-  if (e.target === addPopupOverlay) {
-    addPopupOverlay.classList.remove("show");
-  }
-});
-
-// ===========================
-// Upload de imagens para Card e Título
-// ===========================
-function setupImageUpload(el) {
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = "image/*"; // permite qualquer imagem
-  fileInput.style.display = "none";
-  document.body.appendChild(fileInput);
-
-  el.addEventListener("click", () => {
-    fileInput.click();
-  });
-
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      // Remove o "+" e insere a imagem
-      el.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// Seleciona elementos
-const cardPlaceholder = document.getElementById("add-popup-image");
-const titlePlaceholder = document.getElementById("add-popup-title");
-
-setupImageUpload(cardPlaceholder);
-setupImageUpload(titlePlaceholder);
-
-// ===========================
-// Salvar mapa/história (corrigido fallback do título)
-// ===========================
-saveMapStoryBtn.addEventListener("click", async () => {
-  const titleImgEl = titlePlaceholder.querySelector("img");
-  const cardImgEl = cardPlaceholder.querySelector("img");
-
-  if (!cardImgEl) {
-    showQuickWarning("Selecione a imagem do card!", "warning");
-    return;
-  }
-
-  // Se não houver imagem de título, usa o card como fallback
-  if (!titleImgEl) {
-    showQuickWarning(
-      "Título não enviado, usando imagem do card como título.",
-      "warning"
-    );
-    // Cria temporariamente uma referência à imagem do card
-    const img = document.createElement("img");
-    img.src = cardImgEl.src;
-    img.file = cardImgEl.file;
-    titlePlaceholder.innerHTML = "";
-    titlePlaceholder.appendChild(img);
-  }
-
-  const finalTitleImgEl = titlePlaceholder.querySelector("img");
-
-  const description = document
-    .getElementById("add-popup-description")
-    .value.trim();
-  if (!description) {
-    showQuickWarning("Preencha a descrição!", "warning");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("description", description);
-  formData.append("card_image", cardImgEl.file);
-  formData.append("title_image", finalTitleImgEl.file);
-
-  try {
-    const res = await fetch("/admin/add_map_story", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    if (data.success) {
-      showQuickWarning("Mapa/História salvo com sucesso!", "success");
-      addPopupOverlay.classList.remove("show");
-
-      // Limpar popup
-      document.getElementById("add-popup-description").value = "";
-      cardPlaceholder.innerHTML =
-        '<span>+</span><div class="tooltip">Inserir card</div>';
-      titlePlaceholder.innerHTML =
-        '<span>+</span><div class="tooltip">Inserir título</div>';
-    } else {
-      showQuickWarning("Erro ao salvar!", "error");
-    }
-  } catch (err) {
-    console.error(err);
-    showQuickWarning("Erro ao salvar!", "error");
-  }
-});
-
-// ===========================
-// Modifica o setupImageUpload para salvar referência ao file
-// ===========================
-function setupImageUpload(el) {
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = "image/*";
-  fileInput.style.display = "none";
-  document.body.appendChild(fileInput);
-
-  el.addEventListener("click", () => fileInput.click());
-
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = document.createElement("img");
-      img.src = e.target.result;
-      img.style.width = "100%";
-      img.style.height = "100%";
-      img.style.objectFit = "cover";
-      img.style.borderRadius = "8px";
-      img.file = file; // salva referência do File
-      el.innerHTML = "";
-      el.appendChild(img);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-document
-  .querySelectorAll(".popup-image-placeholder, .popup-title")
-  .forEach((el) => {
-    const tooltip = el.querySelector(".tooltip");
-
-    el.addEventListener("mouseenter", () => {
-      tooltip.style.opacity = 1;
-    });
-
-    el.addEventListener("mouseleave", () => {
-      tooltip.style.opacity = 0;
-    });
-
-    el.addEventListener("mousemove", (e) => {
-      const rect = el.getBoundingClientRect();
-      tooltip.style.left = `${rect.left + rect.width / 2}px`;
-      tooltip.style.top = `${rect.top - 10}px`;
-      tooltip.style.transform = "translate(-50%, -100%)";
-    });
-  });
+const addMapStoryItem = mapsSubmenu.querySelector("li.add-map-story");
+addMapStoryItem.addEventListener("click", adicionarCards);
 
 // ===========================
 // Função: Listar e remover cards
 // ===========================
 const cardsListContainer = document.getElementById("cards-list-container");
 
-async function removerCards() {
+// ===========================
+// Função: Editar cards - SEM AUTO-SAVE
+// ===========================
+async function editarCards() {
   limparConteudoPrincipal();
   fecharSidebar();
 
-  cardsListContainer.innerHTML = ""; // limpa antes
-
-  try {
-    const res = await fetch("/admin/list_cards");
-    const cards = await res.json();
-
-    if (!cards.length) {
-      cardsListContainer.innerHTML = "<p>Nenhum card encontrado.</p>";
-      return;
-    }
-
-    cards.forEach((card) => {
-      const div = document.createElement("div");
-      div.classList.add("remover-card");
-      div.innerHTML = `
-        <img src="/static/images/cards/${card.file}" alt="Card">
-        <div class="trash-overlay">
-            <span>&#128465;</span>
-        </div>
-      `;
-
-      div.addEventListener("click", async () => {
-        const confirmar = await showDeletePopup(card.title); // pode usar o título capitalizado do JSON
-        if (confirmar) {
-          const resp = await fetch(`/admin/delete_map_story/${card.file}`, {
-            method: "DELETE",
-          });
-          const data = await resp.json();
-          if (data.success) {
-            div.remove();
-            showQuickWarning(`Card ${data.card_name} removido!`, "success");
-          } else {
-            showQuickWarning(`Erro: ${data.error}`, "error");
-          }
-        }
-      });
-
-      cardsListContainer.appendChild(div);
-    });
-  } catch (err) {
-    console.error("Erro ao listar/remover cards:", err);
-    showQuickWarning("Erro ao carregar cards!", "error");
-  }
-}
-
-const removerMapStoryItem = mapsSubmenu.querySelector("li:nth-child(2)"); // "Remover"
-
-// Evento de clique - Remover Cards
-removerMapStoryItem.addEventListener("click", removerCards);
-
-// ===========================
-// Função: Reorganizar cards
-// ===========================
-async function reorganizarCards() {
-  limparConteudoPrincipal();
-  fecharSidebar();
-
-  cardsListContainer.innerHTML = ""; // limpa antes
+  cardsListContainer.innerHTML = "";
 
   try {
     const res = await fetch("/admin/list_cards");
@@ -684,157 +531,494 @@ async function reorganizarCards() {
     }
 
     cards.forEach((card, index) => {
-      const div = document.createElement("div");
-      div.classList.add("reorganizar-card");
-      div.dataset.index = index; // salvar posição
+      // Wrapper para card + botão de remover
+      const cardWrapper = document.createElement("div");
+      cardWrapper.className = "card-wrapper";
 
-      // usa flag do JSON se existir, senão visível por padrão
+      // Card principal
+      const cardDiv = document.createElement("div");
+      cardDiv.classList.add("reorganizar-card");
+      cardDiv.dataset.index = index;
+      cardDiv.dataset.file = card.file;
+      cardDiv.dataset.cardTitle = card.title;
+
+      // Estado de visibilidade
       const isInitiallyVisible = card.hasOwnProperty("visible")
         ? !!card.visible
         : true;
-      div.dataset.visible = isInitiallyVisible ? "true" : "false";
-      if (!isInitiallyVisible) div.classList.add("invisible");
+      cardDiv.dataset.visible = isInitiallyVisible ? "true" : "false";
+      if (!isInitiallyVisible) cardDiv.classList.add("invisible");
 
-      div.innerHTML = `
+      // Imagem e botões
+      cardDiv.innerHTML = `
         <img src="/static/images/cards/${card.file}" alt="${card.title}">
         <button class="btn-left">&lt;</button>
         <button class="btn-right">&gt;</button>
-        
       `;
 
-      div.dataset.newSince = card.new_since || ""; // timestamp UTC do backend
-      div.dataset.file = card.file;
+      cardDiv.dataset.newSince = card.new_since || "";
 
-      // 🔹 Botão de selo "Novo!"
+      // ========== BOTÃO "NOVO!" ==========
+      // NÃO sofre interferência do toggle overlay
       const badgeBtn = document.createElement("div");
       badgeBtn.className = "new-badge-toggle" + (card.is_new ? " active" : "");
       badgeBtn.textContent = "Novo!";
-      div.appendChild(badgeBtn);
+      
+      // Listener APENAS para o badge (não para o card inteiro)
+      badgeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        // Toggle visual local
+        badgeBtn.classList.toggle("active");
+        
+        showQuickWarning(
+          `Card ${card.title} ${
+            badgeBtn.classList.contains("active")
+              ? "marcado como 'Novo!'"
+              : "removido de 'Novo!'"
+          }. Clique em "Salvar Alterações" para confirmar.`,
+          "info"
+        );
+      });
+      
+      cardDiv.appendChild(badgeBtn);
 
-      // Toggle "Novo!"
-      badgeBtn.addEventListener("click", async (e) => {
-        e.stopPropagation(); // evita que o click alcance o overlay
-        const currentlyActive = badgeBtn.classList.contains("active");
-        badgeBtn.classList.toggle("active", !currentlyActive);
+      // ========== OVERLAY PARA TOGGLE DE VISIBILIDADE ==========
+      const toggleOverlay = document.createElement("div");
+      toggleOverlay.className = "toggle-overlay";
+      
+      // Listener para o overlay (não interfere com badge nem com botões)
+      toggleOverlay.addEventListener("click", (e) => {
+        e.stopPropagation();
+        
+        // Toggle visibilidade
+        const currentlyVisible = cardDiv.dataset.visible === "true";
+        cardDiv.dataset.visible = currentlyVisible ? "false" : "true";
+        cardDiv.classList.toggle("invisible", currentlyVisible);
 
+        showQuickWarning(
+          `Card ${currentlyVisible ? "marcado para desaparecer" : "marcado para aparecer"}. Clique em "Salvar Alterações" para confirmar.`,
+          "info"
+        );
+      });
+      
+      cardDiv.appendChild(toggleOverlay);
+
+      // ========== BOTÕES DE NAVEGAÇÃO (SETAS) ==========
+      const btnLeft = cardDiv.querySelector(".btn-left");
+      btnLeft.addEventListener("click", (e) => {
+        e.stopPropagation();
+        moverCard(cardDiv, -1);
+        atualizarBotoes();
+      });
+
+      const btnRight = cardDiv.querySelector(".btn-right");
+      btnRight.addEventListener("click", (e) => {
+        e.stopPropagation();
+        moverCard(cardDiv, 1);
+        atualizarBotoes();
+      });
+
+      // ========== BOTÃO REMOVER (FORA DO CARD) ==========
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "btn-remove-card";
+      removeBtn.innerHTML = "🗑️ Remover";
+      removeBtn.style.backgroundColor = "#e74c3c";
+      removeBtn.style.color = "white";
+      removeBtn.style.border = "none";
+      removeBtn.style.padding = "10px 15px";
+      removeBtn.style.borderRadius = "6px";
+      removeBtn.style.cursor = "pointer";
+      removeBtn.style.fontSize = "14px";
+      removeBtn.style.fontWeight = "bold";
+      removeBtn.style.transition = "background-color 0.3s ease";
+      removeBtn.style.width = "100%";
+      removeBtn.style.marginTop = "8px";
+      
+      removeBtn.addEventListener("mouseenter", () => {
+        removeBtn.style.backgroundColor = "#c0392b";
+      });
+      removeBtn.addEventListener("mouseleave", () => {
+        removeBtn.style.backgroundColor = "#e74c3c";
+      });
+      removeBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const confirmar = await showDeletePopup(card.title);
+        if (confirmar) {
+          // Marca para remover (não remove ainda)
+          cardWrapper.dataset.markedForDelete = "true";
+          cardWrapper.style.opacity = "0.5";
+          removeBtn.innerHTML = "✓ Marcado para Remover";
+          removeBtn.style.backgroundColor = "#27ae60";
+          showQuickWarning(
+            `Card ${card.title} marcado para remover. Clique em "Salvar Alterações" para confirmar.`,
+            "info"
+          );
+        }
+      });
+
+      // Montar wrapper
+      cardWrapper.appendChild(cardDiv);
+      cardWrapper.appendChild(removeBtn);
+      cardsListContainer.appendChild(cardWrapper);
+    });
+
+    atualizarBotoes();
+
+    // ========== BOTÃO SALVAR ALTERAÇÕES ==========
+    const existingSaveBtn = cardsListContainer.querySelector(".btn-save-cards");
+    if (existingSaveBtn) existingSaveBtn.remove();
+
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "Salvar Alterações";
+    saveBtn.classList.add("btn-save-cards");
+    saveBtn.addEventListener("click", () => salvarAlteracoes(cards));
+    cardsListContainer.appendChild(saveBtn);
+  } catch (err) {
+    console.error("Erro ao listar/editar cards:", err);
+    showQuickWarning("Erro ao carregar cards!", "error");
+  }
+
+  initNewBadgeTimers();
+}
+
+// ===========================
+// Função: Salvar alterações (visibilidade, ordem e badges)
+// ===========================
+async function salvarAlteracoes(originalCards) {
+  try {
+    // ========== DELETAR CARDS MARCADOS ==========
+    const cardWrappersMarkedForDelete = Array.from(cardsListContainer.querySelectorAll(".card-wrapper[data-marked-for-delete='true']"));
+    
+    for (const wrapper of cardWrappersMarkedForDelete) {
+      const cardDiv = wrapper.querySelector(".reorganizar-card");
+      const file = cardDiv.dataset.file;
+      
+      try {
+        const resp = await fetch(`/admin/delete_map_story/${file}`, {
+          method: "DELETE",
+        });
+        const data = await resp.json();
+        if (data.success) {
+          wrapper.remove();
+          showQuickWarning(`Card ${data.card_name} removido!`, "success");
+        } else {
+          showQuickWarning(`Erro ao remover card: ${data.error}`, "error");
+        }
+      } catch (err) {
+        console.error("Erro ao remover card:", err);
+        showQuickWarning("Erro ao remover card!", "error");
+      }
+    }
+
+    // ========== SALVAR ORDEM E VISIBILIDADE ==========
+    const cardDivs = Array.from(cardsListContainer.querySelectorAll(".reorganizar-card:not([data-marked-for-delete])"));
+    
+    const cardsData = cardDivs.map((cardDiv) => {
+      const file = cardDiv.dataset.file;
+      const originalCard = originalCards.find(c => c.file === file);
+      const badgeBtn = cardDiv.querySelector(".new-badge-toggle");
+      
+      return {
+        file: file,
+        visible: cardDiv.dataset.visible === "true",
+        is_new: badgeBtn ? badgeBtn.classList.contains("active") : (originalCard?.is_new || false),
+      };
+    });
+
+    // Salvar ordem e visibilidade
+    const resOrder = await fetch("/admin/save_cards_order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cardsData.map(c => ({ file: c.file, visible: c.visible }))),
+    });
+
+    const dataOrder = await resOrder.json();
+    if (!dataOrder.success) {
+      showQuickWarning("Erro ao salvar ordem e visibilidade!", "error");
+      return;
+    }
+
+    // ========== SALVAR BADGES "NOVO!" ==========
+    for (const card of cardsData) {
+      const originalCard = originalCards.find(c => c.file === card.file);
+      if (card.is_new !== (originalCard?.is_new || false)) {
         try {
           await fetch(`/admin/toggle_card_new/${card.file}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ is_new: !currentlyActive }),
+            body: JSON.stringify({ is_new: card.is_new }),
           });
-          showQuickWarning(
-            `Card ${card.title} ${
-              !currentlyActive ? "marcado como 'Novo!'" : "removido de 'Novo!'"
-            }`,
-            "success"
-          );
         } catch (err) {
-          console.error("Erro ao atualizar badge Novo!", err);
-          badgeBtn.classList.toggle("active", currentlyActive);
-          showQuickWarning("Erro ao atualizar badge Novo!", "error");
+          console.error(`Erro ao salvar badge para ${card.file}:`, err);
         }
-      });
+      }
+    }
 
-      // cria uma overlay que captura clicks para toggle (fica abaixo dos botões)
-      const toggleOverlay = document.createElement("div");
-      toggleOverlay.className = "toggle-overlay";
-      div.appendChild(toggleOverlay);
-
-      // Botão esquerda
-      const btnLeft = div.querySelector(".btn-left");
-      btnLeft.addEventListener("click", (e) => {
-        e.stopPropagation();
-        moverCard(div, -1);
-        atualizarBotoes(); // atualiza visibilidade/estado dos botões
-      });
-
-      // Botão direita
-      const btnRight = div.querySelector(".btn-right");
-      btnRight.addEventListener("click", (e) => {
-        e.stopPropagation();
-        moverCard(div, 1);
-        atualizarBotoes(); // atualiza visibilidade/estado dos botões
-      });
-
-      // Toggle de visibilidade via overlay (funciona mesmo se o card estiver 'invisible')
-      toggleOverlay.addEventListener("click", async () => {
-        const currentlyVisible = div.dataset.visible === "true";
-
-        // Toggle visual
-        div.dataset.visible = currentlyVisible ? "false" : "true";
-        div.classList.toggle("invisible", currentlyVisible);
-
-        // Desabilita botão "Novo!" se invisível
-        badgeBtn.style.pointerEvents =
-          div.dataset.visible === "true" ? "auto" : "none";
-        badgeBtn.style.opacity = div.dataset.visible === "true" ? "1" : "0.4";
-
-        // Atualiza backend enviando todos os cards
-        const cardsList = Array.from(cardsListContainer.children)
-          .map((c) => {
-            const imgEl = c.querySelector("img");
-            return {
-              file: imgEl ? imgEl.src.split("/").pop() : null,
-              visible: c.dataset.visible === "true",
-            };
-          })
-          .filter((c) => c.file);
-
-        try {
-          const res = await fetch("/admin/save_cards_order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(cardsList),
-          });
-          const data = await res.json();
-          if (!data.success) {
-            showQuickWarning("Erro ao salvar visibilidade!", "error");
-          }
-        } catch (err) {
-          console.error("Erro ao salvar visibilidade:", err);
-          showQuickWarning("Erro de rede ao salvar visibilidade.", "error");
-        }
-      });
-
-      cardsListContainer.appendChild(div);
-    });
-
-    // Ajusta botões iniciais
-    atualizarBotoes();
-
-    // Remove botão antigo apenas dentro da subguia
-    const existingSaveBtn = cardsListContainer.querySelector(".btn-save-cards");
-    if (existingSaveBtn) existingSaveBtn.remove();
-
-    // cria botão de salvar apenas dentro de cardsListContainer
-    const saveBtn = document.createElement("button");
-    saveBtn.textContent = "Salvar Alterações";
-    saveBtn.classList.add("btn-save-cards");
-    saveBtn.addEventListener("click", salvarOrdemCards);
-    cardsListContainer.appendChild(saveBtn);
+    showQuickWarning("Alterações salvas com sucesso!", "success");
   } catch (err) {
-    console.error("Erro ao listar/reorganizar cards:", err);
-    showQuickWarning("Erro ao carregar cards!", "#e74c3c");
+    console.error("Erro ao salvar alterações:", err);
+    showQuickWarning("Erro de rede ao salvar!", "error");
   }
-
-  initNewBadgeTimers(); // ativa o timer para cada card
 }
 
+
+// ===========================
+// Função: Adicionar Mapa/História
+// ===========================
+async function adicionarCards() {
+  limparConteudoPrincipal();
+  fecharSidebar();
+
+  const container = document.createElement("div");
+  container.className = "adicionar-card-page";
+  container.style.padding = "40px";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.height = "100%";
+
+  container.innerHTML = `
+    <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Adicionar Mapa/História</h2>
+    
+    <div style="display: flex; gap: 40px; flex: 1; align-items: stretch;">
+      <!-- Card Image - Left Column (Full Height) -->
+      <div class="add-card-image" style="
+        flex: 0 0 350px;
+        border: 3px dashed #ccc;
+        border-radius: 8px;
+        cursor: pointer;
+        background-color: #f9f9f9;
+        position: relative;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="text-align: center;">
+          <span style="font-size: 60px; color: #999; display: block;">+</span>
+          <div style="font-size: 14px; color: #999; margin-top: 10px;">Inserir card</div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div style="display: flex; flex-direction: column; gap: 20px; flex: 1;">
+        <!-- Title Image -->
+        <div class="add-title-image" style="
+          width: 100%;
+          height: 150px;
+          border: 3px dashed #ccc;
+          border-radius: 8px;
+          cursor: pointer;
+          background-color: #f9f9f9;
+          position: relative;
+          transition: all 0.3s ease;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <div style="text-align: center;">
+            <span style="font-size: 40px; color: #999; display: block;">+</span>
+            <div style="font-size: 14px; color: #999; margin-top: 5px;">Inserir título</div>
+          </div>
+        </div>
+
+        <!-- Texto do Título -->
+        <input id="add-title-text" type="text" placeholder="Inserir texto do título aqui..." style="
+          padding: 12px;
+          border: 2px solid #ddd;
+          border-radius: 8px;
+          font-family: Arial, sans-serif;
+          font-size: 16px;
+        ">
+
+        <!-- Description -->
+        <textarea id="add-description" placeholder="Inserir descrição aqui..." style="
+          flex: 1;
+          padding: 12px;
+          border: 2px solid #ddd;
+          border-radius: 8px;
+          font-family: Arial, sans-serif;
+          resize: none;
+          min-height: 100px;
+        "></textarea>
+
+        <!-- Buttons -->
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button id="add-save-btn" style="
+            padding: 12px 30px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+          ">Salvar</button>
+          <button id="add-cancel-btn" style="
+            padding: 12px 30px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+          ">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  adminContainer.style.display = "flex";
+  adminContainer.style.flexDirection = "column";
+  adminContainer.innerHTML = "";
+  adminContainer.appendChild(container);
+
+  // Setup image uploads
+  const cardImageEl = container.querySelector(".add-card-image");
+  const titleImageEl = container.querySelector(".add-title-image");
+  const titleTextEl = container.querySelector("#add-title-text");
+  const saveBtn = container.querySelector("#add-save-btn");
+  const cancelBtn = container.querySelector("#add-cancel-btn");
+
+  function setupImageUploadPage(el) {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.style.display = "none";
+    document.body.appendChild(fileInput);
+
+    el.addEventListener("click", () => fileInput.click());
+    el.addEventListener("mouseenter", () => {
+      el.style.borderColor = "#27ae60";
+      el.style.backgroundColor = "#ecf0f1";
+    });
+    el.addEventListener("mouseleave", () => {
+      el.style.borderColor = "#ccc";
+      el.style.backgroundColor = "#f9f9f9";
+    });
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "cover";
+        img.style.borderRadius = "8px";
+        img.file = file; // save file reference
+        el.innerHTML = "";
+        el.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    return fileInput;
+  }
+
+  const cardFileInput = setupImageUploadPage(cardImageEl);
+  const titleFileInput = setupImageUploadPage(titleImageEl);
+
+  // Handle buttons
+  saveBtn.addEventListener("click", async () => {
+    const cardImg = cardImageEl.querySelector("img");
+    const titleImg = titleImageEl.querySelector("img");
+    const titleText = titleTextEl.value.trim();
+    const description = container.querySelector("#add-description").value.trim();
+
+    if (!cardImg) {
+      showQuickWarning("Selecione a imagem do card!", "warning");
+      return;
+    }
+
+    if (!titleText) {
+      showQuickWarning("Preencha o texto do título!", "warning");
+      return;
+    }
+
+    if (!description) {
+      showQuickWarning("Preencha a descrição!", "warning");
+      return;
+    }
+
+    // If no title image, use card image as fallback
+    let titleImageFile = titleImg ? titleImg.file : cardImg.file;
+
+    const formData = new FormData();
+    formData.append("title_text", titleText);
+    formData.append("description", description);
+    formData.append("card_image", cardImg.file);
+    formData.append("title_image", titleImageFile);
+
+    try {
+      saveBtn.disabled = true;
+      const res = await fetch("/admin/add_map_story", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showQuickWarning("Mapa/História salvo com sucesso!", "success");
+
+        // Clear form
+        cardImageEl.innerHTML = '<div style="text-align: center;"><span style="font-size: 60px; color: #999; display: block;">+</span><div style="font-size: 14px; color: #999; margin-top: 10px;">Inserir card</div></div>';
+        titleImageEl.innerHTML = '<div style="text-align: center;"><span style="font-size: 40px; color: #999; display: block;">+</span><div style="font-size: 14px; color: #999; margin-top: 5px;">Inserir título</div></div>';
+        titleTextEl.value = "";
+        container.querySelector("#add-description").value = "";
+      } else {
+        showQuickWarning(`Erro: ${data.error || "Não foi possível salvar"}`, "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showQuickWarning("Erro ao salvar!", "error");
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    // Clear only the form content, keep the page open
+    cardImageEl.innerHTML = '<div style="text-align: center;"><span style="font-size: 60px; color: #999; display: block;">+</span><div style="font-size: 14px; color: #999; margin-top: 10px;">Inserir card</div></div>';
+    titleImageEl.innerHTML = '<div style="text-align: center;"><span style="font-size: 40px; color: #999; display: block;">+</span><div style="font-size: 14px; color: #999; margin-top: 5px;">Inserir título</div></div>';
+    titleTextEl.value = "";
+    container.querySelector("#add-description").value = "";
+  });
+}
+
+const editarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(2)"); // "Editar" (antes era "Remover" e "Reorganizar")
+
+// Evento de clique - Editar Cards
+editarMapStoryItem.addEventListener("click", editarCards);
+
+// ===========================
+// Função: Reorganizar cards (REMOVIDA - AGORA INTEGRADA EM editarCards)
+// ===========================
 // ===========================
 // Função: mover card na tela
 // ===========================
 function moverCard(cardEl, direction) {
-  const container = cardEl.parentElement;
-  const currentIndex = Array.from(container.children).indexOf(cardEl);
+  // cardEl é .reorganizar-card, seu parent é .card-wrapper
+  const cardWrapper = cardEl.parentElement;
+  const allWrappers = Array.from(cardsListContainer.querySelectorAll(".card-wrapper"));
+  const currentIndex = allWrappers.indexOf(cardWrapper);
   const newIndex = currentIndex + direction;
 
-  if (newIndex < 0 || newIndex >= container.children.length) return; // limite
+  if (newIndex < 0 || newIndex >= allWrappers.length) return;
 
   if (direction === -1) {
-    container.insertBefore(cardEl, container.children[newIndex]);
+    cardsListContainer.insertBefore(cardWrapper, allWrappers[newIndex]);
   } else {
-    container.insertBefore(cardEl, container.children[newIndex].nextSibling);
+    cardsListContainer.insertBefore(cardWrapper, allWrappers[newIndex].nextSibling);
   }
 }
 
@@ -842,11 +1026,12 @@ function moverCard(cardEl, direction) {
 // Função: Atualizar visibilidade dos botões
 // ===========================
 function atualizarBotoes() {
-  const cards = Array.from(cardsListContainer.children);
+  const cardWrappers = Array.from(cardsListContainer.querySelectorAll(".card-wrapper"));
 
-  cards.forEach((card, idx) => {
-    const btnLeft = card.querySelector(".btn-left");
-    const btnRight = card.querySelector(".btn-right");
+  cardWrappers.forEach((wrapper, idx) => {
+    const cardDiv = wrapper.querySelector(".reorganizar-card");
+    const btnLeft = cardDiv.querySelector(".btn-left");
+    const btnRight = cardDiv.querySelector(".btn-right");
 
     // Se for o primeiro, não tem esquerda
     if (idx === 0) {
@@ -856,7 +1041,7 @@ function atualizarBotoes() {
     }
 
     // Se for o último, não tem direita
-    if (idx === cards.length - 1) {
+    if (idx === cardWrappers.length - 1) {
       btnRight.style.display = "none";
     } else {
       btnRight.style.display = "block";
@@ -865,42 +1050,12 @@ function atualizarBotoes() {
 }
 
 // ===========================
-// Função: salvar ordem + visibilidade
+// Função: salvarOrdemCards() - DESCONTINUADA
+// Substituída por salvarAlteracoes() que é chamada pelo botão "Salvar Alterações"
 // ===========================
-async function salvarOrdemCards() {
-  const cards = Array.from(cardsListContainer.children)
-    .map((card) => {
-      const imgEl = card.querySelector("img");
-      return {
-        file: imgEl ? imgEl.src.split("/").pop() : null,
-        visible: card.dataset.visible === "true",
-      };
-    })
-    .filter((card) => card.file);
 
-  try {
-    const res = await fetch("/admin/save_cards_order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(cards),
-    });
 
-    const data = await res.json();
-    if (data.success) {
-      showQuickWarning("Alterações salvas com sucesso!", "success");
-    } else {
-      showQuickWarning("Erro ao salvar alterações!", "error");
-    }
-  } catch (err) {
-    console.error("Erro ao salvar ordem:", err);
-    showQuickWarning("Erro de rede ao salvar.", "error");
-  }
-}
-
-const reorganizarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(3)"); // "Reorganizar"
-reorganizarMapStoryItem.addEventListener("click", reorganizarCards);
-
-const linkarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(4)"); // criar no menu HTML
+const linkarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(3)"); // "Linkar"
 const linkarContainer = document.getElementById("linkarContainer");
 
 async function abrirSubguiaLinkar() {
