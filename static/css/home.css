@@ -1,3 +1,4 @@
+/* ==================== 1. RESET & ESTILOS BASE ==================== */
 body,
 h1,
 h2,
@@ -16,6 +17,7 @@ body.no-scroll {
   touch-action: none; /* para impedir scroll em dispositivos móveis */
 }
 
+/* ==================== 2. HEADER ==================== */
 header {
   position: fixed;
   top: 0;
@@ -47,7 +49,7 @@ header {
     -2px 2px 0 black;
 }
 
-/* ================= HEADER AUTH BUTTONS ================= */
+/* ==================== 3. BOTÕES DE AUTENTICAÇÃO DO HEADER ==================== */
 .auth-buttons {
   position: absolute;
   top: 17px;
@@ -65,7 +67,6 @@ header {
   transition: all 0.3s ease;
 }
 
-/* Botão Cadastrar: darkgreen com borda branca */
 .btn-register {
   background-color: darkgreen;
   color: white;
@@ -76,7 +77,6 @@ header {
   background-color: #006400; /* verde mais escuro */
 }
 
-/* Botão Entrar: branco com texto darkgreen, sem borda */
 .btn-login {
   background-color: white;
   color: darkgreen;
@@ -87,7 +87,35 @@ header {
   background-color: #f0f0f0;
 }
 
-/* ================= POPUPS DE LOGIN/CADASTRO ================= */
+.btn-logout {
+  background-color: darkgreen;
+  color: white;
+  border: 2px solid white;
+}
+
+.btn-logout:hover {
+  background-color: #006400;
+}
+
+.btn-admin {
+  background-color: white;
+  color: darkgreen;
+  border: none;
+}
+
+.btn-admin:hover {
+  background-color: #f0f0f0;
+}
+
+.welcome-message {
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  align-self: center;
+}
+
+/* ==================== 4. POPUP DE AUTENTICAÇÃO (LOGIN/CADASTRO) ==================== */
 .auth-popup {
   background: #ffffff;
   border-radius: 16px;
@@ -162,9 +190,17 @@ header {
   transition: background-color 0.3s ease;
 }
 
-.auth-btn:hover {
-  background-color: #006400;
-  transform: scale(1.05);
+@media (hover: hover) {
+  .auth-btn:hover {
+    background-color: #006400;
+    transform: scale(1.05);
+  }
+}
+
+@media (hover: none) {
+  .auth-btn:active {
+    background-color: #006400;
+  }
 }
 
 .auth-switch {
@@ -184,7 +220,7 @@ header {
   text-decoration: underline;
 }
 
-/* Popup de validação do usuário */
+/* ==================== 5. TOOLTIPS DE VALIDAÇÃO ==================== */
 .input-wrapper {
   position: relative;
   width: 100%;
@@ -215,12 +251,10 @@ header {
   color: #ff5555; /* vermelho por padrão */
 }
 
-/* Quando a regra é válida */
 .username-tooltip .valid {
   color: #9fff9c;
 }
 
-/* Mostrar tooltip quando ativo */
 .username-tooltip.show {
   display: block;
 }
@@ -285,7 +319,64 @@ header {
   display: block;
 }
 
-/* Regras dentro dos tooltips */
+/* ==================== PASSWORD TOGGLE ICON ==================== */
+.password-wrapper {
+  position: relative;
+  width: 100%;
+  display: block;
+  margin-bottom: 18px;
+}
+
+.password-field {
+  margin-left: -17px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: darkgreen;
+  transition: color 0.3s ease;
+  width: 24px;
+  height: 24px;
+}
+
+@media (hover: hover) {
+  .password-toggle {
+    transition: color 0.3s ease, transform 0.3s ease;
+  }
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.password-toggle .eye-open,
+.password-toggle .eye-closed {
+  display: none;
+  width: 20px;
+  height: 20px;
+  margin-bottom: 16px;
+}
+
+.password-toggle .eye-open {
+  display: block;
+}
+
 #username-tooltip p,
 #email-tooltip p,
 #password-tooltip p {
@@ -295,14 +386,12 @@ header {
   transition: color 0.3s ease;
 }
 
-/* Quando a regra é válida */
 #username-tooltip p.valid,
 #email-tooltip p.valid,
 #password-tooltip p.valid {
   color: greenyellow; /* verde quando válida */
 }
 
-/* Garantir cores de validação */
 #rule-email-format.invalid {
   color: #ff5555; /* vermelho */
 }
@@ -311,39 +400,7 @@ header {
   color: #9fff9c; /* verde */
 }
 
-/* ================= LOGADO ====================== */
-/* Botão Logout: darkgreen com borda branca */
-.btn-logout {
-  background-color: darkgreen;
-  color: white;
-  border: 2px solid white;
-}
-
-.btn-logout:hover {
-  background-color: #006400;
-}
-
-/* Botão Admin: branco, sem borda */
-.btn-admin {
-  background-color: white;
-  color: darkgreen;
-  border: none;
-}
-
-.btn-admin:hover {
-  background-color: #f0f0f0;
-}
-
-/* Mensagem de boas-vindas */
-.welcome-message {
-  color: white;
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  align-self: center;
-}
-
-/* ================= HERO SECTION ================= */
+/* ==================== 6. HERO SECTION ==================== */
 .hero {
   position: relative;
   width: 100%;
@@ -385,14 +442,14 @@ header {
   z-index: 1;
 }
 
-/* ================= CONTENT ================= */
+/* ==================== 7. CONTEÚDO PRINCIPAL ==================== */
 .content {
   background: white; /* garante fundo branco depois da Hero */
   padding: 50px 20px;
   text-align: center;
 }
 
-/* ================= SORT BAR ================= */
+/* ==================== 8. BARRA DE ORDENAÇÃO DE CARDS ==================== */
 .cards-sort-bar {
   width: 100%;
   max-width: 1200px;
@@ -424,7 +481,7 @@ header {
   box-shadow: 0 0 6px rgba(0, 100, 0, 0.4);
 }
 
-/* ================= CARDS ================= */
+/* ==================== 9. CARDS ==================== */
 .cards-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -449,12 +506,53 @@ header {
   display: block;
 }
 
-.card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+  .card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
 }
 
-/* ================= POPUP ================= */
+.new-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 60px;
+  height: 60px;
+  background: darkred; /* cor da medalha */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: 1000;
+  font-size: 12px;
+  clip-path: polygon(
+    50% 0%,
+    70% 15%,
+    100% 0,
+    85% 39%,
+    100% 50%,
+    85% 60%,
+    100% 100%,
+    70% 85%,
+    50% 100%,
+    30% 85%,
+    0 100%,
+    15% 60%,
+    0% 50%,
+    15% 35%,
+    0 0,
+    30% 15%
+  );
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transform: rotate(-10deg);
+}
+
+.new-badge span {
+  transform: rotate(15deg); /* compensa a rotação do selo */
+}
+
+/* ==================== 10. POPUP DE CARDS (OVERLAY) ==================== */
 .popup-overlay {
   position: fixed;
   top: 0;
@@ -475,6 +573,7 @@ header {
   opacity: 1;
 }
 
+/* ==================== 11. POPUP CARD - CONTEÚDO ==================== */
 .popup {
   background: #ffffff;
   border: 3px solid #333;
@@ -551,14 +650,48 @@ header {
   font-size: 24px;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: background-color 0.3s ease;
 }
 
-.popup-buttons button:hover {
-  background-color: #006400;
-  transform: scale(1.05);
+@media (hover: hover) {
+  .popup-buttons button {
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  .popup-buttons button:hover {
+    background-color: #006400;
+    transform: scale(1.05);
+  }
 }
 
+@media (hover: none) {
+  .popup-buttons button:active {
+    background-color: #006400;
+  }
+}
+
+.popup-buttons button.disabled {
+  opacity: 0.5; /* deixa meio apagado */
+  cursor: not-allowed; /* mostra cursor de não clicável */
+  pointer-events: none; /* desativa clique */
+}
+
+.popup-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+.popup-close:hover {
+  color: red;
+}
+
+/* ==================== 12. SISTEMA DE LIKES ==================== */
 .like-btn {
   background: transparent !important;
   display: inline-flex;
@@ -583,8 +716,10 @@ header {
   stroke: darkgreen; /* borda continua */
 }
 
-.like-btn:hover {
-  transform: scale(1.1);
+@media (hover: hover) {
+  .like-btn:hover {
+    transform: scale(1.1);
+  }
 }
 
 #like-count {
@@ -596,28 +731,126 @@ header {
   text-align: center;
 }
 
-.popup-buttons button.disabled {
-  opacity: 0.5; /* deixa meio apagado */
-  cursor: not-allowed; /* mostra cursor de não clicável */
-  pointer-events: none; /* desativa clique */
+/* ==================== 13. COMENTÁRIOS ==================== */
+#popup-comments {
+  background: white;
+  border: 2px solid darkgreen;
+  border-radius: 12px;
+  padding: 12px 15px;
+  margin: 12px 0;
+  width: 100%; /* ocupa toda largura disponível */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
-.popup-close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 28px;
-  font-weight: bold;
-  color: #333;
+#popup-comments h3 {
+  font-size: 16px;
+  margin-bottom: 6px;
+  color: darkgreen;
+  font-weight: 2000;
+}
+
+#comments-container {
+  max-height: 80px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-right: 10px;
+  overflow-x: hidden;
+}
+
+.comment {
+  background: white;
+  padding: 5px;
+  font-size: 15px;
+  text-align: left;
+  word-wrap: break-word;
+  width: 100%;
+  font-weight: 400;
+  border-bottom: 1px solid #ccc;
+}
+
+.comment strong {
+  color: darkgreen;
+  font-weight: 400;
+}
+
+.comment-input-area {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  width: 100%;
+}
+
+#comment-input {
+  flex: 1;
+  border: 2px solid darkgreen; /* 🔹 agora garantido */
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 16px;
+  outline: none;
+}
+
+#comment-input:focus {
+  border-color: #006400;
+  box-shadow: 0 0 6px rgba(0, 100, 0, 0.5);
+}
+
+#comment-submit {
+  background: none;
+  border: none;
+  color: darkgreen;
+  font-size: 28px; /* seta maior */
   cursor: pointer;
-  user-select: none;
+  margin-left: 8px;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.3s ease;
 }
 
-.popup-close:hover {
-  color: red;
+@media (hover: hover) {
+  #comment-submit {
+    transition: transform 0.2s ease, color 0.3s ease;
+  }
+
+  #comment-submit:hover {
+    color: #006400;
+    transform: scale(1.1);
+  }
 }
 
-/* ================= SIDEBAR ================= */
+@media (hover: none) {
+  #comment-submit:active {
+    color: #006400;
+  }
+}
+
+.login-warning {
+  font-size: 14px;
+  color: #666;
+  background: #f2f2f2;
+  padding: 6px;
+  border-radius: 6px;
+  text-align: center;
+  margin: 0 auto; /* centraliza horizontalmente */
+}
+
+#login-link {
+  color: darkgreen;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+#login-link:hover {
+  color: #006400;
+}
+
+/* ==================== 14. SIDEBAR ==================== */
 .sidebar-overlay {
   position: fixed;
   top: 0;
@@ -633,7 +866,6 @@ header {
   display: block;
 }
 
-/* Sidebar principal */
 .sidebar {
   position: fixed;
   top: 0;
@@ -649,12 +881,10 @@ header {
   overflow-y: auto;
 }
 
-/* Quando aberta */
 .sidebar.open {
   left: 0;
 }
 
-/* Protrusão sempre visível */
 .sidebar::before {
   content: "";
   position: absolute;
@@ -665,7 +895,6 @@ header {
   background-color: darkgreen;
 }
 
-/* Header da sidebar */
 .sidebar-header {
   display: flex;
   justify-content: flex-start; /* X à esquerda */
@@ -680,7 +909,6 @@ header {
   color: white;
 }
 
-/* Conteúdo da sidebar */
 .sidebar-content {
   padding: 0 15px;
 }
@@ -696,13 +924,11 @@ header {
   margin: 5px 0 15px 0;
 }
 
-/* Substituir o hamburguer pelo X */
 .menu-btn.open {
   font-size: 2rem;
   color: white;
 }
 
-/* ================= SIDEBAR GUIDES ================= */
 .sidebar-guide {
   display: block;
   width: 100%;
@@ -714,13 +940,21 @@ header {
   padding: 20px 0;
   cursor: pointer;
   position: relative;
+  transition: color 0.3s ease;
 }
 
-.sidebar-guide:hover {
-  color: #bfff00; /* efeito visual ao passar o mouse */
+@media (hover: hover) {
+  .sidebar-guide:hover {
+    color: #bfff00; /* efeito visual ao passar o mouse */
+  }
 }
 
-/* Linha acima da guia */
+@media (hover: none) {
+  .sidebar-guide:active {
+    color: #bfff00;
+  }
+}
+
 .sidebar-guide::before {
   content: "";
   position: absolute;
@@ -731,7 +965,6 @@ header {
   background-color: white;
 }
 
-/* Linha abaixo da guia */
 .sidebar-guide::after {
   content: "";
   position: absolute;
@@ -742,7 +975,42 @@ header {
   background-color: white;
 }
 
-/* ================= POPUP CONTA ================= */
+/* ==================== 15. POPUP "QUEM SOMOS" ==================== */
+.who-us-popup {
+  background-color: white;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+}
+
+.who-us-popup .popup-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.who-us-logo {
+  max-width: 200px;
+  margin-bottom: 20px;
+}
+
+.who-us-text h2 {
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.who-us-text p {
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: justify;
+}
+
+/* ==================== 16. POPUP "SUA CONTA" ==================== */
 .account-popup {
   width: 600px;
   max-width: 90%;
@@ -757,7 +1025,6 @@ header {
   min-height: 400px;
 }
 
-/* Frase guia */
 .account-guide {
   position: absolute;
   top: 15px;
@@ -767,7 +1034,6 @@ header {
   color: darkgreen;
 }
 
-/* Container centralizado */
 .account-content {
   flex: 1; /* ocupa espaço disponível */
   display: flex;
@@ -775,14 +1041,12 @@ header {
   justify-content: center; /* centraliza verticalmente */
 }
 
-/* Labels maiores e em negrito */
 .account-content label {
   font-weight: bold;
   font-size: 18px;
   margin-bottom: 6px;
 }
 
-/* Inputs */
 .account-input {
   width: 95%;
   padding: 12px 14px;
@@ -799,7 +1063,6 @@ header {
   box-shadow: 0 0 8px rgba(0, 100, 0, 0.4);
 }
 
-/* Botões */
 .account-buttons {
   margin-top: auto;
   display: flex;
@@ -837,7 +1100,6 @@ header {
   display: none;
 }
 
-/* Envolvendo inputs de conta */
 .account-input-wrapper {
   position: relative;
   display: flex;
@@ -845,7 +1107,6 @@ header {
   margin-bottom: 15px;
 }
 
-/* Tooltip padrão */
 .account-input-wrapper .tooltip {
   display: none;
   position: absolute;
@@ -860,12 +1121,10 @@ header {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Mostra tooltip quando ativado */
 .account-input-wrapper .tooltip.show {
   display: block;
 }
 
-/* Regras de validação dentro do tooltip */
 .account-input-wrapper .tooltip p {
   margin: 4px 0;
 }
@@ -874,7 +1133,7 @@ header {
   color: #4caf50; /* verde para válido */
 }
 
-/* Popup delete account */
+/* ==================== 17. POPUP DELETE ACCOUNT ==================== */
 #delete-account-popup-overlay {
   position: fixed;
   top: 0;
@@ -934,7 +1193,7 @@ header {
   color: #333;
 }
 
-/* ================= FORGOT PASSWORD POPUP ================= */
+/* ==================== 18. POPUP ESQUECI MINHA SENHA ==================== */
 #forgot-password-overlay {
   display: none; /* escondido por padrão */
   align-items: center;
@@ -950,7 +1209,6 @@ header {
   max-width: 400px;
 }
 
-/* Link esqueci minha senha */
 #forgot-password-link {
   color: darkgreen;
   font-weight: bold;
@@ -997,194 +1255,7 @@ header {
   }
 }
 
-/* Fade-in keyframes */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Popup Quem Somos */
-.who-us-popup {
-  background-color: white;
-  border-radius: 15px;
-  padding: 30px;
-  max-width: 500px;
-  width: 90%;
-  text-align: center;
-  position: relative;
-}
-
-.who-us-popup .popup-close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 28px;
-  cursor: pointer;
-}
-
-.who-us-logo {
-  max-width: 200px;
-  margin-bottom: 20px;
-}
-
-.who-us-text h2 {
-  margin-bottom: 15px;
-  font-size: 24px;
-}
-
-.who-us-text p {
-  font-size: 16px;
-  line-height: 1.5;
-  text-align: justify;
-}
-
-.new-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 60px;
-  height: 60px;
-  background: darkred; /* cor da medalha */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-weight: 1000;
-  font-size: 12px;
-  clip-path: polygon(
-    50% 0%,
-    70% 15%,
-    100% 0,
-    85% 39%,
-    100% 50%,
-    85% 60%,
-    100% 100%,
-    70% 85%,
-    50% 100%,
-    30% 85%,
-    0 100%,
-    15% 60%,
-    0% 50%,
-    15% 35%,
-    0 0,
-    30% 15%
-  );
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  transform: rotate(-10deg);
-}
-
-.new-badge span {
-  transform: rotate(15deg); /* compensa a rotação do selo */
-}
-
-/* ================= COMENTÁRIOS ================= */
-#popup-comments {
-  background: white;
-  border: 2px solid darkgreen;
-  border-radius: 12px;
-  padding: 12px 15px;
-  margin: 12px 0;
-  width: 100%; /* ocupa toda largura disponível */
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-#popup-comments h3 {
-  font-size: 16px;
-  margin-bottom: 6px;
-  color: darkgreen;
-  font-weight: 2000;
-}
-
-/* Lista de comentários */
-#comments-container {
-  max-height: 80px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-  padding-right: 10px;
-  overflow-x: hidden;
-}
-
-/* Cada comentário */
-.comment {
-  background: white;
-  padding: 5px;
-  font-size: 15px;
-  text-align: left;
-  word-wrap: break-word;
-  width: 100%;
-  font-weight: 400;
-  border-bottom: 1px solid #ccc;
-}
-
-.comment strong {
-  color: darkgreen;
-  font-weight: 400;
-}
-
-/* Área de input + botão */
-.comment-input-area {
-  display: flex;
-  align-items: center;
-  margin-top: 8px;
-  width: 100%;
-}
-
-/* Campo de texto */
-#comment-input {
-  flex: 1;
-  border: 2px solid darkgreen; /* 🔹 agora garantido */
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 16px;
-  outline: none;
-}
-
-#comment-input:focus {
-  border-color: #006400;
-  box-shadow: 0 0 6px rgba(0, 100, 0, 0.5);
-}
-
-/* Botão de enviar */
-#comment-submit {
-  background: none;
-  border: none;
-  color: darkgreen;
-  font-size: 28px; /* seta maior */
-  cursor: pointer;
-  margin-left: 8px;
-  line-height: 1;
-  padding: 0;
-  transition: transform 0.2s ease, color 0.3s ease;
-}
-
-#comment-submit:hover {
-  color: #006400;
-  transform: scale(1.1);
-}
-
-/* Aviso login */
-.login-warning {
-  font-size: 14px;
-  color: #666;
-  background: #f2f2f2;
-  padding: 6px;
-  border-radius: 6px;
-  text-align: center;
-  margin: 0 auto; /* centraliza horizontalmente */
-}
-
-/* ===== PARCEIROS ===== */
+/* ==================== 19. SEÇÃO PARCEIROS ==================== */
 .parceiros {
   margin: 50px auto;
   text-align: center;
@@ -1221,8 +1292,10 @@ header {
   margin-bottom: 60px;
 }  
 
-.parceiro:hover {
-  transform: scale(1.05);
+@media (hover: hover) {
+  .parceiro:hover {
+    transform: scale(1.05);
+  }
 }
 
 .parceiro-bg {
@@ -1236,7 +1309,6 @@ header {
   align-items: center;
 }
 
-/* Fundo borrado apenas no pseudo-elemento */
 .parceiro-bg::before {
   content: "";
   position: absolute;
@@ -1249,7 +1321,6 @@ header {
   border-radius: 12px;
 }
 
-/* Logo nítida acima */
 .parceiro-logo {
   position: relative;
   z-index: 2; /* acima do pseudo-elemento */
@@ -1259,7 +1330,7 @@ header {
   filter: none; /* garante nitidez */
 }
 
-/* ===== POPUP PARCEIROS ===== */
+/* ==================== 20. POPUP PARCEIROS ==================== */
 #partner-popup-overlay {
     display: none; /* escondido por padrão */
     position: fixed;
@@ -1273,7 +1344,6 @@ header {
     align-items: center;
 }
 
-/* Conteúdo do popup */
 .partner-popup {
     background: #fff;
     border-radius: 12px;
@@ -1294,7 +1364,6 @@ header {
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* Quando o overlay estiver visível, anima o popup */
 #partner-popup-overlay.show .partner-popup {
     opacity: 1;
     transform: scale(1);
@@ -1319,7 +1388,6 @@ header {
   margin-bottom: 14px;
 }
 
-/* ===== LINKS DE PARCEIROS ===== */
 .partner-links {
     display: flex;
     justify-content: center;
@@ -1327,7 +1395,6 @@ header {
     margin-top: 15px;
 }
 
-/* Ícones apenas, sem fundo, cor controlada via CSS */
 .partner-links a.partner-link {
     display: flex;
     align-items: center;
@@ -1338,8 +1405,16 @@ header {
     transition: color 0.3s;
 }
 
-.partner-links a.partner-link:hover {
+@media (hover: hover) {
+  .partner-links a.partner-link:hover {
     color: green; /* hover dos ícones */
+  }
+}
+
+@media (hover: none) {
+  .partner-links a.partner-link:active {
+    color: green;
+  }
 }
 
 .partner-links a.partner-link .icon {
@@ -1348,7 +1423,7 @@ header {
     fill: currentColor; /* usa a cor definida no a.partner-link */
 }
 
-/* ================= FOOTER ================= */
+/* ==================== 21. FOOTER ==================== */
 .footer {
   background-color: #f2f2f2; /* cinzento próximo do branco */
   padding: 15px 0;
@@ -1361,19 +1436,36 @@ header {
 .footer a {
   display: inline-block;
   margin: 0 15px;
+  color: darkgreen;
+  transition: transform 0.3s ease, color 0.3s ease;
 }
 
-.footer img {
+@media (hover: hover) {
+  .footer a:hover {
+    transform: scale(1.2);
+    color: #006400;
+  }
+}
+
+@media (hover: none) {
+  .footer a:active {
+    color: #006400;
+  }
+}
+
+.footer svg {
   width: 35px;
   height: 35px;
-  transition: transform 0.3s ease;
+  fill: black;
+  transition: fill 0.3s ease;
 }
 
-.footer img:hover {
-  transform: scale(1.2);
+@media (hover: hover) {
+  .footer a:hover svg {
+    fill: #333;
+  }
 }
 
-/* Links extras do footer */
 .footer-links {
   margin-top: 15px;
 }
@@ -1392,7 +1484,7 @@ header {
   color: green; /* destaque ao passar o mouse */
 }
 
-/* Popup FAQ */
+/* ==================== 22. POPUP FAQ ==================== */
 .faq-popup {
   display: none; /* oculto inicialmente */
   position: fixed;
@@ -1438,8 +1530,7 @@ header {
   color: #ff0000;
 }
 
-
-/* Botão do modo noturno */
+/* ==================== 23. BOTÃO DARK MODE ==================== */
 .dark-mode-btn {
   position: absolute;
   margin-top: 3px;
@@ -1457,13 +1548,25 @@ header {
   transition: transform 0.3s ease;
 }
 
-.dark-mode-btn:hover svg {
-  transform: rotate(20deg);
+@media (hover: hover) {
+  .dark-mode-btn:hover svg {
+    transform: rotate(20deg);
+  }
 }
 
-/* ============================= */
-/* MODO ESCURO                   */
-/* ============================= */
+/* ==================== 24. ANIMAÇÕES ==================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== 25. MODO ESCURO ==================== */
 body.dark-mode {
   background: #1e1e1e; /* fundo geral escuro */
   color: #f0f0f0; /* texto mais claro */
@@ -1474,13 +1577,11 @@ footer.dark-mode {
   color: #f0f0f0; /* texto mais claro */
 }
 
-/* Conteúdo principal */
 body.dark-mode .content {
   background: #1e1e1e;
   color: #f0f0f0;
 }
 
-/* Popups brancos */
 body.dark-mode .auth-popup,
 body.dark-mode .popup,
 body.dark-mode .account-popup,
@@ -1490,7 +1591,6 @@ body.dark-mode .faq-content {
   border-color: #444;
 }
 
-/* Inputs e caixas dentro de popups */
 body.dark-mode .auth-input,
 body.dark-mode .account-input {
   background: #2a2a2a;
@@ -1504,27 +1604,39 @@ body.dark-mode .account-input:focus {
   box-shadow: 0 0 8px rgba(200, 200, 200, 0.4);
 }
 
-/* Descrições / textos dentro de popups */
 body.dark-mode .popup-description {
   color: #ddd;
 }
 
-/* Comentários e containers internos */
 body.dark-mode #comments-container {
   color: #f0f0f0;
 }
 
-/* Footer no modo escuro */
 body.dark-mode footer {
   background: #121212;
   color: #f0f0f0;
+}
+
+body.dark-mode .footer a {
+  color: white;
+}
+
+body.dark-mode .footer a:hover {
+  color: #bfff00;
+}
+
+body.dark-mode .footer svg {
+  fill: white;
+}
+
+body.dark-mode .footer a:hover svg {
+  fill: #bfff00;
 }
 
 body.dark-mode .parceiros {
   background: #1e1e1e;
 }
 
-/* Ícones sociais no footer - inverte as cores */
 body.dark-mode footer img {
   filter: invert(1);
 }
@@ -1542,7 +1654,6 @@ body.dark-mode .email-tooltip,
 body.dark-mode .password-tooltip,
 body.dark-mode .account-guide,
 body.dark-mode .account-input,
-body.dark-mode .popup-buttons button,
 body.dark-mode .like-btn .like-icon svg,
 body.dark-mode #like-count,
 body.dark-mode .forgot-password,
@@ -1610,10 +1721,29 @@ body.dark-mode .popup-close:hover {
   color: red;
 }
 
-/* Botões que eram darkgreen → ajusta o fundo */
-body.dark-mode .auth-btn,
-body.dark-mode .popup-buttons button {
+body.dark-mode .password-toggle {
+  color: white;
+}
+
+@media (hover: hover) {
+  body.dark-mode .password-toggle:hover {
+    color: #bfff00;
+  }
+}
+
+body.dark-mode .auth-btn {
   border-color: #1e1e1e;
+}
+
+body.dark-mode .popup-buttons button {
+  background-color: white;
+  color: black;
+  border: none;
+}
+
+body.dark-mode .popup-buttons button:hover {
+  background-color: #f0f0f0;
+  color: black;
 }
 
 body.dark-mode #popup-comments {
@@ -1628,7 +1758,6 @@ body.dark-mode #popup-comments {
   border-color: #555;
 }
 
-/* Inputs no darkmode */
 body.dark-mode .auth-input,
 body.dark-mode .account-input {
   background-color: #1e1e1e;
@@ -1641,9 +1770,16 @@ body.dark-mode #comment-submit {
   color: white;
 }
 
-/* ================= RESPONSIVIDADE ================= */
+body.dark-mode #login-link {
+  color: white;
+  text-decoration: underline;
+}
 
-/* Tablets e celulares */
+body.dark-mode #login-link:hover {
+  color: #bfff00;
+}
+
+/* ==================== 26. RESPONSIVIDADE - 1024px ==================== */
 @media (max-width: 1024px) {
   header {
     height: 80px;
@@ -1652,7 +1788,7 @@ body.dark-mode #comment-submit {
   .auth-popup {
     width: 85%; /* aumenta ocupação da tela */
     max-width: 400px;
-    padding: 50px 30px;
+    padding: 60px 40px;
     align-items: center;
     justify-content: center;
   }
@@ -1809,19 +1945,15 @@ body.dark-mode #comment-submit {
     padding: 10px 18px;
   }
 
-  /* ================= LOGADO ====================== */
-  /* Botão Logout: darkgreen com borda branca */
   .btn-logout {
     margin-top: 14px;
     margin-left: 100px;
   }
 
-  /* Botão Admin: branco, sem borda */
   .btn-admin {
     margin-left: 100px;
   }
 
-  /* Mensagem de boas-vindas */
   .welcome-message {
     display: none;
   }
@@ -1894,6 +2026,7 @@ body.dark-mode #comment-submit {
   }
 }
 
+/* ==================== 27. RESPONSIVIDADE - 320px ==================== */
 @media (max-width: 320px){
   .auth-popup {
     width: 70%; /* aumenta ocupação da tela */
@@ -2005,8 +2138,6 @@ body.dark-mode #comment-submit {
     width: 50%; /* menor que 90%, mantém espaço para conteúdo */
   }
 
-  /* ================= LOGADO ====================== */
-  /* Botão Logout: darkgreen com borda branca */
   .btn-logout {
     margin-top: 16px;
   }
@@ -2050,6 +2181,7 @@ body.dark-mode #comment-submit {
   }
 }
 
+/* ==================== 28. RESPONSIVIDADE - 375px ==================== */
 @media (max-width: 375px){
   .site-title {
     font-size: 18px;
@@ -2060,7 +2192,7 @@ body.dark-mode #comment-submit {
   }
 }
 
-/* Telas até 1280px (720p) */
+/* ==================== 29. RESPONSIVIDADE - 1492px ==================== */
 @media (max-width: 1492px) {
   .card {
     max-width: 240px;
@@ -2083,4 +2215,232 @@ body.dark-mode #comment-submit {
   #comments-container {
     max-height: 70px;
   }
+}
+
+/* ==================== 30. SISTEMA DE NOTIFICAÇÕES TOAST ==================== */
+
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 400px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  animation: slideIn 0.3s ease-out;
+  transform: translateX(400px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+  max-width: 100%;
+  word-wrap: break-word;
+  font-size: 14px;
+  font-weight: 500;
+  min-height: 44px;
+}
+
+.toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Tipos de toast */
+.toast-success {
+  background-color: #4CAF50;
+  color: white;
+  border-left: 4px solid #2e7d32;
+}
+
+.toast-error {
+  background-color: #f44336;
+  color: white;
+  border-left: 4px solid #c62828;
+}
+
+.toast-warning {
+  background-color: #ff9800;
+  color: white;
+  border-left: 4px solid #e65100;
+}
+
+.toast-info {
+  background-color: #2196F3;
+  color: white;
+  border-left: 4px solid #1565c0;
+}
+
+/* Ícone do toast */
+.toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* Mensagem do toast */
+.toast-message {
+  flex: 1;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Botão de fechar */
+.toast-close {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0;
+  margin-left: 8px;
+  flex-shrink: 0;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+/* Animações */
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Toast saindo (via CSS quando classe .show é removida) */
+.toast:not(.show) {
+  animation: slideOut 0.3s ease-out forwards;
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .toast-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: 100%;
+  }
+
+  .toast {
+    max-width: 100%;
+    font-size: 13px;
+    padding: 12px 14px;
+    min-height: 40px;
+  }
+
+  .toast-message {
+    flex: 1;
+  }
+}
+
+/* Dark mode */
+body.dark-mode .toast-success {
+  background-color: #388e3c;
+  border-left-color: #1b5e20;
+}
+
+body.dark-mode .toast-error {
+  background-color: #d32f2f;
+  border-left-color: #b71c1c;
+}
+
+body.dark-mode .toast-warning {
+  background-color: #f57c00;
+  border-left-color: #e65100;
+}
+
+body.dark-mode .toast-info {
+  background-color: #1976d2;
+  border-left-color: #0d47a1;
+}
+
+/* ==================== 31. SCROLLBAR CUSTOMIZADO ==================== */
+
+/* Scrollbar do webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px; /* largura do scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* fundo transparente */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d3d3d3; /* cinza claro */
+  border-radius: 10px; /* bordas arredondadas (cápsula) */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #999999; /* cinza mais escuro no hover */
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Firefox */
+* {
+  scrollbar-color: #d3d3d3 transparent;
+  scrollbar-width: thin;
+}
+
+/* Scrollbar do Firefox no hover (simulado) */
+*:hover {
+  scrollbar-color: #999999 transparent;
+}
+
+/* Dark mode - scrollbar cinzento mais suave */
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background-color: #555555; /* cinza escuro para dark mode */
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background-color: #888888; /* cinza mais claro no hover em dark mode */
+}
+
+body.dark-mode {
+  scrollbar-color: #555555 transparent;
+}
+
+body.dark-mode:hover {
+  scrollbar-color: #888888 transparent;
 }

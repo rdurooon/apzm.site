@@ -3,40 +3,30 @@
         "file": "gpcdertoten.jpg",
         "title": "GPC Der Toten",
         "description": "Após um dos alunos ingerir uma pedra azul brilhante, ele se tornou um morto-vivo, instaurando o caos na escola. Quatro alunos e mais um amigo deles devem sobreviver e achar uma maneira de sair vivos dali.",
-        "visible": true,
-        "is_new": false,
-        "new_since": null
+        "visible": true
     },
     {
         "file": "diefestung.jpg",
         "title": "Die Festung",
         "description": "Os sobreviventes do caos da escola GPC saem vivos e partem em direção ao supermercado Festung, a pedido de Joãozin. Eles vão descobrir segredos nunca visto, com os mortos-vivos presente no local.",
-        "visible": true,
-        "is_new": false,
-        "new_since": null
+        "visible": true
     },
     {
         "file": "fdu.jpg",
         "title": "Fortaleza Der Untoten",
         "description": "Quatro soldados são requisitados a irem à Fortaleza de São José, investigar sobre rumores de uma doença. Ao chegarem, se deparam com diversos infectados pela doença. Eles adentram a fortaleza, em busca de resposta, com um ser misterioso guiando-os.",
-        "visible": true,
-        "is_new": false,
-        "new_since": null
+        "visible": true
     },
     {
         "file": "bacabeiras.jpg",
         "title": "Bacabeiras",
         "description": "Um grupo de agentes do governo começam a trabalhar, no posto de segurança do Teatro das Bacabeiras. Ao chegarem lá, descobrem se tratar de uma instalação de pesquisa do governo amapaense. Porém, algo inesperado acontece no local.",
-        "visible": true,
-        "is_new": false,
-        "new_since": null
+        "visible": true
     },
     {
         "file": "sacaca.jpg",
         "title": "Sacaca",
         "description": "O grupo 7 chega ao museu Sacaca, após fugirem através do teletransporte de Bacabeiras. Sendo mais uma instalação de pesquisa do governo, há infectados no local. Pablo pede para eles irem se encontrar com ele, ajudando-os no processo.",
-        "visible": true,
-        "is_new": false,
-        "new_since": null
+        "visible": true
     }
 ]
