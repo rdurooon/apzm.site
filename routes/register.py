@@ -2,6 +2,7 @@ import json
 import os
 import uuid
 from datetime import datetime
+import pytz
 from flask import Blueprint, request, jsonify, session
 from tools.crypto_utils import cipher, encrypt_value, decrypt_value
 
@@ -116,7 +117,7 @@ def register_user():
         "email": encrypt_value(email),
         "password": encrypt_value(password),
         "is_admin": False,
-        "created_at": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        "created_at": datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%d/%m/%Y %H:%M:%S")
     }
 
     users.append(new_user)

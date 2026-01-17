@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import pytz
 import os
 import json
 import shutil
@@ -35,7 +36,7 @@ def write_json(path, data):
 
 # =========================== FUNÇÃO PARA CHECAR "NOVA" ===========================
 def check_new_badges(cards):
-    now = datetime.utcnow()
+    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
     changed = False
     for card in cards:
         if card.get("is_new") and card.get("new_since"):
@@ -61,6 +62,7 @@ def admin():
 
 # =========================== LISTAR USUÁRIOS ===========================
 @admin_bp.route("/admin/list_users")
+@admin_required
 def list_users():
     users = load_users()
     return jsonify([
@@ -124,10 +126,11 @@ def list_cards():
 @admin_required
 def add_map_story():
     description = request.form.get("description")
+    title_text = request.form.get("title_text")
     card_image = request.files.get("card_image")
 
-    if not description or not card_image:
-        return jsonify({"success": False, "error": "Faltando descrição ou imagem do card"})
+    if not description or not title_text or not card_image:
+        return jsonify({"success": False, "error": "Faltando descrição, título ou imagem do card"})
 
     # Salva imagem do card
     card_filename = secure_filename(card_image.filename) # type: ignore
@@ -147,11 +150,10 @@ def add_map_story():
 
     # Atualiza JSON
     cards = read_json(DATA_FILE, [])
-    title_json = os.path.splitext(card_filename)[0].capitalize()
 
     cards.append({
         "file": card_filename,
-        "title": title_json,
+        "title": title_text,
         "description": description
     })
 
@@ -231,7 +233,7 @@ def toggle_card_new(filename):
         if card["file"] == filename:
             card["is_new"] = is_new
             if is_new:
-                card["new_since"] = datetime.utcnow().isoformat()
+                card["new_since"] = datetime.now(pytz.timezone("America/Sao_Paulo")).isoformat()
             else:
                 card["new_since"] = None
             break
