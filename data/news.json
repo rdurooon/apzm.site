@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1768937675631,
+        "title": "Atualização do site: Notícias!",
+        "subtitle": "Agora o site possui uma aba dedicada a noticias.",
+        "text": "É com grande satisfação que anunciamos que o nosso site agora conta com uma aba de Notícias!\r\n\r\nEsse novo espaço foi criado para centralizar tudo o que acontece no Amapá Zombies e também das novidades de nossos parceiros. Para conferir as novidades, você pode clicar no ícone de jornal no canto superior esquerdo ou acessar diretamente pelo menu lateral. Por aqui, você ficará por dentro do desenvolvimento de novas histórias e mapas, atualizações técnicas do site e informações importantes que conectam nosso projeto ao ecossistema de nossos colaboradores.\r\n\r\nAcreditamos que essa funcionalidade será um pilar fundamental para o crescimento do site e o fortalecimento do nosso projeto. Esperamos que vocês curtam essa novidade e aproveitem o espaço para acompanhar cada passo da nossa evolução. Como sempre, o feedback de vocês é essencial: contem para a gente o que acharam dessa nova função e como podemos torná-la ainda melhor!",
+        "image": "noticias.jpg",
+        "created_at": "2026-01-20T16:34:35.631578-03:00",
+        "button": null
+    },
+    {
+        "id": 1768933239028,
+        "title": "Lançamento oficial do site",
+        "subtitle": "Em 2025, o Amapá Zombies lança seu site oficial",
+        "text": "É com muita alegria que anunciamos que, desde o dia 19 de outubro de 2025, o Amapá Zombies conta com seu site oficial! Desenvolvemos esse espaço para reunir tudo o que nossa comunidade mais gosta em um só lugar: aqui você tem acesso direto a todas as nossas histórias e mapas, conhece nossos parceiros e encontra links rápidos para nossas redes sociais. A ideia é que o site seja o nosso ponto de encontro principal, facilitando a distribuição de cada novo conteúdo que produzimos para vocês.\r\n\r\nEste é apenas o começo da nossa jornada. O site continuará evoluindo com melhorias e novas funções que serão adicionadas com o tempo, sempre focando em entregar a melhor experiência possível. Convidamos todos a explorarem nossa nova casa e ficarem de olho, pois tudo o que vem de novo no projeto estará aqui!",
+        "image": "siteOficial.jpg",
+        "created_at": "2026-01-20T15:20:39.028677-03:00",
+        "button": null
+    }
+]

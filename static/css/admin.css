@@ -952,3 +952,11 @@ input:checked + .slider:before {
     flex: 1;
   }
 }
+
+/* News card (reaproveita user-card, só ajusta textos) */
+.news-card .created-at {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

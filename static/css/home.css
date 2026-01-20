@@ -49,6 +49,162 @@ header {
     -2px 2px 0 black;
 }
 
+/* ==================== NOTICIAS ==================== */
+
+.news-btn {
+  position: absolute;
+  margin-top: 3px;
+  left: 53px;           /* fica entre menu (20px) e dark-mode (65px) */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  user-select: none;
+}
+
+@media (hover: hover) {
+  .news-btn:hover {
+    transform: scale(1.08);
+  }
+}
+
+.news-icon {
+  width: 26px;
+  height: 26px;
+  color: white;
+  display: block;
+}
+
+body.dark-mode .news-icon {
+  color: white;
+}
+
+.news-popup {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 92%;
+  max-width: 900px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 22px 22px 26px 22px;
+  position: relative;
+  border: 2px solid #333;
+}
+
+body.dark-mode .news-popup {
+  background: #1e1e1e;
+  color: #f0f0f0;
+  border-color: #444;
+}
+
+.news-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.news-title {
+  margin: 0;
+  color: darkgreen;
+  font-size: 28px;
+}
+
+body.dark-mode .news-title {
+  color: white;
+}
+
+.news-subtitle {
+  margin-top: 6px;
+  color: #555;
+}
+
+body.dark-mode .news-subtitle {
+  color: #ccc;
+}
+
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.news-item {
+  border: 2px solid darkgreen;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fff;
+  text-align: left;
+}
+
+body.dark-mode .news-item {
+  background: #1e1e1e;
+  border-color: #555;
+}
+
+.news-item h3 {
+  margin: 0;
+  color: darkgreen;
+  font-size: 22px;
+}
+
+body.dark-mode .news-item h3 {
+  color: white;
+}
+
+.news-item h4 {
+  margin: 8px 0 12px 0;
+  font-weight: 400;
+  color: #444;
+  font-size: 16px;
+}
+
+body.dark-mode .news-item h4 {
+  color: #ccc;
+}
+
+.news-item img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 8px 0 12px 0;
+}
+
+.news-item p {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 16px;
+  color: #222;
+  white-space: pre-wrap; /* mantém quebras de linha do texto */
+}
+
+body.dark-mode .news-item p {
+  color: #eee;
+}
+
+.news-item .news-btn-link {
+  display: inline-flex;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: darkgreen;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (hover: hover) {
+  .news-item .news-btn-link:hover {
+    background: #006400;
+    transform: scale(1.03);
+  }
+}
+
 /* ==================== 3. BOTÕES DE AUTENTICAÇÃO DO HEADER ==================== */
 .auth-buttons {
   position: absolute;
@@ -1534,7 +1690,7 @@ header {
 .dark-mode-btn {
   position: absolute;
   margin-top: 3px;
-  left: 65px; /* ao lado do menu hamburguer */
+  left: 85px; /* ao lado do menu hamburguer */
   background: none;
   border: none;
   cursor: pointer;
@@ -1864,14 +2020,12 @@ body.dark-mode #login-link:hover {
   }
 
   .menu-btn {
-    margin-bottom: 35px;
     font-size: 24px; /* maior */
     left: 28px;
   }
   
   .dark-mode-btn {
-    left: 21px; /* ao lado do menu hamburguer */
-    margin-top: 35px;
+    left: 85px; /* ao lado do menu hamburguer */
   }
 
   .main-logo {
@@ -2179,6 +2333,10 @@ body.dark-mode #login-link:hover {
     align-self: flex-end; /* botão alinhado à direita */
     padding-bottom: 8px;
   }
+
+  .news-btn {
+    display: none;
+  }
 }
 
 /* ==================== 28. RESPONSIVIDADE - 375px ==================== */
@@ -2189,6 +2347,35 @@ body.dark-mode #login-link:hover {
 
   .cards-container {
     grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  }
+
+  .news-btn {
+    display: none;
+  }
+}
+
+/* ==================== 28.1 RESPONSIVIDADE - 425px ==================== */
+@media (max-width: 425px){
+  .news-btn {
+    display: none;
+  }
+}
+
+/* ==================== 28.2 RESPONSIVIDADE - 425px ==================== */
+@media (max-width: 425px){
+  .news-btn {
+    display: none;
+  }
+
+  .menu-btn {
+    margin-bottom: 35px;
+    font-size: 24px; /* maior */
+    left: 28px;
+  }
+  
+  .dark-mode-btn {
+    left: 21px; /* ao lado do menu hamburguer */
+    margin-top: 35px;
   }
 }
 

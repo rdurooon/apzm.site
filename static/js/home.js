@@ -1004,4 +1004,215 @@ document.addEventListener("DOMContentLoaded", () => {
     cardsContainer.innerHTML = "";
     cards.forEach((card) => cardsContainer.appendChild(card));
   });
+
+  // ==================== NOTÍCIAS ====================
+
+  const newsBtn = document.getElementById("news-btn");
+  const newsOverlay = document.getElementById("news-popup-overlay");
+  const newsClose = document.getElementById("news-popup-close");
+  const newsList = document.getElementById("news-list");
+
+  const NEWS_STORAGE_KEY = "apzm_news_last_open";
+  const NEWS_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 14;
+
+  function parseDateSafe(s) {
+    const t = Date.parse(s);
+    return Number.isFinite(t) ? t : 0;
+  }
+
+  function sortNewsNewestFirst(items) {
+    return (items || []).slice().sort((a, b) => {
+      const ta = parseDateSafe(a.created_at);
+      const tb = parseDateSafe(b.created_at);
+      return tb - ta;
+    });
+  }
+
+  function openNewsPopup() {
+    if (!newsOverlay) return;
+    newsOverlay.classList.add("show");
+    updateScrollLock();
+    localStorage.setItem(NEWS_STORAGE_KEY, String(Date.now()));
+  }
+
+  function closeNewsPopup() {
+    if (!newsOverlay) return;
+    newsOverlay.classList.remove("show");
+    updateScrollLock();
+  }
+
+  function renderNews(items) {
+    if (!newsList) return;
+
+    if (!items || items.length === 0) {
+      newsList.innerHTML = `<div class="news-item"><p>Nenhuma notícia no momento.</p></div>`;
+      return;
+    }
+
+    const html = items.map((n) => {
+      const title = escapeHtml(n.title || "");
+      const subtitle = escapeHtml(n.subtitle || "");
+      const text = escapeHtml(n.text || "");
+      const img = (n.image || "").trim();
+      const imgHtml = img ? `<img src="/static/images/news/${encodeURIComponent(img)}" alt="${title}">` : "";
+
+    let buttonHtml = "";
+    if (n.button && typeof n.button === "object") {
+      const bText = escapeHtml(n.button.text || "Abrir");
+      const bType = (n.button.type || "url").trim();
+      const bTarget = (n.button.target || n.button.url || "").trim();
+
+      if (bTarget) {
+        buttonHtml = `
+          <button
+            class="news-btn-link"
+            type="button"
+            data-action="${escapeHtml(bType)}"
+            data-target="${escapeHtml(bTarget)}"
+          >${bText}</button>
+        `;
+      }
+    }
+
+      return `
+        <div class="news-item">
+          <h3>${title}</h3>
+          ${subtitle ? `<h4>${subtitle}</h4>` : ""}
+          ${imgHtml}
+          ${text ? `<p>${text}</p>` : ""}
+          ${buttonHtml}
+        </div>
+      `;
+    }).join("");
+
+    function openPartnerByFile(partnerFile) {
+      const el = document.querySelector(`.parceiro[data-file="${CSS.escape(partnerFile)}"]`);
+      if (!el) {
+        showQuickWarning("Parceiro não encontrado.", "error");
+        return;
+      }
+      el.click(); // reaproveita seu listener atual
+    }
+
+    function openCardByFile(cardFile) {
+      // tenta achar o card pelo arquivo (se você guardar o file em dataset, melhor ainda)
+      const cardEl = Array.from(document.querySelectorAll(".card")).find((c) => {
+        const img = c.querySelector("img");
+        const file = (img?.src || "").split("/").pop();
+        return file === cardFile;
+      });
+
+      if (!cardEl) {
+        showQuickWarning("Mapa/História não encontrado.", "error");
+        return;
+      }
+
+      // reaproveita o fluxo atual
+      cardEl.click();
+    }
+
+    function handleNewsAction(type, target) {
+      const t = String(type || "").toLowerCase();
+      const trg = String(target || "").trim();
+      if (!trg) return;
+
+      if (t === "url") {
+        if (!isValidHttpUrl(trg)) return showQuickWarning("Link inválido.", "error");
+        window.open(trg, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      if (t === "partner") {
+        closeNewsPopup();          // opcional: fecha notícias antes
+        openPartnerByFile(trg);
+        return;
+      }
+
+      if (t === "card") {
+        closeNewsPopup();          // opcional
+        openCardByFile(trg);
+        return;
+      }
+
+      if (t === "news") {
+        openNewsPopup();
+        return;
+      }
+
+      showQuickWarning("Ação do botão desconhecida.", "error");
+    }
+
+    if (newsList) {
+      newsList.addEventListener("click", (e) => {
+        const btn = e.target.closest(".news-btn-link[data-action][data-target]");
+        if (!btn) return;
+
+        const action = btn.getAttribute("data-action");
+        const target = btn.getAttribute("data-target");
+        handleNewsAction(action, target);
+      });
+    }
+
+    newsList.innerHTML = html;
+  }
+
+  async function loadNewsAndMaybeOpen() {
+    try {
+      const res = await fetch("/api/news.json", { cache: "no-store" });
+      const data = await res.json();
+      const sorted = sortNewsNewestFirst(Array.isArray(data) ? data : []);
+      renderNews(sorted);
+
+      // abrir automaticamente na 1ª visita ou depois de um tempo
+      const lastOpen = Number(localStorage.getItem(NEWS_STORAGE_KEY) || "0");
+      const now = Date.now();
+
+      const shouldAutoOpen = !lastOpen || (now - lastOpen) > NEWS_COOLDOWN_MS;
+
+      if (shouldAutoOpen) {
+        openNewsPopup();
+      }
+    } catch (err) {
+      console.error("Erro ao carregar notícias:", err);
+      // fallback visual
+      renderNews([]);
+    }
+  }
+
+  if (newsBtn) {
+    newsBtn.addEventListener("click", () => {
+      // sempre recarrega ao abrir (garante notícia nova sem F5)
+      loadNewsAndMaybeOpen().then(() => openNewsPopup());
+    });
+  }
+
+  if (newsClose) newsClose.addEventListener("click", closeNewsPopup);
+
+  if (newsOverlay) {
+    newsOverlay.addEventListener("click", (e) => {
+      if (e.target === newsOverlay) closeNewsPopup();
+    });
+  }
+
+  const sidebarNewsBtn = document.getElementById("btn-news");
+
+  if (sidebarNewsBtn) {
+    sidebarNewsBtn.addEventListener("click", () => {
+      // fecha o menu lateral (se já existir essa função)
+      if (typeof closeSidebar === "function") {
+        closeSidebar();
+      } else {
+        // fallback: remove a classe manualmente
+        const sidebar = document.getElementById("sidebar");
+        if (sidebar) sidebar.classList.remove("open");
+        updateScrollLock();
+      }
+
+      // abre o popup de notícias
+      openNewsPopup();
+    });
+  }
+
+  // Carrega ao entrar no site (para abrir automaticamente quando necessário)
+  loadNewsAndMaybeOpen();
 });

@@ -15,7 +15,9 @@ DATA_FILE = "data/cards.json"
 LINKS_FILE = "data/links.json"
 CARD_DIR = "static/images/cards/"
 TITLE_DIR = "static/images/titles/"
-
+PARTNERS_FILE = "data/parceiros.json"
+NEWS_FILE = "data/news.json"
+NEWS_DIR = "static/images/news/"
 
 # =========================== FUNÇÕES AUXILIARES ===========================
 def read_json(path, default=None):
@@ -255,4 +257,267 @@ def save_card_links(filename):
     }
 
     write_json(LINKS_FILE, links_data)
+    return jsonify({"success": True})
+
+# =========================== LISTAR PARCEIROS ===========================
+
+@admin_bp.route("/admin/list_partners", methods=["GET"])
+@admin_required
+def list_partners():
+    partners = read_json(PARTNERS_FILE, [])
+    if not isinstance(partners, list):
+        partners = []
+
+    # retorna só o necessário
+    return jsonify([
+        {
+            "nome": p.get("nome", ""),
+            "file": p.get("file", "")  # se você usa file/id no front
+        }
+        for p in partners
+        if p.get("nome")
+    ])
+
+# =========================== ADICIONAR NOTÍCIA ===========================
+@admin_bp.route("/admin/add_news", methods=["POST"])
+@admin_required
+def add_news():
+    title = (request.form.get("title") or "").strip()
+    subtitle = (request.form.get("subtitle") or "").strip()
+    text = (request.form.get("text") or "").strip()
+
+    btn_enabled = (request.form.get("btn_enabled") or "false").lower() == "true"
+    btn_text = (request.form.get("btn_text") or "").strip()
+    btn_type = (request.form.get("btn_type") or "url").strip()
+    btn_target = (request.form.get("btn_target") or "").strip()
+
+    btn_url = (request.form.get("btn_url") or "").strip()
+    if not btn_target and btn_url:
+        btn_target = btn_url
+    if not btn_type:
+        btn_type = "url"
+
+    image = request.files.get("image")
+
+    # -------- validações --------
+    if not title:
+        return jsonify({"success": False, "error": "Título é obrigatório."}), 400
+    if not text:
+        return jsonify({"success": False, "error": "Texto é obrigatório."}), 400
+    if not image:
+        return jsonify({"success": False, "error": "Imagem é obrigatória."}), 400
+
+    if btn_enabled:
+        if not btn_text or not btn_target:
+            return jsonify({"success": False, "error": "Texto e destino do botão são obrigatórios quando o botão está ativado."}), 400
+
+        if btn_type == "url":
+            if not (btn_target.startswith("http://") or btn_target.startswith("https://")):
+                return jsonify({"success": False, "error": "Link do botão deve começar com http:// ou https://"}), 400
+
+        elif btn_type in ("partner", "card"):
+            # aqui só exige que tenha destino
+            # (se quiser, dá pra validar melhor depois)
+            pass
+
+        else:
+            return jsonify({"success": False, "error": "Tipo de botão inválido."}), 400
+
+    # -------- salvar imagem --------
+    os.makedirs(NEWS_DIR, exist_ok=True)
+
+    original_name = image.filename or ""
+    safe_name = secure_filename(original_name)
+
+    if not safe_name:
+        return jsonify({"success": False, "error": "Nome de arquivo inválido."}), 400
+
+    img_path = os.path.join(NEWS_DIR, safe_name)
+
+    # não sobrescreve se já existir
+    if os.path.exists(img_path):
+        return jsonify({"success": False, "error": f"Já existe uma imagem com esse nome: {safe_name}. Renomeie o arquivo e tente novamente."}), 409
+
+    image.save(img_path)
+
+    # -------- atualizar news.json --------
+    news_list = read_json(NEWS_FILE, [])
+    if not isinstance(news_list, list):
+        news_list = []
+
+    created_at = datetime.now(pytz.timezone("America/Sao_Paulo")).isoformat()
+
+    item = {
+        "id": int(datetime.now().timestamp() * 1000),
+        "title": title,
+        "subtitle": subtitle,
+        "text": text,
+        "image": safe_name,      # só o nome do arquivo
+        "created_at": created_at
+    }
+
+    if btn_enabled:
+        # mantém compat com front antigo e deixa o novo completo
+        button_obj = {"text": btn_text, "type": btn_type, "target": btn_target}
+        if btn_type == "url":
+            button_obj["url"] = btn_target  # compat: quem ainda lê "url" continua funcionando
+        item["button"] = button_obj
+    else:
+        item["button"] = None
+
+
+    # mais recente primeiro
+    news_list.insert(0, item)
+    write_json(NEWS_FILE, news_list)
+
+    return jsonify({"success": True, "item": item})
+
+# =========================== NOTÍCIAS: EDITAR ===========================
+
+@admin_bp.route("/admin/list_news", methods=["GET"])
+@admin_required
+def list_news():
+    news_list = read_json(NEWS_FILE, [])
+    if not isinstance(news_list, list):
+        news_list = []
+
+    # retorna só o necessário para a “lista de edição”
+    def safe_item(n):
+        return {
+            "id": n.get("id"),
+            "title": n.get("title", ""),
+            "subtitle": n.get("subtitle", ""),
+            "created_at": n.get("created_at", ""),
+        }
+
+    return jsonify([safe_item(n) for n in news_list])
+
+
+@admin_bp.route("/admin/get_news/<int:news_id>", methods=["GET"])
+@admin_required
+def get_news(news_id: int):
+    news_list = read_json(NEWS_FILE, [])
+    if not isinstance(news_list, list):
+        news_list = []
+
+    item = next((n for n in news_list if int(n.get("id", -1)) == news_id), None)
+    if not item:
+        return jsonify({"success": False, "error": "Notícia não encontrada."}), 404
+
+    return jsonify({"success": True, "item": item})
+
+
+@admin_bp.route("/admin/update_news/<int:news_id>", methods=["POST"])
+@admin_required
+def update_news(news_id: int):
+    title = (request.form.get("title") or "").strip()
+    subtitle = (request.form.get("subtitle") or "").strip()
+    text = (request.form.get("text") or "").strip()
+
+    btn_enabled = (request.form.get("btn_enabled") or "false").lower() == "true"
+    btn_text = (request.form.get("btn_text") or "").strip()
+
+    btn_type = (request.form.get("btn_type") or "url").strip()
+    btn_target = (request.form.get("btn_target") or "").strip()
+
+    btn_url = (request.form.get("btn_url") or "").strip()
+    if not btn_target and btn_url:
+        btn_target = btn_url
+    if not btn_type:
+        btn_type = "url"
+
+    new_image = request.files.get("image")  # opcional no editar
+
+    if not title:
+        return jsonify({"success": False, "error": "Título é obrigatório."}), 400
+    if not text:
+        return jsonify({"success": False, "error": "Texto é obrigatório."}), 400
+
+    if btn_enabled:
+        if not btn_text or not btn_target:
+            return jsonify({"success": False, "error": "Texto e destino do botão são obrigatórios quando o botão está ativado."}), 400
+
+        if btn_type == "url":
+            if not (btn_target.startswith("http://") or btn_target.startswith("https://")):
+                return jsonify({"success": False, "error": "Link do botão deve começar com http:// ou https://"}), 400
+
+        elif btn_type in ("partner", "card"):
+            pass
+        else:
+            return jsonify({"success": False, "error": "Tipo de botão inválido."}), 400
+
+    news_list = read_json(NEWS_FILE, [])
+    if not isinstance(news_list, list):
+        news_list = []
+
+    idx = next((i for i, n in enumerate(news_list) if int(n.get("id", -1)) == news_id), None)
+    if idx is None:
+        return jsonify({"success": False, "error": "Notícia não encontrada."}), 404
+
+    item = news_list[idx]
+    old_image_name = item.get("image", "")
+
+    # -------- troca de imagem (se enviou uma nova) --------
+    if new_image and (new_image.filename or ""):
+        os.makedirs(NEWS_DIR, exist_ok=True)
+
+        safe_name = secure_filename(new_image.filename)  # type: ignore
+        if not safe_name:
+            return jsonify({"success": False, "error": "Nome de arquivo inválido."}), 400
+
+        new_path = os.path.join(NEWS_DIR, safe_name)
+
+        # Se já existe um arquivo com esse nome e ele não é o mesmo da notícia atual, bloqueia (evita sobrescrever outro)
+        if os.path.exists(new_path) and safe_name != old_image_name:
+            return jsonify({"success": False, "error": f"Já existe uma imagem com esse nome: {safe_name}. Renomeie o arquivo e tente novamente."}), 409
+
+        # salva nova
+        new_image.save(new_path)
+
+        # apaga antiga se for diferente
+        if old_image_name and old_image_name != safe_name:
+            old_path = os.path.join(NEWS_DIR, old_image_name)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+
+        item["image"] = safe_name
+
+    # -------- atualiza campos --------
+    item["title"] = title
+    item["subtitle"] = subtitle
+    item["text"] = text
+    item["button"] = (
+        {"text": btn_text, "type": btn_type, "target": btn_target, **({"url": btn_target} if btn_type == "url" else {})}
+        if btn_enabled else None
+    )
+
+
+    news_list[idx] = item
+    write_json(NEWS_FILE, news_list)
+
+    return jsonify({"success": True, "item": item})
+
+
+@admin_bp.route("/admin/delete_news/<int:news_id>", methods=["DELETE"])
+@admin_required
+def delete_news(news_id: int):
+    news_list = read_json(NEWS_FILE, [])
+    if not isinstance(news_list, list):
+        news_list = []
+
+    item = next((n for n in news_list if int(n.get("id", -1)) == news_id), None)
+    if not item:
+        return jsonify({"success": False, "error": "Notícia não encontrada."}), 404
+
+    # remove do json
+    news_list = [n for n in news_list if int(n.get("id", -1)) != news_id]
+    write_json(NEWS_FILE, news_list)
+
+    # remove imagem
+    img_name = item.get("image", "")
+    if img_name:
+        img_path = os.path.join(NEWS_DIR, img_name)
+        if os.path.exists(img_path):
+            os.remove(img_path)
+
     return jsonify({"success": True})
