@@ -58,7 +58,17 @@
     <header class="header">
         <!-- Botão do menu hambúrguer -->
         <div class="menu-btn" id="menu-btn">☰</div>
-        
+        <!-- Botão de noticias -->
+        <button id="news-btn" class="news-btn" aria-label="Notícias">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                class="news-icon"
+                fill="currentColor"
+                aria-hidden="true">
+                <path d="M0 2.5A1.5 1.5 0 0 1 1.5 1h11A1.5 1.5 0 0 1 14 2.5v10.528c0 .3-.05.654-.238.972h.738a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 1 1 0v9a1.5 1.5 0 0 1-1.5 1.5H1.497A1.497 1.497 0 0 1 0 13.5zM12 14c.37 0 .654-.211.853-.441.092-.106.147-.279.147-.531V2.5a.5.5 0 0 0-.5-.5h-11a.5.5 0 0 0-.5.5v11c0 .278.223.5.497.5z"/>
+                <path d="M2 3h10v2H2zm0 3h4v3H2zm0 4h4v1H2zm0 2h4v1H2zm5-6h2v1H7zm3 0h2v1h-2zM7 8h2v1H7zm3 0h2v1h-2zm-3 2h2v1H7zm3 0h2v1h-2zm-3 2h2v1H7zm3 0h2v1h-2z"/>
+            </svg>
+        </button>
         <!-- Botão para alternar modo escuro -->
         <button id="dark-mode-toggle" class="dark-mode-btn" aria-label="Alternar modo noturno">
             <svg id="dark-mode-icon" xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24">
@@ -95,8 +105,9 @@
             <span id="sidebar-close" class="sidebar-close">&times;</span>
         </div>
         <div class="sidebar-content">
-            <button id="btn-user-account" class="sidebar-guide">Sua Conta</button>
+            <button id="btn-user-account" class="sidebar-guide">Sua conta</button>
             <button id="btn-who-us" class="sidebar-guide">Sobre nós</button>
+            <button id="btn-news" class="sidebar-guide">Notícias</button>
         </div>
     </div>
 
@@ -626,6 +637,21 @@
 
             <h3>12 - Como posso apoiar o projeto?</h3>
             <p>Você pode ajudar divulgando o projeto, dando feedback sobre as histórias e mapas, e acompanhando nossas redes sociais. Todo apoio da comunidade é bem-vindo.</p>
+        </div>
+    </div>
+
+    <div id="news-popup-overlay" class="popup-overlay">
+        <div class="news-popup">
+            <span id="news-popup-close" class="popup-close" aria-label="Fechar">✖</span>
+
+            <div class="news-header">
+            <h2 class="news-title">Notícias</h2>
+            <p class="news-subtitle">Atualizações e informações do Amapá Zombies</p>
+            </div>
+
+            <div id="news-list" class="news-list">
+            <!-- JS renderiza aqui -->
+            </div>
         </div>
     </div>
 
