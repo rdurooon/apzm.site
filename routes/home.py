@@ -81,6 +81,7 @@ def load_parceiros():
         "site": p.get("site", ""),
         "instagram": p.get("instagram", ""),
         "twitter": p.get("twitter", ""),
+        "discord": p.get("discord", ""),
         "email": p.get("email", ""),
     } for p in parceiros]
 
