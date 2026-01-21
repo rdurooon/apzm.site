@@ -56,7 +56,7 @@
                     <li id="gerenciar-usuarios">Gerenciar</li>
                 </ul>
             </li>
-            <li>
+            {# <li>
                 <div class="menu-item" id="partners">
                     <span>Parceiros</span>
                     <span class="arrow">&#9654;</span>
@@ -67,7 +67,7 @@
                     <li class="edit-partner">Editar</li>
                     <li class="reorder-partner">Reorganizar</li>
                 </ul>
-            </li>
+            </li> #}
             <!-- Botão Voltar para Home -->
             <div class="sidebar-footer">
                 <a href="{{ url_for('home.home') }}" class="back-home-btn">Voltar para página principal</a>
@@ -77,16 +77,17 @@
 
     <!-- Main Content -->
     <div class="admin-container">
-        <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" alt="Logo Amapá Zombies"
-            class="admin-logo" />
-        <h1 class="admin-title">Página da Administração</h1>
+        <div id="admin-header" class="admin-header">
+            <img src="{{ url_for('static', filename='images/common/amapazombies.png') }}" class="admin-logo" />
+            <h1 class="admin-title">Página da Administração</h1>
+        </div>
 
-        <div id="admin-content"></div>
+        <div id="admin-content">
+            <div id="users-list-container" class="users-list-container"></div>
+            <div id="cards-list-container" class="cards-list-container"></div>
+            <div class="linkar-cards-grid" id="linkarContainer"></div>
+        </div>
     </div>
-
-    <div id="users-list-container" class="users-list-container"></div>
-    <div id="cards-list-container" class="cards-list-container"></div>
-    <div class="linkar-cards-grid" id="linkarContainer"></div>
 
     <script>
         const loggedInUser = "{{ session['username'] }}";

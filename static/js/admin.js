@@ -10,7 +10,97 @@ const usersSubmenu = document.getElementById("users-submenu");
 
 const adminContainer = document.querySelector(".admin-container"); // logo + título
 const usersListContainer = document.getElementById("users-list-container");
+const adminContent = document.getElementById("admin-content");
+const adminHeader = document.getElementById("admin-header");
 let subguiaAtiva = null; // ou um valor inicial adequado
+
+function hideAllViews() {
+  // esconde o “topo padrão” (logo+título) somente se você realmente quiser
+  if (adminContainer) adminContainer.style.display = "flex"; // mantém a página base
+
+  // some com todas as views
+  if (usersListContainer) {
+    usersListContainer.innerHTML = "";
+    usersListContainer.style.display = "none";
+  }
+
+  if (cardsListContainer) {
+    cardsListContainer.innerHTML = "";
+    cardsListContainer.style.display = "none";
+  }
+
+  if (linkarContainer) {
+    linkarContainer.innerHTML = "";
+    linkarContainer.style.display = "none";
+  }
+
+  // remove barra de pesquisa se existir
+  const existingSearchContainer = document.querySelector("#users-search-container");
+  if (existingSearchContainer) existingSearchContainer.remove();
+}
+
+// Ativa somente 1 view por vez
+function showView(viewName) {
+  hideAllViews();
+
+  if (viewName === "users") {
+    usersListContainer.style.display = "grid";
+  }
+
+  if (viewName === "cards") {
+    cardsListContainer.style.display = "grid"; // ou "flex", depende do seu CSS
+  }
+
+  if (viewName === "linkar") {
+    linkarContainer.style.display = "grid";
+  }
+}
+
+function setHeaderVisible(visible) {
+  if (!adminHeader) return;
+  adminHeader.style.display = visible ? "block" : "none";
+}
+
+function clearAdminContent() {
+  subguiaAtiva = null;
+  updateSiteToggleVisibility();
+  if (!adminContent) return;
+
+  // remove qualquer tela “full page” que você tiver inserido no admin-content
+  const dynamic = adminContent.querySelector(".dynamic-page");
+  if (dynamic) dynamic.remove();
+
+  // limpa listas (views fixas)
+  if (usersListContainer) usersListContainer.innerHTML = "";
+  if (cardsListContainer) cardsListContainer.innerHTML = "";
+  if (linkarContainer) linkarContainer.innerHTML = "";
+
+  // esconde views fixas
+  if (usersListContainer) usersListContainer.style.display = "none";
+  if (cardsListContainer) cardsListContainer.style.display = "none";
+  if (linkarContainer) linkarContainer.style.display = "none";
+
+  // remove search
+  const existingSearchContainer = document.querySelector("#users-search-container");
+  if (existingSearchContainer) existingSearchContainer.remove();
+}
+
+function showView(viewName) {
+  clearAdminContent();
+  setHeaderVisible(false);
+
+  if (viewName === "users") usersListContainer.style.display = "grid";
+  if (viewName === "cards") cardsListContainer.style.display = "grid";
+  if (viewName === "linkar") linkarContainer.style.display = "grid";
+}
+
+function showDynamicPage(el) {
+  clearAdminContent();
+  setHeaderVisible(false);
+
+  el.classList.add("dynamic-page");
+  adminContent.appendChild(el);
+}
 
 // ===========================
 // Função: Abrir/Fechar Sidebar
@@ -87,25 +177,28 @@ function toggleUsersSubmenu() {
 // Limpa todo conteúdo principal (logo, título e container de usuários)
 // ===========================
 function limparConteudoPrincipal() {
-  // Esconde container padrão
-  if (adminContainer) adminContainer.style.display = "none";
+  // NÃO esconda o adminContainer se você está usando ele pra renderizar telas
+  // if (adminContainer) adminContainer.style.display = "none";
 
-  // Limpa container de usuários
   if (usersListContainer) {
     usersListContainer.innerHTML = "";
-    usersListContainer.style.display = "grid";
+    usersListContainer.style.display = "none"; // <-- importante
   }
 
-  // Limpa container de cards para remover / reorganizar / linkar
   if (cardsListContainer) {
     cardsListContainer.innerHTML = "";
+    cardsListContainer.style.display = "none"; // <-- importante
   }
 
-  // Limpa container da subguia "Linkar"
   if (linkarContainer) {
     linkarContainer.innerHTML = "";
+    linkarContainer.style.display = "none"; // <-- importante
   }
+
+  const existingSearchContainer = document.querySelector("#users-search-container");
+  if (existingSearchContainer) existingSearchContainer.remove();
 }
+
 
 function hideExtraContainers() {
   const u = document.getElementById("users-list-container");
@@ -122,6 +215,7 @@ function hideExtraContainers() {
 // Renderiza usuários
 // ===========================
 async function listarUsuarios() {
+  updateSiteToggleVisibility()
   limparConteudoPrincipal();
   fecharSidebar(); // fecha sidebar ao clicar
 
@@ -153,7 +247,8 @@ const gerenciarUsersItem = usersSubmenu.querySelector("li#gerenciar-usuarios"); 
 // Função: Gerenciar usuários (unificada)
 // ===========================
 async function gerenciarUsuarios() {
-  limparConteudoPrincipal();
+  updateSiteToggleVisibility()
+  showView("users");
   fecharSidebar();
 
   try {
@@ -212,7 +307,7 @@ async function gerenciarUsuarios() {
     searchBar.appendChild(searchIcon);
     searchBar.appendChild(searchInput);
     searchContainer.appendChild(searchBar);
-    adminContainer.parentNode.insertBefore(searchContainer, usersListContainer);
+    adminContent.insertBefore(searchContainer, usersListContainer);
 
     // Função para renderizar cards com base na pesquisa
     function renderUsers(usersToRender) {
@@ -560,10 +655,9 @@ const cardsListContainer = document.getElementById("cards-list-container");
 // Função: Editar cards - SEM AUTO-SAVE
 // ===========================
 async function editarCards() {
-  limparConteudoPrincipal();
+  updateSiteToggleVisibility()
+  showView("cards");
   fecharSidebar();
-
-  cardsListContainer.innerHTML = "";
 
   try {
     const res = await fetch("/admin/list_cards");
@@ -812,6 +906,7 @@ async function salvarAlteracoes(originalCards) {
 // Função: Adicionar Mapa/História
 // ===========================
 async function adicionarCards() {
+  updateSiteToggleVisibility()
   limparConteudoPrincipal();
   fecharSidebar();
 
@@ -918,10 +1013,11 @@ async function adicionarCards() {
     </div>
   `;
 
-  adminContainer.style.display = "flex";
-  adminContainer.style.flexDirection = "column";
-  adminContainer.innerHTML = "";
-  adminContainer.appendChild(container);
+  showDynamicPage(container);
+  adminContent.style.overflowY = "auto";
+  adminContent.style.maxHeight = "100vh";
+  adminContent.scrollTop = 0;
+  window.scrollTo(0, 0);
   adminContainer.style.overflowY = "auto";
   adminContainer.style.maxHeight = "100vh";
   adminContainer.scrollTop = 0;
@@ -1108,10 +1204,9 @@ const linkarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(3)"); // "Lin
 const linkarContainer = document.getElementById("linkarContainer");
 
 async function abrirSubguiaLinkar() {
-  limparConteudoPrincipal();
+  updateSiteToggleVisibility()
+  showView("linkar");
   fecharSidebar();
-
-  linkarContainer.innerHTML = ""; // limpa container
 
   try {
     const res = await fetch("/admin/list_links");
@@ -1252,16 +1347,22 @@ if (subguiaAtiva === "visao-geral") {
 const visaoGeralItem = document.querySelector(
   ".sidebar-menu li:first-child .menu-item"
 );
+
+function updateSiteToggleVisibility() {
+  if (!siteToggleContainer) return;
+  siteToggleContainer.style.display = (subguiaAtiva === "visao-geral") ? "flex" : "none";
+}
+
 visaoGeralItem.addEventListener("click", () => {
-  // Alterna visibilidade do toggle
-  if (siteToggleContainer.style.display === "none") {
-    siteToggleContainer.style.display = "flex";
-    subguiaAtiva = "visao-geral";
-  } else {
-    siteToggleContainer.style.display = "none";
-    subguiaAtiva = null;
-  }
+  clearAdminContent();
+  setHeaderVisible(true);
+  fecharSidebar();
+
+  // toggle do site online/offline pode ficar aqui:
+  siteToggleContainer.style.display = "flex";
+  subguiaAtiva = "visao-geral";
 });
+
 
 // ===========================
 // Inicialização: Página Carregada
@@ -1351,7 +1452,7 @@ addPartnerItem.addEventListener("click", () => {
   limparConteudoPrincipal();
   fecharSidebar();
 
-  const main = document.querySelector("admin-content");
+  const main = document.querySelector("#admin-content");
 
   main.innerHTML = `
     <div class="partner-form" style="display: flex;">
@@ -1429,6 +1530,7 @@ reorderPartnerItem.addEventListener("click", () => {
 // Função: Adicionar Notícia (UI apenas por enquanto)
 // ===========================
 async function adicionarNoticia() {
+  updateSiteToggleVisibility()
   limparConteudoPrincipal();
   hideExtraContainers();
   fecharSidebar();
@@ -1446,7 +1548,7 @@ async function adicionarNoticia() {
   container.style.height = "100%";
 
   container.innerHTML = `
-    <h2 style="text-align: center; margin-bottom: 10px; color: #333;">Adicionar Notícia</h2>
+    <h2 style="text-align: center; margin-bottom: 10px; margin-top: 10px; color: #333;">Adicionar Notícia</h2>
 
     <!-- Título -->
     <input id="news-title" type="text" placeholder="Título da notícia..." style="
@@ -1558,7 +1660,7 @@ async function adicionarNoticia() {
     </div>
 
     <!-- Ações -->
-    <div style="display:flex; gap:10px; justify-content:center; margin-top: 8px;">
+    <div style="display:flex; gap:10px; justify-content:center; margin-top: 8px; margin-bottom: 8px;">
       <button id="news-save-btn" style="
         padding: 12px 30px;
         background-color: #2ecc71;
@@ -1583,10 +1685,7 @@ async function adicionarNoticia() {
     </div>
   `;
 
-  adminContainer.style.display = "flex";
-  adminContainer.style.flexDirection = "column";
-  adminContainer.innerHTML = "";
-  adminContainer.appendChild(container);
+  showDynamicPage(container);
 
   // ---------- refs ----------
   const titleEl = container.querySelector("#news-title");
@@ -1874,6 +1973,7 @@ function isValidHttpUrl(url) {
 // Notícias: Editar (lista + modal)
 // ===========================
 async function editarNoticias() {
+  updateSiteToggleVisibility()
   limparConteudoPrincipal();
   hideExtraContainers();
   fecharSidebar();
@@ -1889,15 +1989,15 @@ async function editarNoticias() {
   if (existingSearchContainer) existingSearchContainer.remove();
 
   // cria um “título” simples
-  adminContainer.style.display = "flex";
-  adminContainer.style.flexDirection = "column";
-  adminContainer.innerHTML = `
-    <h2 style="text-align:center; margin-top: 30px; color:#333;">Editar Notícias</h2>
-    <p style="text-align:center; margin: 6px 0 0; color:#777;">Clique em uma notícia para editar.</p>
-  `;
+  showView("users"); // prepara o grid e limpa tudo
 
-  // insere o grid abaixo
-  adminContainer.appendChild(usersListContainer);
+  adminContent.insertAdjacentHTML("afterbegin", `
+    <div class="dynamic-page news-edit-header">
+      <h2>Editar Notícias</h2>
+      <p>Clique em uma notícia para editar.</p>
+    </div>
+  `);
+
 
   try {
     const res = await fetch("/admin/list_news");
