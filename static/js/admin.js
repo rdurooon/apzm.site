@@ -14,6 +14,14 @@ const adminContent = document.getElementById("admin-content");
 const adminHeader = document.getElementById("admin-header");
 let subguiaAtiva = null; // ou um valor inicial adequado
 
+let __newsTargetsCache = {
+  cards: null,
+  partners: null,
+};
+
+let targetMode = "input"; // "input" | "select"
+let targetSelectEl = null;
+
 function hideAllViews() {
   // esconde o “topo padrão” (logo+título) somente se você realmente quiser
   if (adminContainer) adminContainer.style.display = "flex"; // mantém a página base
@@ -149,10 +157,14 @@ function toggleNewsSubmenu() {
 // ===========================
 // Subguia "Notícias"
 // ===========================
-const addNewsItem = newsSubmenu.querySelector("li.add-news");
-addNewsItem.addEventListener("click", adicionarNoticia);
-const editNewsItem = newsSubmenu.querySelector("li.edit-news");
-if (editNewsItem) editNewsItem.addEventListener("click", editarNoticias);
+if (newsSubmenu) {
+  const addNewsItem = newsSubmenu.querySelector("li.add-news");
+  if (addNewsItem) addNewsItem.addEventListener("click", adicionarNoticia);
+
+  const editNewsItem = newsSubmenu.querySelector("li.edit-news");
+  if (editNewsItem) editNewsItem.addEventListener("click", editarNoticias);
+}
+
 
 
 // ===========================
@@ -434,42 +446,42 @@ gerenciarUsersItem.addEventListener("click", gerenciarUsuarios);
 function showQuickWarning(message, type = "error") {
   const toastContainer = document.getElementById("toast-container") || createToastContainer();
   const toastId = "toast-" + Date.now();
-  
+
   const toastEl = document.createElement("div");
   toastEl.id = toastId;
   toastEl.className = `toast toast-${type}`;
   toastEl.setAttribute("role", "alert");
-  
+
   const icons = {
     success: "✓",
     error: "✕",
     warning: "⚠",
     info: "ℹ"
   };
-  
+
   toastEl.innerHTML = `
     <span class="toast-icon">${icons[type] || icons.error}</span>
     <span class="toast-message">${escapeHtmlAdmin(message)}</span>
     <button class="toast-close" aria-label="Fechar notificação">×</button>
   `;
-  
+
   toastContainer.appendChild(toastEl);
-  
+
   // Trigger animação de entrada
   setTimeout(() => {
     toastEl.classList.add("show");
   }, 10);
-  
+
   // Fechar pelo botão
   toastEl.querySelector(".toast-close").addEventListener("click", () => {
     removeToastAdmin(toastId);
   });
-  
+
   // Fechar automaticamente após 3.5s
   const autoCloseTimer = setTimeout(() => {
     removeToastAdmin(toastId);
   }, 3500);
-  
+
   // Remover timer se o toast for fechado manualmente
   toastEl.addEventListener("transitionend", () => {
     if (!toastEl.classList.contains("show")) {
@@ -643,8 +655,13 @@ if (newsItem) {
 // ===========================
 // Subguia "Adicionar" - Handler
 // ===========================
-const addMapStoryItem = mapsSubmenu.querySelector("li.add-map-story");
-addMapStoryItem.addEventListener("click", adicionarCards);
+const addMapStoryItem = mapsSubmenu?.querySelector("li.add-map-story");
+if (addMapStoryItem) {
+  addMapStoryItem.addEventListener("click", adicionarCards);
+} else {
+  console.warn("[admin] add-map-story não encontrado dentro de #maps-submenu");
+}
+
 
 // ===========================
 // Função: Listar e remover cards
@@ -701,35 +718,34 @@ async function editarCards() {
       const badgeBtn = document.createElement("div");
       badgeBtn.className = "new-badge-toggle" + (card.is_new ? " active" : "");
       badgeBtn.textContent = "Novo!";
-      
+
       // Listener APENAS para o badge (não para o card inteiro)
       badgeBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         e.preventDefault();
-        
+
         // Toggle visual local
         badgeBtn.classList.toggle("active");
-        
+
         showQuickWarning(
-          `Card ${card.title} ${
-            badgeBtn.classList.contains("active")
-              ? "marcado como 'Novo!'"
-              : "removido de 'Novo!'"
+          `Card ${card.title} ${badgeBtn.classList.contains("active")
+            ? "marcado como 'Novo!'"
+            : "removido de 'Novo!'"
           }. Clique em "Salvar Alterações" para confirmar.`,
           "info"
         );
       });
-      
+
       cardDiv.appendChild(badgeBtn);
 
       // ========== OVERLAY PARA TOGGLE DE VISIBILIDADE ==========
       const toggleOverlay = document.createElement("div");
       toggleOverlay.className = "toggle-overlay";
-      
+
       // Listener para o overlay (não interfere com badge nem com botões)
       toggleOverlay.addEventListener("click", (e) => {
         e.stopPropagation();
-        
+
         // Toggle visibilidade
         const currentlyVisible = cardDiv.dataset.visible === "true";
         cardDiv.dataset.visible = currentlyVisible ? "false" : "true";
@@ -740,7 +756,7 @@ async function editarCards() {
           "info"
         );
       });
-      
+
       cardDiv.appendChild(toggleOverlay);
 
       // ========== BOTÕES DE NAVEGAÇÃO (SETAS) ==========
@@ -773,7 +789,7 @@ async function editarCards() {
       removeBtn.style.transition = "background-color 0.3s ease";
       removeBtn.style.width = "100%";
       removeBtn.style.marginTop = "8px";
-      
+
       removeBtn.addEventListener("mouseenter", () => {
         removeBtn.style.backgroundColor = "#c0392b";
       });
@@ -828,11 +844,11 @@ async function salvarAlteracoes(originalCards) {
   try {
     // ========== DELETAR CARDS MARCADOS ==========
     const cardWrappersMarkedForDelete = Array.from(cardsListContainer.querySelectorAll(".card-wrapper[data-marked-for-delete='true']"));
-    
+
     for (const wrapper of cardWrappersMarkedForDelete) {
       const cardDiv = wrapper.querySelector(".reorganizar-card");
       const file = cardDiv.dataset.file;
-      
+
       try {
         const resp = await fetch(`/admin/delete_map_story/${file}`, {
           method: "DELETE",
@@ -852,12 +868,12 @@ async function salvarAlteracoes(originalCards) {
 
     // ========== SALVAR ORDEM E VISIBILIDADE ==========
     const cardDivs = Array.from(cardsListContainer.querySelectorAll(".reorganizar-card:not([data-marked-for-delete])"));
-    
+
     const cardsData = cardDivs.map((cardDiv) => {
       const file = cardDiv.dataset.file;
       const originalCard = originalCards.find(c => c.file === file);
       const badgeBtn = cardDiv.querySelector(".new-badge-toggle");
-      
+
       return {
         file: file,
         visible: cardDiv.dataset.visible === "true",
@@ -1223,22 +1239,19 @@ async function abrirSubguiaLinkar() {
 
       div.innerHTML = `
               <div class="linkar-card-left">
-                  <img src="/static/images/cards/${card.file}" alt="${
-        card.title
-      }">
+                  <img src="/static/images/cards/${card.file}" alt="${card.title
+        }">
               </div>
               <div class="linkar-card-right">
                   <h3 class="linkar-card-title">${card.title}</h3>
                   <div class="link-fields">
                       <label>Linkar História</label>
-                      <input type="text" placeholder="Cole o link da história" value="${
-                        card.link_historia || ""
-                      }" class="historia-link">
+                      <input type="text" placeholder="Cole o link da história" value="${card.link_historia || ""
+        }" class="historia-link">
                       
                       <label>Linkar Mapa</label>
-                      <input type="text" placeholder="Cole o link do mapa" value="${
-                        card.link_mapa || ""
-                      }" class="mapa-link">
+                      <input type="text" placeholder="Cole o link do mapa" value="${card.link_mapa || ""
+        }" class="mapa-link">
                   </div>
                   <button class="save-links">Salvar Alterações</button>
               </div>
@@ -1695,9 +1708,9 @@ async function adicionarNoticia() {
   const imageBox = container.querySelector(".news-image-box");
   const imageHint = container.querySelector("#news-image-hint");
 
-  const btnEnabled  = container.querySelector("#news-btn-enabled");
-  const btnTextEl   = container.querySelector("#news-btn-text");
-  const btnTypeEl   = container.querySelector("#news-btn-type");
+  const btnEnabled = container.querySelector("#news-btn-enabled");
+  const btnTextEl = container.querySelector("#news-btn-text");
+  const btnTypeEl = container.querySelector("#news-btn-type");
   let btnTargetEl = container.querySelector("#news-btn-target");
   const btnTargetWrap = container.querySelector("#news-btn-target-wrap");
 
@@ -1782,8 +1795,8 @@ async function adicionarNoticia() {
   function applyButtonToggleState() {
     const enabled = btnEnabled.checked;
 
-    btnTextEl.disabled   = !enabled;
-    btnTypeEl.disabled   = !enabled;
+    btnTextEl.disabled = !enabled;
+    btnTypeEl.disabled = !enabled;
     btnTargetEl.disabled = !enabled;
 
     if (!enabled) {
@@ -1793,7 +1806,6 @@ async function adicionarNoticia() {
     }
     rebuildTargetFieldByType();
   }
-  applyButtonToggleState();
   btnEnabled.addEventListener("change", applyButtonToggleState);
   btnTypeEl.addEventListener("change", () => {
     // reset destino quando muda tipo
@@ -1803,8 +1815,6 @@ async function adicionarNoticia() {
 
   // no final do applyButtonToggleState (quando enabled muda), chame:
   applyButtonToggleState();
-  rebuildTargetFieldByType();
-
 
   // Botão "Adicionar" (por enquanto só valida + mostra preview no console)
   saveBtn.addEventListener("click", async () => {
@@ -1878,24 +1888,21 @@ async function adicionarNoticia() {
     }
   });
 
-  let targetMode = "input"; // "input" | "select"
-  let targetSelectEl = null;
-
   async function rebuildTargetFieldByType() {
     const enabled = btnEnabled.checked;
     const type = btnTypeEl.value;
+    const currentValue = (btnTargetEl?.value || "").trim();
 
-    // limpa wrap e recria
     btnTargetWrap.innerHTML = "";
     targetSelectEl = null;
 
-    // helper pra criar input padrão
-    function makeInput() {
+    function makeInput(ph) {
       const input = document.createElement("input");
       input.id = "news-btn-target";
       input.type = "text";
-      input.placeholder = "Destino (https://...)";
+      input.placeholder = ph;
       input.disabled = !enabled;
+      input.value = currentValue;
       input.style.width = "100%";
       input.style.padding = "10px";
       input.style.border = "2px solid #ddd";
@@ -1904,38 +1911,45 @@ async function adicionarNoticia() {
       return input;
     }
 
-    if (type === "url") {
-      targetMode = "input";
-      const inp = makeInput();
-      inp.placeholder = "Link do botão (https://...)";
-      inp.value = btnTargetEl.value || "";
+    try {
+      if (type === "url") {
+        const inp = makeInput("Link do botão (https://...)");
+        btnTargetWrap.appendChild(inp);
+        btnTargetEl = inp;
+        return;
+      }
+
+      // partner/card = select
+      let options = [];
+      if (type === "card") {
+        const cards = await fetchVisibleCardsForNews();
+        options = cards.map(c => ({ value: c.file, label: c.title }));
+      } else if (type === "partner") {
+        const partners = await fetchPartnersForNews();
+        options = partners.map(p => ({ value: p.file, label: p.nome }));
+      }
+
+      const sel = createTargetSelect(
+        options,
+        type === "card" ? "Selecione um mapa/história..." : "Selecione um parceiro..."
+      );
+      sel.id = "news-btn-target";
+      sel.disabled = !enabled;
+      sel.value = currentValue;
+
+      btnTargetWrap.appendChild(sel);
+      targetSelectEl = sel;
+      btnTargetEl = sel;
+    } catch (err) {
+      console.error("Erro ao montar destino do botão:", err);
+
+      // fallback: volta para input URL para nunca sumir o campo
+      const inp = makeInput("Destino (https://...)");
       btnTargetWrap.appendChild(inp);
-      btnTargetEl = inp; // IMPORTANT: atualiza referência
-      return;
+      btnTargetEl = inp;
+
+      showQuickWarning("Falha ao carregar lista (cards/parceiros). Verifique o backend /admin/list_cards e /admin/list_partners.", "warning");
     }
-
-    // partner/card = select
-    targetMode = "select";
-
-    let options = [];
-    if (type === "card") {
-      const cards = await fetchVisibleCardsForNews();
-      options = cards.map(c => ({ value: c.file, label: c.title }));
-    } else if (type === "partner") {
-      const partners = await fetchPartnersForNews();
-      options = partners.map(p => ({ value: p.file, label: p.nome }));
-    }
-
-    const sel = createTargetSelect(options, type === "card" ? "Selecione um mapa/história..." : "Selecione um parceiro...");
-    sel.id = "news-btn-target";
-    sel.disabled = !enabled;
-
-    // mantém valor atual se existir
-    sel.value = (btnTargetEl.value || "").trim();
-
-    btnTargetWrap.appendChild(sel);
-    targetSelectEl = sel;
-    btnTargetEl = sel; // IMPORTANT: atualiza referência
   }
 }
 
@@ -2032,6 +2046,7 @@ async function editarNoticias() {
 
 async function abrirModalEditarNoticia(newsId) {
   // busca a notícia completa
+
   let editTargetSelectEl = null;
   let item = null;
   try {
@@ -2207,9 +2222,9 @@ async function abrirModalEditarNoticia(newsId) {
   const imgPreview = modal.querySelector("#edit-news-image-preview");
   const imgHint = modal.querySelector("#edit-news-image-hint");
 
-  const btnEnabled  = modal.querySelector("#edit-news-btn-enabled");
-  const btnTextEl   = modal.querySelector("#edit-news-btn-text");
-  const btnTypeEl   = modal.querySelector("#edit-news-btn-type");
+  const btnEnabled = modal.querySelector("#edit-news-btn-enabled");
+  const btnTextEl = modal.querySelector("#edit-news-btn-text");
+  const btnTypeEl = modal.querySelector("#edit-news-btn-type");
   let btnTargetEl = modal.querySelector("#edit-news-btn-target");
   const btnTargetWrap = modal.querySelector("#edit-news-btn-target-wrap");
 
@@ -2306,12 +2321,12 @@ async function abrirModalEditarNoticia(newsId) {
     btnTargetEl.value = "";
     rebuildEditTargetFieldByType();
   });
-  
+
   btnEnabled.addEventListener("change", () => {
     applyBtnToggle();
     rebuildEditTargetFieldByType();
   });
-  
+
   // após preencher initialType/initialTarget:
   applyBtnToggle();
 
@@ -2509,23 +2524,43 @@ function formatIsoDateBR(iso) {
 // ===========================
 // QoL: Cache de targets (cards/parceiros)
 // ===========================
-let __newsTargetsCache = {
-  cards: null,      // [{ title, file }]
-  partners: null,   // [{ nome, file }]
-};
+function __extractArray(payload, possibleKeys = []) {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    for (const k of possibleKeys) {
+      if (Array.isArray(payload[k])) return payload[k];
+    }
+  }
+  return [];
+}
 
 async function fetchVisibleCardsForNews() {
   if (__newsTargetsCache.cards) return __newsTargetsCache.cards;
 
-  const res = await fetch("/admin/list_cards");
-  const cards = await res.json();
+  const res = await fetch("/admin/list_cards", {
+    method: "GET",
+    credentials: "same-origin",
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
 
-  const visible = (Array.isArray(cards) ? cards : [])
-    .filter(c => c && c.file && (c.visible === undefined || c.visible === true)) // visível por padrão
-    .map(c => ({ title: String(c.title || c.file), file: String(c.file) }));
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`list_cards falhou: ${res.status} ${txt.slice(0, 120)}`);
+  }
 
-  // ordena A-Z pelo title
-  visible.sort((a, b) => a.title.localeCompare(b.title, "pt-BR", { sensitivity: "base" }));
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`list_cards retornou não-JSON: ${contentType} ${txt.slice(0, 120)}`);
+  }
+
+  const payload = await res.json();
+  const raw = __extractArray(payload, ["cards", "items", "data"]);
+
+  const visible = raw
+    .filter(c => c && c.file && (c.visible === undefined || c.visible === true))
+    .map(c => ({ title: String(c.title || c.file), file: String(c.file) }))
+    .sort((a, b) => a.title.localeCompare(b.title, "pt-BR", { sensitivity: "base" }));
 
   __newsTargetsCache.cards = visible;
   return visible;
@@ -2534,17 +2569,33 @@ async function fetchVisibleCardsForNews() {
 async function fetchPartnersForNews() {
   if (__newsTargetsCache.partners) return __newsTargetsCache.partners;
 
-  const res = await fetch("/admin/list_partners");
-  const partners = await res.json();
+  const res = await fetch("/admin/list_partners", {
+    method: "GET",
+    credentials: "same-origin",
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
 
-  const list = (Array.isArray(partners) ? partners : [])
-    .filter(p => p && p.nome)
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`list_partners falhou: ${res.status} ${txt.slice(0, 120)}`);
+  }
+
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`list_partners retornou não-JSON: ${contentType} ${txt.slice(0, 120)}`);
+  }
+
+  const payload = await res.json();
+  const raw = __extractArray(payload, ["partners", "items", "data"]);
+
+  const list = raw
+    .filter(p => p && (p.nome || p.name || p.title))
     .map(p => ({
-      nome: String(p.nome),
-      file: String(p.file || p.nome) // fallback: nome (se não existir file)
-    }));
-
-  list.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }));
+      nome: String(p.nome || p.name || p.title),
+      file: String(p.file || p.slug || p.id || (p.nome || p.name || p.title)),
+    }))
+    .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { sensitivity: "base" }));
 
   __newsTargetsCache.partners = list;
   return list;
