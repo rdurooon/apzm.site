@@ -209,7 +209,23 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const slides = document.querySelectorAll(".bg-slide");
-  let currentSlide = 0;
+  let slideOrder = [];
+  let slidePointer = 0;
+  let currentSlide = null;
+
+  // Fisher-Yates shuffle
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  function buildNewCycle() {
+    slideOrder = Array.from({ length: slides.length }, (_, i) => i);
+    shuffle(slideOrder);
+    slidePointer = 0;
+  }
 
   function showSlide(index) {
     slides.forEach((slide, i) => {
@@ -217,19 +233,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function getNextSlideIndex() {
-    let next;
-    do {
-      next = Math.floor(Math.random() * slides.length);
-    } while (next === currentSlide);
-    return next;
+  function nextSlide() {
+    // Se acabou o ciclo, cria outro
+    if (slidePointer >= slideOrder.length) {
+      buildNewCycle();
+    }
+
+    currentSlide = slideOrder[slidePointer];
+    slidePointer++;
+
+    showSlide(currentSlide);
   }
 
-  showSlide(currentSlide);
-  setInterval(() => {
-    currentSlide = getNextSlideIndex();
-    showSlide(currentSlide);
-  }, 5000);
+  // inicia
+  buildNewCycle();
+  nextSlide();
+
+  setInterval(nextSlide, 5000);
 
   // ==================== POPUP DE CARDS ====================
 
