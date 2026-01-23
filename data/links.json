@@ -1,22 +1,3 @@
 {
-    "bacabeiras.jpg": {
-        "historia": "https://www.mediafire.com/file/9tqwf2byy9gpb8c/BacabeirasHistory.pdf/file",
-        "mapa": "https://www.mediafire.com/file/ls9oiq0g64ry42b/Bacabeiras.zip/file"
-    },
-    "gpcdertoten.jpg": {
-        "historia": "https://www.mediafire.com/file/awu0kx83i7u1jsx/GPCDTCompleto.pdf/file",
-        "mapa": "https://www.mediafire.com/file/vefog7i2coc7ii5/GPCDerTotenRemakeMap.zip/file"
-    },
-    "diefestung.jpg": {
-        "historia": "https://www.mediafire.com/file/wsj3b8ajpcp5j44/DieFestungHistoryCompleto.pdf/file",
-        "mapa": "https://www.mediafire.com/file/uf9czr1y1a73wqa/DieFestungFolder.zip/file"
-    },
-    "sacaca.jpg": {
-        "historia": "https://www.mediafire.com/file/i0eo4omlrdonq24/SacacaHistory.pdf/file",
-        "mapa": "https://www.mediafire.com/file/8xjiwy89xeyppus/SacacaMap.zip/file"
-    },
-    "fdu.jpg": {
-        "historia": "https://www.mediafire.com/file/bjwubht2nkrrbxv/FDUHistory.pdf/file",
-        "mapa": "https://www.mediafire.com/file/00oxknnn5x0mvu7/FDU.zip/file"
-    }
+
 }
