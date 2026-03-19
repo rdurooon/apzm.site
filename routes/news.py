@@ -11,6 +11,8 @@ def api_news():
     news_path = os.path.join(base_dir, "data", "news.json")
 
     if not os.path.exists(news_path):
+        with open(news_path, "w", encoding="utf-8") as f:
+            json.dump([], f, indent=4, ensure_ascii=False)
         return jsonify([])
 
     try:

@@ -26,11 +26,15 @@ BACKGROUND_FOLDER = os.path.join(STATIC_DIR, "background")
 # ==================== UTILITÁRIOS ====================
 def load_json_file(path, default=None):
     if not os.path.exists(path):
+        if default is not None:
+            save_json_file(path, default)
         return default
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
+        if default is not None:
+            save_json_file(path, default)
         return default
 
 

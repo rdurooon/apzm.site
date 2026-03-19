@@ -23,11 +23,15 @@ NEWS_DIR = "static/images/news/"
 def read_json(path, default=None):
     """Lê JSON de um arquivo, retornando default em caso de erro."""
     if not os.path.exists(path):
+        if default is not None:
+            write_json(path, default)
         return default if default is not None else []
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, OSError):
+        if default is not None:
+            write_json(path, default)
         return default if default is not None else []
 
 
