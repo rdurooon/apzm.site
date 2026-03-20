@@ -1,6 +1,7 @@
 import os
 import json
 from flask import Blueprint, jsonify, current_app
+from tools.text_formatter import format_text_to_html
 
 news_bp = Blueprint("news", __name__)
 
@@ -23,7 +24,15 @@ def api_news():
         if not isinstance(data, list):
             return jsonify([])
 
-        return jsonify(data)
+        # Formatar texto das notícias
+        formatted_data = []
+        for news_item in data:
+            formatted_item = news_item.copy()
+            if "text" in formatted_item:
+                formatted_item["text_formatted"] = format_text_to_html(formatted_item.get("text", ""))
+            formatted_data.append(formatted_item)
+
+        return jsonify(formatted_data)
     except Exception:
         # Em produção, você pode logar isso
         return jsonify([]), 200

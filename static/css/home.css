@@ -2710,3 +2710,15 @@ body.dark-mode {
 body.dark-mode:hover {
   scrollbar-color: #888888 transparent;
 }
+
+/* ==================== FORMATAÇÃO DE TEXTO ==================== */
+
+.text-censored {
+  background-color: #000;
+  color: #000;
+  padding: 2px 4px;
+  border-radius: 2px;
+  user-select: none;
+  cursor: default;
+  font-weight: inherit;
+}

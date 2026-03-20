@@ -1040,6 +1040,8 @@ async function adicionarCards() {
   adminContainer.scrollTop = 0;
   window.scrollTo(0, 0);
 
+  // Criar toolbar de formatação
+  TextFormatter.createFormattingToolbar("#add-description");
 
   // Setup image uploads
   const cardImageEl = container.querySelector(".add-card-image");
@@ -1701,6 +1703,9 @@ async function adicionarNoticia() {
 
   showDynamicPage(container);
 
+  // Criar toolbar de formatação para o texto da notícia
+  TextFormatter.createFormattingToolbar("#news-text");
+
   // ---------- refs ----------
   const titleEl = container.querySelector("#news-title");
   const subtitleEl = container.querySelector("#news-subtitle");
@@ -2218,6 +2223,12 @@ async function abrirModalEditarNoticia(newsId) {
 
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
+
+  // Criar toolbar de formatação para o texto da notícia
+  const textareaSelector = "#edit-news-text";
+  setTimeout(() => {
+    TextFormatter.createFormattingToolbar(textareaSelector);
+  }, 100);
 
   // refs
   const titleEl = modal.querySelector("#edit-news-title");

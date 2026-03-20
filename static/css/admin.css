@@ -995,3 +995,68 @@ input:checked + .slider:before {
   margin: 0;
   color:#777;
 }
+
+/* ==================== FORMATAÇÃO DE TEXTO ==================== */
+
+.text-censored {
+  background-color: #000;
+  color: #000;
+  padding: 2px 4px;
+  border-radius: 2px;
+  user-select: none;
+  cursor: default;
+}
+
+.textarea-with-toolbar {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.textarea-with-toolbar textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: 40px !important;
+  padding-right: 12px !important;
+}
+
+.formatting-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background-color: transparent;
+  border-radius: 6px;
+  border: none;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.formatting-toolbar .fmt-btn {
+  padding: 4px 6px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background-color 0.2s ease;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.formatting-toolbar .fmt-btn:hover {
+  background-color: #2980b9;
+}
+
+.formatting-toolbar .fmt-btn:active {
+  background-color: #1f618d;
+}

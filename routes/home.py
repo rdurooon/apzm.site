@@ -6,6 +6,7 @@ from flask import (
 )
 from .register import load_users, save_users
 from tools.crypto_utils import decrypt_value
+from tools.text_formatter import format_text_to_html
 
 home_bp = Blueprint("home", __name__)
 
@@ -83,6 +84,7 @@ def get_visible_cards():
                 "file": card_file,
                 "title": card.get("title", "Sem título"),
                 "description": card.get("description", ""),
+                "description_formatted": format_text_to_html(card.get("description", "")),
                 "visible": True,
                 "is_new": card.get("is_new", False),
             })
