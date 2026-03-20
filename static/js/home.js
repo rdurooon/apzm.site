@@ -399,7 +399,7 @@ document.addEventListener("DOMContentLoaded", () => {
       popupTitle.innerHTML = "";
     }
 
-    popupDescription.textContent = description || "";
+    popupDescription.innerHTML = TextFormatter.formatTextToHtml(description || "");
     popupOverlay.classList.add("show");
     updateScrollLock();
     updateCommentInterface();
@@ -1205,7 +1205,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const html = nextSlice.map((n) => {
       const title = escapeHtml(n.title || "");
       const subtitle = escapeHtml(n.subtitle || "");
-      const text = escapeHtml(n.text || "");
+      const text = n.text_formatted || escapeHtml(n.text || "");
       const img = (n.image || "").trim();
       const imgHtml = img
         ? `<img 
