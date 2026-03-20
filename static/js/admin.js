@@ -195,6 +195,7 @@ function limparConteudoPrincipal() {
   if (usersListContainer) {
     usersListContainer.innerHTML = "";
     usersListContainer.style.display = "none"; // <-- importante
+    usersListContainer.classList.remove("news-list-view"); // Remove classe de notícias
   }
 
   if (cardsListContainer) {
@@ -2004,6 +2005,11 @@ async function editarNoticias() {
 
   // cria um “título” simples
   showView("users"); // prepara o grid e limpa tudo
+  
+  // Adiciona classe para estilizar layout de notícias
+  if (usersListContainer) {
+    usersListContainer.classList.add("news-list-view");
+  }
 
   adminContent.insertAdjacentHTML("afterbegin", `
     <div class="dynamic-page news-edit-header">
@@ -2018,7 +2024,7 @@ async function editarNoticias() {
     const news = await res.json();
 
     if (!news.length) {
-      usersListContainer.innerHTML = "<p style='text-align:center; color:#999;'>Nenhuma notícia encontrada.</p>";
+      usersListContainer.innerHTML = "<p style='text-align:center; color:#999; grid-column: 1 / -1; display:flex; align-items:center; justify-content:center; min-height:400px; font-size:18px;'>Nenhuma notícia encontrada.</p>";
       return;
     }
 
