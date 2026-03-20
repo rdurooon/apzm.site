@@ -14,6 +14,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ==================== UTILITÁRIOS ====================
   
+  function isValidUrl(string) {
+    // Aceita http, https e mailto
+    if (string.startsWith("mailto:")) {
+      return true;
+    }
+    try {
+      const url = new URL(string);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch (err) {
+      return false;
+    }
+  }
+  
   function hideAllOverlays() {
     document.querySelectorAll(".popup-overlay.show").forEach(ov => ov.classList.remove("show"));
   }
@@ -165,6 +178,80 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function showAgeVerificationPopup() {
+    if (document.getElementById("age-verification-overlay")) {
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.id = "age-verification-overlay";
+    overlay.style.position = "fixed";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100vw";
+    overlay.style.height = "100vh";
+    overlay.style.background = "rgba(0, 0, 0, 0.6)";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.zIndex = "9999";
+
+    const popup = document.createElement("div");
+    popup.style.background = "#fff";
+    popup.style.borderRadius = "10px";
+    popup.style.padding = "24px";
+    popup.style.width = "90%";
+    popup.style.maxWidth = "420px";
+    popup.style.textAlign = "center";
+    popup.style.boxShadow = "0 8px 20px rgba(0,0,0,0.35)";
+
+    popup.innerHTML = `
+      <h2 style="margin: 0 0 12px; font-size: 22px; color: darkgreen;">Verificação de idade</h2>
+      <p style="margin: 0 0 20px; color: #333; font-size: 16px;">Você já tem mais de 18 anos?</p>
+      <div style="display: inline-flex; gap: 12px; justify-content: center; width: 100%;">
+        <button id="age-yes-btn" style="flex: 1; padding: 10px 14px; background-color: darkgreen; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Sim</button>
+        <button id="age-no-btn" style="flex: 1; padding: 10px 14px; background-color: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Não</button>
+      </div>
+    `;
+
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+
+    const yesBtn = document.getElementById("age-yes-btn");
+    const noBtn = document.getElementById("age-no-btn");
+
+    yesBtn.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/api/set_over18", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({isOver18: true}),
+        });
+        const data = await response.json();
+        if (response.ok && data.status === "success") {
+          LOGGED_USER.is_over_18 = true;
+          showQuickWarning("Verificação de idade registrada", "success");
+          overlay.remove();
+        } else {
+          showQuickWarning("Falha ao registrar idade: " + (data.message || ""), "error");
+        }
+      } catch (err) {
+        console.error("Erro ao atualizar isOver18:", err);
+        showQuickWarning("Erro de rede ao registrar idade", "error");
+      }
+    });
+
+    noBtn.addEventListener("click", () => {
+      showQuickWarning("Você tem certeza?", "warning");
+      // mantém o popup aberto até que o usuário confirme
+    });
+  }
+
+  function ensureAgeVerified() {
+    if (LOGGED_USER.is_over_18 === true) return;
+    showAgeVerificationPopup();
+  }
+
   // Carrega dados do usuário atual
   fetch("/api/current_user")
     .then((res) => res.json())
@@ -172,7 +259,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.logged_in) {
         updateLoggedUser(data.username, data.email || "", data.password_masked || "");
         LOGGED_USER.is_admin = data.is_admin === true || data.is_admin === "true";
+        LOGGED_USER.is_over_18 = data.is_over_18 === true || data.is_over_18 === "true";
         updateAccountPopupFields(LOGGED_USER.username, LOGGED_USER.email, LOGGED_USER.password_masked);
+        ensureAgeVerified();
       }
     })
     .catch((err) => console.error("Erro ao carregar usuário:", err));
@@ -611,7 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (data.is_admin) buttonsHTML += `<button class="btn-admin" onclick="location.href='/admin'">Admin</button>`;
           document.querySelector(".auth-buttons").innerHTML = buttonsHTML;
 
-          setTimeout(() => location.reload(), 100);
+          ensureAgeVerified();
           updateCommentInterface();
         }
       })
@@ -1106,7 +1195,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (!newsAll || newsAll.length === 0) {
-      newsList.innerHTML = `<div class="news-item"><p>Nenhuma notícia no momento.</p></div>`;
+      newsList.innerHTML = `<div class="news-item news-empty"><p>Nenhuma notícia no momento.</p></div>`;
       return;
     }
 
@@ -1199,14 +1288,28 @@ document.addEventListener("DOMContentLoaded", () => {
     cardEl.click();
   }
 
+  function getGmailComposeUrl(emailUri) {
+    const t = String(emailUri || "").trim();
+    if (!t.startsWith("mailto:")) return t;
+    const email = t.substring(7);
+    return `https://mail.google.com/mail/u/0/?fs=1&to=${encodeURIComponent(email)}&tf=cm`;
+  }
+
   function handleNewsAction(type, target) {
     const t = String(type || "").toLowerCase();
     const trg = String(target || "").trim();
     if (!trg) return;
 
     if (t === "url") {
-      if (!isValidHttpUrl(trg)) return showQuickWarning("Link inválido.", "error");
-      window.open(trg, "_blank", "noopener,noreferrer");
+      if (!isValidUrl(trg)) {
+        showQuickWarning("Link inválido.", "error");
+        return;
+      }
+      let finalUrl = trg;
+      if (trg.startsWith("mailto:")) {
+        finalUrl = getGmailComposeUrl(trg);
+      }
+      window.open(finalUrl, "_blank", "noopener,noreferrer");
       return;
     }
 

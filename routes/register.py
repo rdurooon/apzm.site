@@ -117,6 +117,7 @@ def register_user():
         "email": encrypt_value(email),
         "password": encrypt_value(password),
         "is_admin": False,
+        "isOver18": False,
         "created_at": datetime.now(pytz.timezone("America/Sao_Paulo")).strftime("%d/%m/%Y %H:%M:%S")
     }
 

@@ -129,6 +129,8 @@ body.dark-mode .news-subtitle {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .news-item {
@@ -137,6 +139,8 @@ body.dark-mode .news-subtitle {
   padding: 16px;
   background: #fff;
   text-align: left;
+  word-wrap: break-word;
+  overflow: hidden;
 }
 
 body.dark-mode .news-item {
@@ -185,23 +189,55 @@ body.dark-mode .news-item p {
   color: #eee;
 }
 
-.news-item .news-btn-link {
-  display: inline-flex;
-  margin-top: 14px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: darkgreen;
-  color: white;
-  text-decoration: none;
-  font-weight: bold;
+/* Centraliza mensagem de nenhuma notícia */
+.news-item.news-empty {
+  display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 200px;
+  text-align: center;
+}
+
+.news-item.news-empty p {
+  color: #666;
+  font-size: 18px;
+}
+
+body.dark-mode .news-item.news-empty p {
+  color: #999;
+}
+
+.news-item .news-btn-link {
+  background-color: darkgreen;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  text-decoration: none;
+  font-weight: bold;
 }
 
 @media (hover: hover) {
+  .news-item .news-btn-link {
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
   .news-item .news-btn-link:hover {
-    background: #006400;
-    transform: scale(1.03);
+    background-color: #006400;
+    transform: scale(1.05);
+  }
+}
+
+@media (hover: none) {
+  .news-item .news-btn-link:active {
+    background-color: #006400;
   }
 }
 
@@ -2453,7 +2489,7 @@ body.dark-mode #login-link:hover {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 9999;
+  z-index: 2147483647; /* maior z-index seguro possível */
   display: flex;
   flex-direction: column;
   gap: 10px;

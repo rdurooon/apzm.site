@@ -968,6 +968,17 @@ input:checked + .slider:before {
   white-space: nowrap;
 }
 
+/* Container para listagem de notícias (modo editar) */
+#users-list-container.news-list-view {
+  grid-template-columns: 1fr; /* Uma coluna só */
+  max-width: 600px;
+  margin: 30px auto;
+}
+
+#users-list-container.news-list-view .user-card {
+  text-align: center;
+}
+
 .news-edit-header{
   width: 100%;
   text-align: center;

@@ -4,7 +4,7 @@ from flask import (
     Blueprint, render_template, session, redirect, url_for,
     send_from_directory, request, jsonify
 )
-from .register import load_users
+from .register import load_users, save_users
 from tools.crypto_utils import decrypt_value
 
 home_bp = Blueprint("home", __name__)
@@ -58,6 +58,19 @@ def get_user_from_session():
         return None
     users = load_users()
     return next((u for u in users if u.get("username") == username), None)
+
+
+def set_user_over18(username, is_over18):
+    users = load_users()
+    changed = False
+    for u in users:
+        if u.get("username") == username:
+            u["isOver18"] = bool(is_over18)
+            changed = True
+            break
+    if changed:
+        save_users(users)
+    return changed
 
 
 def get_visible_cards():
@@ -174,7 +187,25 @@ def current_user():
         "email": email,
         "password_masked": mask_password(raw_password),
         "is_admin": user.get("is_admin", False),
+        "is_over_18": user.get("isOver18", False),
     })
+
+
+@home_bp.route("/api/set_over18", methods=["POST"])
+def set_over18():
+    user = get_user_from_session()
+    if not user:
+        return jsonify({"status": "error", "message": "Usuário não autenticado."}), 401
+
+    data = request.get_json(silent=True) or {}
+    is_over18 = data.get("isOver18")
+    if is_over18 is None:
+        return jsonify({"status": "error", "message": "Parâmetro isOver18 obrigatório."}), 400
+
+    if not set_user_over18(user.get("username"), bool(is_over18)):
+        return jsonify({"status": "error", "message": "Não foi possível atualizar o usuário."}), 500
+
+    return jsonify({"status": "success", "message": "Verificação de idade atualizada."})
 
 
 # ==================== API COMENTÁRIOS ====================

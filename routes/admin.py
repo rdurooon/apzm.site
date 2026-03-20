@@ -139,11 +139,13 @@ def add_map_story():
         return jsonify({"success": False, "error": "Faltando descrição, título ou imagem do card"})
 
     # Salva imagem do card
+    os.makedirs(CARD_DIR, exist_ok=True)
     card_filename = secure_filename(card_image.filename) # type: ignore
     card_path = os.path.join(CARD_DIR, card_filename)
     card_image.save(card_path)
 
     # Salva imagem do título (ou usa o mesmo arquivo do card)
+    os.makedirs(TITLE_DIR, exist_ok=True)
     title_image = request.files.get("title_image")
     if title_image:
         title_filename = secure_filename(title_image.filename) # type: ignore
@@ -316,8 +318,8 @@ def add_news():
             return jsonify({"success": False, "error": "Texto e destino do botão são obrigatórios quando o botão está ativado."}), 400
 
         if btn_type == "url":
-            if not (btn_target.startswith("http://") or btn_target.startswith("https://")):
-                return jsonify({"success": False, "error": "Link do botão deve começar com http:// ou https://"}), 400
+            if not (btn_target.startswith("http://") or btn_target.startswith("https://") or btn_target.startswith("mailto:")):
+                return jsonify({"success": False, "error": "Link do botão deve começar com http://, https:// ou mailto:"}), 400
 
         elif btn_type in ("partner", "card"):
             # aqui só exige que tenha destino
@@ -336,6 +338,7 @@ def add_news():
     if not safe_name:
         return jsonify({"success": False, "error": "Nome de arquivo inválido."}), 400
 
+    os.makedirs(NEWS_DIR, exist_ok=True)
     img_path = os.path.join(NEWS_DIR, safe_name)
 
     # não sobrescreve se já existir
@@ -442,8 +445,8 @@ def update_news(news_id: int):
             return jsonify({"success": False, "error": "Texto e destino do botão são obrigatórios quando o botão está ativado."}), 400
 
         if btn_type == "url":
-            if not (btn_target.startswith("http://") or btn_target.startswith("https://")):
-                return jsonify({"success": False, "error": "Link do botão deve começar com http:// ou https://"}), 400
+            if not (btn_target.startswith("http://") or btn_target.startswith("https://") or btn_target.startswith("mailto:")):
+                return jsonify({"success": False, "error": "Link do botão deve começar com http://, https:// ou mailto:"}), 400
 
         elif btn_type in ("partner", "card"):
             pass
@@ -476,6 +479,7 @@ def update_news(news_id: int):
             return jsonify({"success": False, "error": f"Já existe uma imagem com esse nome: {safe_name}. Renomeie o arquivo e tente novamente."}), 409
 
         # salva nova
+        os.makedirs(NEWS_DIR, exist_ok=True)
         new_image.save(new_path)
 
         # apaga antiga se for diferente
