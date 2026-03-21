@@ -42,7 +42,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateScrollLock() {
     const anyOverlayShown = document.querySelectorAll(".popup-overlay.show").length > 0;
-    anyOverlayShown ? blockScroll() : unblockScroll();
+    if (anyOverlayShown) {
+      blockScroll();
+    } else {
+      unblockScroll();
+    }
   }
 
   function showQuickWarning(message, type = "error") {
@@ -185,8 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    blockScroll(); // Bloquear scroll quando o popup aparece
-
     const overlay = document.createElement("div");
     overlay.id = "age-verification-overlay";
     overlay.style.position = "fixed";
@@ -236,29 +238,26 @@ document.addEventListener("DOMContentLoaded", () => {
           LOGGED_USER.is_over_18 = true;
           showQuickWarning("Verificação de idade registrada", "success");
           overlay.remove();
-          unblockScroll(); // Desbloquear scroll quando o popup é removido
+          updateScrollLock(); // Desbloquear scroll quando o popup é removido
         } else {
           showQuickWarning("Falha ao registrar idade: " + (data.message || ""), "error");
           overlay.remove();
-          unblockScroll(); // Desbloquear scroll em caso de erro
+          updateScrollLock(); // Desbloquear scroll em caso de erro
         }
       } catch (err) {
         console.error("Erro ao atualizar isOver18:", err);
         showQuickWarning("Erro de rede ao registrar idade", "error");
         overlay.remove();
-        unblockScroll(); // Desbloquear scroll em caso de erro
+        updateScrollLock(); // Desbloquear scroll em caso de erro
       }
     });
 
     noBtn.addEventListener("click", () => {
-      showQuickWarning("Você deve ter mais de 18 anos para acessar o conteúdo.", "error");
-      // Logout ou redirecionar
-      overlay.remove();
-      unblockScroll(); // Desbloquear scroll
-      setTimeout(() => {
-        location.href = '/logout';
-      }, 2000);
+      showQuickWarning("Você tem certeza?", "warning");
     });
+
+    overlay.classList.add("popup-overlay", "show");
+    updateScrollLock(); // Bloquear scroll quando o popup aparece
   }
 
   function ensureAgeVerified() {
@@ -705,6 +704,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.status === "success") {
           authOverlay.classList.remove("show");
+          updateScrollLock();
           LOGGED_USER.username = data.username || emailVal;
           LOGGED_USER.email = data.email || emailVal;
           LOGGED_USER.is_admin = data.is_admin || false;
@@ -1092,7 +1092,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function closeFaqPopup() {
     faqPopup.style.display = "none";
-    unblockScroll();
+    updateScrollLock();
   }
 
   faqBtn.addEventListener("click", (e) => {
