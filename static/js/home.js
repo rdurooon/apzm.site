@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     email: null,
     password_masked: null,
     is_admin: false,
+    is_over_18: false,
   };
 
   let cardLinks = {};
@@ -146,10 +147,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ==================== DADOS DO USUÁRIO ====================
 
-  function updateLoggedUser(username, email = "", password_masked = "") {
+  function updateLoggedUser(username, email = "", password_masked = "", is_over_18 = false) {
     LOGGED_USER.username = username;
     LOGGED_USER.email = email;
     LOGGED_USER.password_masked = password_masked;
+    LOGGED_USER.is_over_18 = is_over_18 === true || is_over_18 === "true";
   }
 
   function updateAccountPopupFields(username, email, passwordMasked) {
@@ -182,6 +184,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (document.getElementById("age-verification-overlay")) {
       return;
     }
+
+    blockScroll(); // Bloquear scroll quando o popup aparece
 
     const overlay = document.createElement("div");
     overlay.id = "age-verification-overlay";
@@ -232,18 +236,28 @@ document.addEventListener("DOMContentLoaded", () => {
           LOGGED_USER.is_over_18 = true;
           showQuickWarning("Verificação de idade registrada", "success");
           overlay.remove();
+          unblockScroll(); // Desbloquear scroll quando o popup é removido
         } else {
           showQuickWarning("Falha ao registrar idade: " + (data.message || ""), "error");
+          overlay.remove();
+          unblockScroll(); // Desbloquear scroll em caso de erro
         }
       } catch (err) {
         console.error("Erro ao atualizar isOver18:", err);
         showQuickWarning("Erro de rede ao registrar idade", "error");
+        overlay.remove();
+        unblockScroll(); // Desbloquear scroll em caso de erro
       }
     });
 
     noBtn.addEventListener("click", () => {
-      showQuickWarning("Você tem certeza?", "warning");
-      // mantém o popup aberto até que o usuário confirme
+      showQuickWarning("Você deve ter mais de 18 anos para acessar o conteúdo.", "error");
+      // Logout ou redirecionar
+      overlay.remove();
+      unblockScroll(); // Desbloquear scroll
+      setTimeout(() => {
+        location.href = '/logout';
+      }, 2000);
     });
   }
 
@@ -257,9 +271,8 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((res) => res.json())
     .then((data) => {
       if (data.logged_in) {
-        updateLoggedUser(data.username, data.email || "", data.password_masked || "");
+        updateLoggedUser(data.username, data.email || "", data.password_masked || "", data.is_over_18);
         LOGGED_USER.is_admin = data.is_admin === true || data.is_admin === "true";
-        LOGGED_USER.is_over_18 = data.is_over_18 === true || data.is_over_18 === "true";
         updateAccountPopupFields(LOGGED_USER.username, LOGGED_USER.email, LOGGED_USER.password_masked);
         ensureAgeVerified();
       }
@@ -692,15 +705,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.status === "success") {
           authOverlay.classList.remove("show");
-          LOGGED_USER.username = data.username;
-          LOGGED_USER.email = emailVal;
+          LOGGED_USER.username = data.username || emailVal;
+          LOGGED_USER.email = data.email || emailVal;
           LOGGED_USER.is_admin = data.is_admin || false;
+          LOGGED_USER.is_over_18 = data.is_over_18 === true || data.is_over_18 === "true";
 
-          let buttonsHTML = `<span class="welcome-message">Olá, ${data.username}!</span><button class="btn-logout" onclick="location.href='/logout'">Sair</button>`;
-          if (data.is_admin) buttonsHTML += `<button class="btn-admin" onclick="location.href='/admin'">Admin</button>`;
+          const displayUsername = LOGGED_USER.username || "Usuário";
+          let buttonsHTML = `<span class="welcome-message">Olá, ${displayUsername}!</span><button class="btn-logout" onclick="location.href='/logout'">Sair</button>`;
+          if (LOGGED_USER.is_admin) buttonsHTML += `<button class="btn-admin" onclick="location.href='/admin'">Admin</button>`;
           document.querySelector(".auth-buttons").innerHTML = buttonsHTML;
 
-          ensureAgeVerified();
+          if (!LOGGED_USER.is_over_18) {
+            ensureAgeVerified();
+          }
           updateCommentInterface();
         }
       })
