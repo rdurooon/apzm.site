@@ -90,6 +90,8 @@ def login_user():
     return jsonify({
         "status": "success",
         "message": f"Bem-vindo de volta, {user['username']}!",
+        "username": user["username"],
+        "is_over_18": user.get("isOver18", False),
         "is_admin": user.get("is_admin", False),
         "email": decrypted_email,
         "password_masked": mask_password(raw_password),
@@ -131,7 +133,13 @@ def register_user():
         "is_admin": False
     })
 
-    return jsonify({"status": "success", "message": "Cadastro realizado com sucesso!"})
+    return jsonify({
+        "status": "success",
+        "message": "Cadastro realizado com sucesso!",
+        "username": username,
+        "is_over_18": False,
+        "is_admin": False,
+    })
 
 
 # ==========================
