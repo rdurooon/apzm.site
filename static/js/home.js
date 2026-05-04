@@ -1252,7 +1252,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const toggleLink = (id, url) => {
         const el = document.getElementById(id);
-        if (url?.trim()) {
+        if (url?.trim() && url !== "None") {
           el.href = url;
           el.style.display = "flex";
         } else {

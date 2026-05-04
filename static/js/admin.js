@@ -879,6 +879,7 @@ async function salvarAlteracoes(originalCards) {
         file: file,
         visible: cardDiv.dataset.visible === "true",
         is_new: badgeBtn ? badgeBtn.classList.contains("active") : (originalCard?.is_new || false),
+        description: originalCard?.description || ""
       };
     });
 
