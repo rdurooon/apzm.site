@@ -278,11 +278,11 @@
                         readonly 
                     />
                     <div id="account-username-tooltip-popup" class="tooltip">
-                        <p id="rule-length-popup">• Nome deve ter entre 5 e 20 caracteres</p>
-                        <p id="rule-special-popup">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
-                        <p id="rule-first-upper-popup">• Primeira letra deve ser maiúscula</p>
-                        <p id="rule-no-number-start-popup">• Não pode começar com número</p>
-                        <p id="rule-badwords-popup">• Não pode conter palavras ofensivas</p>
+                        <p id="rule-username-length-popup">• Nome deve ter entre 5 e 20 caracteres</p>
+                        <p id="rule-username-special-popup">• Não pode conter caracteres especiais ($, #, @, etc.)</p>
+                        <p id="rule-username-first-upper-popup">• Primeira letra deve ser maiúscula</p>
+                        <p id="rule-username-no-number-start-popup">• Não pode começar com número</p>
+                        <p id="rule-username-badwords-popup">• Não pode conter palavras ofensivas</p>
                     </div>
                 </div>
 
@@ -302,21 +302,24 @@
                     </div>
                 </div>
 
-                <!-- Campo: Senha -->
-                <label id="account-password-label">Senha</label>
+                <!-- Campo: Confirmar Senha (oculto por padrão) -->
+                <label id="account-password-label" style="display: none;">Confirmar Senha</label>
                 <input 
                     type="password" 
                     id="account-password" 
                     class="account-input"
-                    value="{{ password_masked or '********' }}" 
-                    data-password="{{ password_masked or '********' }}"
+                    placeholder="Confirme sua senha"
+                    style="display: none;"
                     readonly 
                 />
             </div>
 
             <!-- Botões de ação -->
             <div class="account-buttons">
+                <button id="btn-edit-account" class="btn-green">Alterar Dados</button>
                 <button id="btn-delete-account" class="btn-red">Deletar Conta</button>
+                <button id="btn-cancel-edit" class="btn-gray" style="display: none;">Cancelar</button>
+                <button id="btn-save-edit" class="btn-green" style="display: none;">Salvar</button>
             </div>
         </div>
     </div>

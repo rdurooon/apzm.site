@@ -541,24 +541,37 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   function validateUsername(value) {
-    const trimmed = value.trim();
-    const rules = {
-      length: trimmed.length >= 5 && trimmed.length <= 20,
-      special: /^[A-Za-z0-9_]*$/.test(trimmed),
-      firstUpper: /^[A-Z]/.test(trimmed),
-      noNumberStart: !/^[0-9]/.test(trimmed),
-      badwords: !BADWORDS.some((bad) => trimmed.toLowerCase().includes(bad)),
-    };
+      const trimmed = value.trim();
+      const rules = {
+        length: trimmed.length >= 5 && trimmed.length <= 20,
+        special: /^[A-Za-z0-9_]*$/.test(trimmed),
+        firstUpper: /^[A-Z]/.test(trimmed),
+        noNumberStart: !/^[0-9]/.test(trimmed),
+        badwords: !BADWORDS.some((bad) => trimmed.toLowerCase().includes(bad)),
+      };
 
-    Object.entries(rules).forEach(([rule, isValid]) => {
-      const id = `rule-username-${rule === "length" ? "length" : rule === "firstUpper" ? "first-upper" : rule === "noNumberStart" ? "no-number-start" : rule}`;
-      const el = document.getElementById(id);
-      if (el) isValid ? el.classList.add("valid") : el.classList.remove("valid");
-    });
-  }
+      Object.entries(rules).forEach(([rule, isValid]) => {
+        const baseId = `rule-username-${rule === "length" ? "length" : rule === "firstUpper" ? "first-upper" : rule === "noNumberStart" ? "no-number-start" : rule}`;
+        const popupId = `${baseId}-popup`;
+        
+        // Busca os dois elementos de forma independente
+        const elBase = document.getElementById(baseId);
+        const elPopup = document.getElementById(popupId);
+        
+        // Atualiza o tooltip do registro (se existir)
+        if (elBase) {
+          isValid ? elBase.classList.add("valid") : elBase.classList.remove("valid");
+        }
+        
+        // Atualiza o tooltip do popup "Alterar Dados" (se existir)
+        if (elPopup) {
+          isValid ? elPopup.classList.add("valid") : elPopup.classList.remove("valid");
+        }
+      });
+    }
 
   function validateEmail(value) {
-    const ruleEl = document.getElementById("rule-email-format");
+    const ruleEl = document.getElementById("rule-email-format") || document.getElementById("rule-email-format-popup");
     if (ruleEl) {
       const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
       isValid ? ruleEl.classList.add("valid") : ruleEl.classList.remove("valid");
@@ -785,9 +798,15 @@ document.addEventListener("DOMContentLoaded", () => {
     updateAccountPopupFields(LOGGED_USER.username, LOGGED_USER.email, LOGGED_USER.password_masked);
   });
 
-  accountPopupClose.addEventListener("click", () => accountOverlay.classList.remove("show"));
+  accountPopupClose.addEventListener("click", () => {
+    accountOverlay.classList.remove("show");
+    if (isEditingAccount) disableEditMode();
+  });
   accountOverlay.addEventListener("click", (e) => {
-    if (e.target === accountOverlay) accountOverlay.classList.remove("show");
+    if (e.target === accountOverlay) {
+      accountOverlay.classList.remove("show");
+      if (isEditingAccount) disableEditMode();
+    }
   });
 
   // ==================== DELETAR CONTA ====================
@@ -826,6 +845,190 @@ document.addEventListener("DOMContentLoaded", () => {
   if (deleteAccountOverlay) {
     deleteAccountOverlay.addEventListener("click", (e) => {
       if (e.target === deleteAccountOverlay) deleteAccountOverlay.classList.remove("show");
+    });
+  }
+
+  // ==================== ALTERAR DADOS DA CONTA ====================
+
+  let isEditingAccount = false;
+  const editAccountBtn = document.getElementById("btn-edit-account");
+  const cancelEditBtn = document.getElementById("btn-cancel-edit");
+  const saveEditBtn = document.getElementById("btn-save-edit");
+  const accountUsernameInput = document.getElementById("account-username-popup");
+  const accountUsernameTooltip = document.getElementById("account-username-tooltip-popup");
+  const accountEmailInput = document.getElementById("account-email-popup");
+  const accountPasswordInput = document.getElementById("account-password");
+  const accountPasswordLabel = document.getElementById("account-password-label");
+
+  function enableEditMode() {
+    isEditingAccount = true;
+    
+    // Ativa input de username
+    accountUsernameInput.removeAttribute("readonly");
+    accountUsernameInput.focus();
+    
+    // Desativa input de email (mostra bloqueado)
+    accountEmailInput.setAttribute("disabled", "disabled");
+    accountEmailInput.style.opacity = "0.5";
+    accountEmailInput.style.backgroundColor = "#f0f0f0";
+    
+    // Mostra campo de confirmar senha
+    accountPasswordLabel.style.display = "block";
+    accountPasswordInput.style.display = "block";
+    accountPasswordInput.removeAttribute("readonly");
+    accountPasswordInput.value = "";
+    
+    // Alterna botões
+    editAccountBtn.style.display = "none";
+    deleteAccountBtn.style.display = "none";
+    cancelEditBtn.style.display = "inline-block";
+    saveEditBtn.style.display = "inline-block";
+  }
+
+  function disableEditMode() {
+    isEditingAccount = false;
+    
+    // Desativa input de username
+    accountUsernameInput.setAttribute("readonly", "readonly");
+    
+    // Desativa input de email
+    accountEmailInput.removeAttribute("disabled");
+    accountEmailInput.style.opacity = "1";
+    accountEmailInput.style.backgroundColor = "#fff";
+    
+    // Oculta campo de confirmar senha
+    accountPasswordLabel.style.display = "none";
+    accountPasswordInput.style.display = "none";
+    accountPasswordInput.setAttribute("readonly", "readonly");
+    accountPasswordInput.value = "";
+    
+    // Alterna botões
+    editAccountBtn.style.display = "inline-block";
+    deleteAccountBtn.style.display = "inline-block";
+    cancelEditBtn.style.display = "none";
+    saveEditBtn.style.display = "none";
+    
+    // Oculta tooltip
+    const tooltip = document.getElementById("account-username-tooltip-popup");
+    if (tooltip) tooltip.classList.remove("show");
+    
+    // Restaura username original
+    accountUsernameInput.value = accountUsernameInput.getAttribute("data-username");
+  }
+
+  if (editAccountBtn) {
+    editAccountBtn.addEventListener("click", enableEditMode);
+  }
+
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener("click", disableEditMode);
+  }
+
+  if (saveEditBtn) {
+    saveEditBtn.addEventListener("click", async () => {
+      const newUsername = accountUsernameInput.value.trim();
+      const password = accountPasswordInput.value.trim();
+      const currentUsername = LOGGED_USER.username;
+      
+      // Validação básica
+      if (!newUsername || !password) {
+        showQuickWarning("Preencha todos os campos.", "error");
+        return;
+      }
+      
+      if (newUsername === currentUsername) {
+        showQuickWarning("O novo username é igual ao atual.", "error");
+        return;
+      }
+      
+      // Valida o novo username
+      const usernameValid = validateUsernameForChange(newUsername);
+      if (!usernameValid) {
+        showQuickWarning("Username não atende aos requisitos.", "error");
+        return;
+      }
+      
+      try {
+        const response = await fetch("/api/change_username", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            new_username: newUsername,
+            password: password
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          showQuickWarning(data.message, "success");
+          
+          // Atualiza o usuário logado
+          LOGGED_USER.username = data.new_username;
+          accountUsernameInput.setAttribute("data-username", data.new_username);
+          
+          // Desativa modo de edição
+          disableEditMode();
+          
+          // Atualiza a interface geral
+          const displayUsername = LOGGED_USER.username || "Usuário";
+          const authButtons = document.querySelector(".auth-buttons");
+          if (authButtons) {
+            let buttonsHTML = `<span class="welcome-message">Olá, ${displayUsername}!</span><button class="btn-logout" onclick="location.href='/logout'">Sair</button>`;
+            if (LOGGED_USER.is_admin) buttonsHTML += `<button class="btn-admin" onclick="location.href='/admin'">Admin</button>`;
+            authButtons.innerHTML = buttonsHTML;
+          }
+          
+          // Atualiza a sessão na página (recarrega dados do usuário)
+          fetch("/api/current_user")
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.logged_in) {
+                updateLoggedUser(data.username, data.email || "", data.password_masked || "", data.is_over_18);
+              }
+            })
+            .catch((err) => console.error("Erro ao atualizar usuário:", err));
+        } else {
+          showQuickWarning(data.message, "error");
+        }
+      } catch (err) {
+        console.error(err);
+        showQuickWarning("Erro ao alterar username.", "error");
+      }
+    });
+  }
+
+  function validateUsernameForChange(value) {
+    const trimmed = value.trim();
+    const rules = {
+      length: trimmed.length >= 5 && trimmed.length <= 20,
+      special: /^[A-Za-z0-9_]*$/.test(trimmed),
+      firstUpper: /^[A-Z]/.test(trimmed),
+      noNumberStart: !/^[0-9]/.test(trimmed),
+      badwords: !BADWORDS.some((bad) => trimmed.toLowerCase().includes(bad)),
+    };
+
+    // Retorna true apenas se todas as regras forem válidas
+    return Object.values(rules).every(r => r);
+  }
+
+  // Valida username enquanto o usuário digita (modo edição)
+  if (accountUsernameInput) {
+    accountUsernameInput.addEventListener("focus", () => {
+      const tooltip = document.getElementById("account-username-tooltip-popup");
+      if (tooltip) tooltip.classList.add("show");
+      validateUsername(accountUsernameInput.value);
+    });
+
+    accountUsernameInput.addEventListener("blur", () => {
+      const tooltip = document.getElementById("account-username-tooltip-popup");
+      if (tooltip) tooltip.classList.remove("show");
+    });
+
+    accountUsernameInput.addEventListener("input", (e) => {
+      if (isEditingAccount) {
+        validateUsername(e.target.value);
+      }
     });
   }
 
