@@ -28,6 +28,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
+  function formatarDataBR(dataString) {
+      if (!dataString) return "";
+      
+      // Cria o objeto Date a partir da string do banco
+      const data = new Date(dataString);
+      
+      // Extrai os componentes e adiciona o zero à esquerda se necessário
+      const dia = String(data.getDate()).padStart(2, '0');
+      const mes = String(data.getMonth() + 1).padStart(2, '0'); // Meses começam em 0
+      const ano = data.getFullYear();
+      
+      const horas = String(data.getHours()).padStart(2, '0');
+      const minutos = String(data.getMinutes()).padStart(2, '0');
+      const segundos = String(data.getSeconds()).padStart(2, '0');
+      
+      return `${dia}/${mes}/${ano} ${horas}:${minutos}:${segundos}`;
+  }
+
   function hideAllOverlays() {
     document.querySelectorAll(".popup-overlay.show").forEach(ov => ov.classList.remove("show"));
   }

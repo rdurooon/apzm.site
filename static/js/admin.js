@@ -22,6 +22,24 @@ let __newsTargetsCache = {
 let targetMode = "input"; // "input" | "select"
 let targetSelectEl = null;
 
+function formatarDataBR(dataString) {
+    if (!dataString) return "";
+    
+    // Cria o objeto Date a partir da string do banco
+    const data = new Date(dataString);
+    
+    // Extrai os componentes e adiciona o zero à esquerda se necessário
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0'); // Meses começam em 0
+    const ano = data.getFullYear();
+    
+    const horas = String(data.getHours()).padStart(2, '0');
+    const minutos = String(data.getMinutes()).padStart(2, '0');
+    const segundos = String(data.getSeconds()).padStart(2, '0');
+    
+    return `${dia}/${mes}/${ano} ${horas}:${minutos}:${segundos}`;
+}
+
 function hideAllViews() {
   // esconde o “topo padrão” (logo+título) somente se você realmente quiser
   if (adminContainer) adminContainer.style.display = "flex"; // mantém a página base
@@ -242,7 +260,7 @@ async function listarUsuarios() {
 
       card.innerHTML = `
                 <span class="username">${user.username}</span>
-                <span class="created-at">${user.created_at}</span>
+                <span class="created-at">${formatarDataBR(user.created_at)}</span>
             `;
       usersListContainer.appendChild(card);
     });
@@ -337,7 +355,7 @@ async function gerenciarUsuarios() {
 
         card.innerHTML = `
                   <span class="username">${user.username}</span>
-                  <span class="created-at">${user.created_at}</span>
+                  <span class="created-at">${formatarDataBR(user.created_at)}</span>
                   <div class="user-actions">
                       <button class="admin-toggle">Promover Admin</button>
                       <button class="delete">&#128465;</button>
