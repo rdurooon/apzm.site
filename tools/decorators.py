@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import session, redirect, url_for
-from routes.register import load_users
+from tools.db import get_admin_count, get_user_by_username
 
 def check_user_exists(f):
     """
@@ -9,9 +9,10 @@ def check_user_exists(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if "username" in session:
-            users = load_users()
-            if not any(u["username"] == session["username"] for u in users):
+        username = session.get("username")
+        if username:
+            user = get_user_by_username(username)
+            if not user:
                 session.clear()
                 return redirect(url_for("home.session_denied"))
         return f(*args, **kwargs)
@@ -23,13 +24,15 @@ def admin_required(f):
     Se não for, ou se não estiver logado, redireciona para a página de acesso negado.
     """
     @wraps(f)
-    @check_user_exists  # primeiro garante que o usuário ainda existe
+    @check_user_exists
     def decorated_function(*args, **kwargs):
         username = session.get("username")
-        users = load_users()
-        user = next((u for u in users if u["username"] == username), None)
+        user = get_user_by_username(username) if username else None
         if not user or not user.get("is_admin", False):
-            session["is_admin"] = False  # garante que a sessão não engane
+            if session.get("bootstrap_admin") and get_admin_count() == 0:
+                session["is_admin"] = True
+                return f(*args, **kwargs)
+            session["is_admin"] = False
             return redirect(url_for("home.session_denied"))
         session["is_admin"] = True
         return f(*args, **kwargs)

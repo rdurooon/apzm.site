@@ -120,15 +120,8 @@ apzm.site/
 │           ├── logo/      # Logos dos parceiros
 │           └── background/ # Backgrounds dos parceiros
 │
-└── data/                  # Arquivos de dados (JSON)
-    ├── cards.json         # Dados dos cards (mapas/histórias)
-    ├── comments.json      # Comentários da comunidade
-    ├── likes.json         # Dados de "likes"
-    ├── ratings.json       # Avaliações por estrelas
-    ├── links.json         # Links para histórias e mapas
-    ├── parceiros.json     # Dados dos parceiros
-    ├── users.json         # Dados dos usuários (criptografado)
-    ├── site_status.json   # Status do site
+└── data/                  # Arquivos de dados do banco SQLite
+    ├── apzm_database.db   # Banco de dados principal do aplicativo
     ├── fernet.key         # Chave de criptografia (gerada automaticamente)
     └── email_creds.key    # Credenciais SMTP (EMAIL e PW_APP)
 ```

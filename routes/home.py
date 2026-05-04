@@ -1,54 +1,34 @@
 import os
-import json
 from flask import (
     Blueprint, render_template, session, redirect, url_for,
-    send_from_directory, request, jsonify
+    request, jsonify
 )
-from .register import load_users, save_users
+from tools.db import (
+    get_user_by_username,
+    set_user_over18 as db_set_user_over18,
+    get_visible_cards as db_get_visible_cards,
+    get_partners as db_get_partners,
+    get_site_status,
+    get_comments_for_card,
+    add_or_update_comment,
+    delete_comment as db_delete_comment,
+    get_likes_for_card,
+    toggle_like_card,
+    set_rating,
+    get_rating_for_item,
+    get_card_links,
+)
 from tools.crypto_utils import decrypt_value
 from tools.text_formatter import format_text_to_html
 
 home_bp = Blueprint("home", __name__)
 
 # ==================== CONSTANTES ====================
-DATA_DIR = "data"
 STATIC_DIR = os.path.join("static", "images")
-
-STATUS_FILE = os.path.join(DATA_DIR, "site_status.json")
-CARDS_FILE = os.path.join(DATA_DIR, "cards.json")
-COMMENTS_FILE = os.path.join(DATA_DIR, "comments.json")
-PARCEIROS_FILE = os.path.join(DATA_DIR, "parceiros.json")
-RATINGS_FILE = os.path.join(DATA_DIR, "ratings.json")
-LIKES_FILE = os.path.join(DATA_DIR, "likes.json")
-
 CARDS_FOLDER = os.path.join(STATIC_DIR, "cards")
 BACKGROUND_FOLDER = os.path.join(STATIC_DIR, "background")
 
 # ==================== UTILITÁRIOS ====================
-def load_json_file(path, default=None):
-    if not os.path.exists(path):
-        if default is not None:
-            save_json_file(path, default)
-        return default
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        if default is not None:
-            save_json_file(path, default)
-        return default
-
-
-def save_json_file(path, data):
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        return True
-    except Exception as e:
-        print(f"Erro ao salvar {path}: {e}")
-        return False
-
-
 def mask_password(password: str) -> str:
     return "*" * len(password) if password else "********"
 
@@ -57,52 +37,45 @@ def get_user_from_session():
     username = session.get("username")
     if not username:
         return None
-    users = load_users()
-    return next((u for u in users if u.get("username") == username), None)
+    return get_user_by_username(username)
 
 
 def set_user_over18(username, is_over18):
-    users = load_users()
-    changed = False
-    for u in users:
-        if u.get("username") == username:
-            u["isOver18"] = bool(is_over18)
-            changed = True
-            break
-    if changed:
-        save_users(users)
-    return changed
+    return db_set_user_over18(username, bool(is_over18))
 
 
 def get_visible_cards():
-    all_cards = load_json_file(CARDS_FILE, default=[]) or []
+    all_cards = db_get_visible_cards() or []
     visible_cards = []
     for card in all_cards:
         card_file = card.get("file")
-        if card_file and card.get("visible", True) and os.path.exists(os.path.join(CARDS_FOLDER, card_file)):
+        if card_file and os.path.exists(os.path.join(CARDS_FOLDER, card_file)):
             visible_cards.append({
                 "file": card_file,
                 "title": card.get("title", "Sem título"),
                 "description": card.get("description", ""),
                 "description_formatted": format_text_to_html(card.get("description", "")),
                 "visible": True,
-                "is_new": card.get("is_new", False),
+                "is_new": bool(card.get("is_new", False)),
             })
     return visible_cards
 
 
 def load_parceiros():
-    parceiros = load_json_file(PARCEIROS_FILE, default=[]) or []
-    return [{
-        "nome": p.get("nome", "Sem nome"),
-        "file": p.get("file", ""),
-        "descricao": p.get("descricao", ""),
-        "site": p.get("site", ""),
-        "instagram": p.get("instagram", ""),
-        "twitter": p.get("twitter", ""),
-        "discord": p.get("discord", ""),
-        "email": p.get("email", ""),
-    } for p in parceiros]
+    parceiros = db_get_partners() or []
+    return [
+        {
+            "nome": p.get("nome", "Sem nome"),
+            "file": p.get("file", ""),
+            "descricao": p.get("descricao", ""),
+            "site": p.get("site", ""),
+            "instagram": p.get("instagram", ""),
+            "twitter": p.get("twitter", ""),
+            "discord": p.get("discord", ""),
+            "email": p.get("email", ""),
+        }
+        for p in parceiros
+    ]
 
 
 # ==================== CACHE CONTROL ====================
@@ -131,8 +104,7 @@ def home():
         "image": "/static/images/icon.jpg"
     }
 
-    site_status = load_json_file(STATUS_FILE, default={"online": True})
-    if not site_status.get("online", True):
+    if not get_site_status():
         return render_template("off.html", seo=seo)
 
     visible_cards = get_visible_cards()
@@ -180,16 +152,14 @@ def current_user():
     if not user:
         return jsonify({"logged_in": False})
 
-    email = decrypt_value(user.get("email", "")) or "não informado"
-    raw_password = decrypt_value(user.get("password", "")) or ""
-
+    email = decrypt_value(user.get("email_encrypted", "")) or "não informado"
     return jsonify({
         "logged_in": True,
         "username": user["username"],
         "email": email,
-        "password_masked": mask_password(raw_password),
-        "is_admin": user.get("is_admin", False),
-        "is_over_18": user.get("isOver18", False),
+        "password_masked": mask_password(None),
+        "is_admin": bool(user.get("is_admin", False)),
+        "is_over_18": bool(user.get("is_over_18", False)),
     })
 
 
@@ -213,8 +183,7 @@ def set_over18():
 # ==================== API COMENTÁRIOS ====================
 @home_bp.route("/api/comments/<card_id>", methods=["GET"])
 def get_comments(card_id):
-    comments = load_json_file(COMMENTS_FILE, default={})
-    return jsonify(comments.get(card_id, {}))
+    return jsonify(get_comments_for_card(card_id) or {})
 
 
 @home_bp.route("/api/comments/<card_id>", methods=["POST"])
@@ -228,13 +197,7 @@ def add_comment(card_id):
     if not comment_text:
         return jsonify({"status": "error", "message": "Comentário vazio"}), 400
 
-    comments = load_json_file(COMMENTS_FILE, default={})
-    if card_id not in comments:
-        comments[card_id] = {}
-
-    comments[card_id][user["username"]] = comment_text
-    save_json_file(COMMENTS_FILE, comments)
-
+    add_or_update_comment(card_id, user["username"], comment_text)
     return jsonify({"status": "success", "message": "Comentário adicionado!"})
 
 
@@ -251,18 +214,14 @@ def delete_comment():
     if not card_id or not target_user:
         return jsonify({"status": "error", "message": "Dados insuficientes"}), 400
 
-    comments = load_json_file(COMMENTS_FILE, default={})
-    if card_id not in comments or target_user not in comments[card_id]:
+    comments = get_comments_for_card(card_id) or {}
+    if target_user not in comments:
         return jsonify({"status": "error", "message": "Comentário não encontrado"}), 404
 
     if user["username"] != target_user and not user.get("is_admin", False):
         return jsonify({"status": "error", "message": "Permissão negada"}), 403
 
-    del comments[card_id][target_user]
-    if not comments[card_id]:
-        del comments[card_id]
-
-    save_json_file(COMMENTS_FILE, comments)
+    db_delete_comment(card_id, target_user)
     return jsonify({"status": "success", "message": "Comentário deletado."})
 
 
@@ -272,12 +231,10 @@ def get_likes(filename):
     user = get_user_from_session()
     username = user["username"] if user else None
 
-    likes_data = load_json_file(LIKES_FILE, default={})
-    card_likes = likes_data.get(filename, {"likes": 0, "liked_by": []})
-
+    likes, liked = get_likes_for_card(filename, username)
     return jsonify({
-        "likes": card_likes.get("likes", 0),
-        "user_liked": username in card_likes.get("liked_by", []) if username else False
+        "likes": likes,
+        "user_liked": liked
     })
 
 
@@ -288,24 +245,10 @@ def like_card(filename):
         return jsonify({"status": "error", "message": "Necessário login"}), 403
 
     username = user["username"]
-    likes_data = load_json_file(LIKES_FILE, default={})
-    card_likes = likes_data.get(filename, {"likes": 0, "liked_by": []})
-
-    if username in card_likes["liked_by"]:
-        card_likes["liked_by"].remove(username)
-        card_likes["likes"] -= 1
-        action = "unliked"
-    else:
-        card_likes["liked_by"].append(username)
-        card_likes["likes"] += 1
-        action = "liked"
-
-    likes_data[filename] = card_likes
-    save_json_file(LIKES_FILE, likes_data)
-
+    action, likes = toggle_like_card(filename, username)
     return jsonify({
         "status": "success",
-        "likes": card_likes["likes"],
+        "likes": likes,
         "action": action
     })
 
@@ -318,32 +261,31 @@ def rate_item(item_id):
         return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
 
     data = request.get_json(silent=True) or {}
-    rating = int(data.get("rating", 0))
+    try:
+        rating = int(data.get("rating", 0))
+    except (TypeError, ValueError):
+        rating = 0
+
     if rating < 1 or rating > 5:
         return jsonify({"success": False, "error": "Rating inválido"}), 400
 
-    ratings = load_json_file(RATINGS_FILE, default={})
-    if item_id not in ratings:
-        ratings[item_id] = {"usuarios": {}, "media": 0}
-
-    ratings[item_id]["usuarios"][user["username"]] = rating
-    notas = list(ratings[item_id]["usuarios"].values())
-    ratings[item_id]["media"] = round(sum(notas) / len(notas), 2)
-
-    save_json_file(RATINGS_FILE, ratings)
-    return jsonify({"success": True, "average": ratings[item_id]["media"]})
+    rating_data = set_rating(item_id, user["username"], rating)
+    return jsonify({"success": True, "average": rating_data.get("media", 0)})
 
 
 @home_bp.route("/get_rating/<item_id>")
 def get_rating(item_id):
-    ratings = load_json_file(RATINGS_FILE, default={})
-    return jsonify(ratings.get(item_id, {"usuarios": {}, "media": 0}))
+    return jsonify(get_rating_for_item(item_id))
 
 
 # ==================== API DADOS ====================
 @home_bp.route("/api/<filename>")
 def serve_data(filename):
-    return send_from_directory(DATA_DIR, filename)
+    if filename == "site_status.json":
+        return jsonify({"online": get_site_status()})
+    if filename == "links.json":
+        return jsonify(get_card_links())
+    return jsonify({"error": "Endpoint não encontrado."}), 404
 
 
 # ==================== API ADMIN ====================
@@ -351,6 +293,5 @@ def serve_data(filename):
 def toggle_site():
     data = request.get_json(silent=True) or {}
     online = data.get("online", True)
-    if save_json_file(STATUS_FILE, {"online": bool(online)}):
-        return jsonify({"success": True, "online": online})
-    return jsonify({"success": False, "error": "Erro ao salvar"}), 500
+    set_site_status(bool(online))
+    return jsonify({"success": True, "online": bool(online)})

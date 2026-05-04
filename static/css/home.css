@@ -1315,7 +1315,7 @@ body.dark-mode .news-load-more {
 }
 
 .btn-green {
-  background-color: #4caf50;
+  background-color: darkgreen;
   color: #fff;
 }
 .btn-green:hover {
@@ -1323,11 +1323,19 @@ body.dark-mode .news-load-more {
 }
 
 .btn-red {
-  background-color: #f44336;
+  background-color: #ff0000;
   color: #fff;
 }
 .btn-red:hover {
   background-color: #d32f2f;
+}
+
+.btn-gray {
+  background-color: #9e9e9e;
+  color: #fff;
+}
+.btn-gray:hover {
+  background-color: #757575;
 }
 
 #btn-save-account,
@@ -1362,10 +1370,11 @@ body.dark-mode .news-load-more {
 
 .account-input-wrapper .tooltip p {
   margin: 4px 0;
+  color: #ff0000;
 }
 
 .account-input-wrapper .tooltip p.valid {
-  color: #4caf50; /* verde para válido */
+  color: greenyellow; /* verde para válido */
 }
 
 /* ==================== 17. POPUP DELETE ACCOUNT ==================== */
@@ -2530,7 +2539,7 @@ body.dark-mode #login-link:hover {
 }
 
 .toast-error {
-  background-color: #f44336;
+  background-color: #ff0000;
   color: white;
   border-left: 4px solid #c62828;
 }

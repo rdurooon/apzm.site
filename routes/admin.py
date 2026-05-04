@@ -1,62 +1,40 @@
 from datetime import datetime, timedelta
 import pytz
 import os
-import json
 import shutil
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, current_app, redirect, url_for, session
 from werkzeug.utils import secure_filename
-from .register import load_users, promote_user, demote_user, delete_user
+from .register import promote_user, demote_user, delete_user
 from tools.decorators import admin_required
+from tools.db import (
+    get_admin_count as db_get_admin_count,
+    get_all_users,
+    get_cards as db_get_cards,
+    get_card_links as db_get_card_links,
+    insert_card as db_insert_card,
+    delete_card as db_delete_card,
+    update_cards_order as db_update_cards_order,
+    update_card as db_update_card,
+    save_card_links as db_save_card_links,
+    get_partners as db_get_partners,
+    insert_news as db_insert_news,
+    list_news as db_list_news,
+    get_news_item as db_get_news_item,
+    update_news as db_update_news,
+    delete_news as db_delete_news,
+    check_new_badges as db_check_new_badges,
+)
 
 admin_bp = Blueprint("admin", __name__)
 
 # =========================== CONSTANTES ===========================
-DATA_FILE = "data/cards.json"
-LINKS_FILE = "data/links.json"
 CARD_DIR = "static/images/cards/"
 TITLE_DIR = "static/images/titles/"
-PARTNERS_FILE = "data/parceiros.json"
-NEWS_FILE = "data/news.json"
 NEWS_DIR = "static/images/news/"
-
-# =========================== FUNÇÕES AUXILIARES ===========================
-def read_json(path, default=None):
-    """Lê JSON de um arquivo, retornando default em caso de erro."""
-    if not os.path.exists(path):
-        if default is not None:
-            write_json(path, default)
-        return default if default is not None else []
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError):
-        if default is not None:
-            write_json(path, default)
-        return default if default is not None else []
-
-
-def write_json(path, data):
-    """Salva JSON no arquivo com indentação e UTF-8."""
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
 
 # =========================== FUNÇÃO PARA CHECAR "NOVA" ===========================
 def check_new_badges(cards):
-    now = datetime.now(pytz.timezone("America/Sao_Paulo"))
-    changed = False
-    for card in cards:
-        if card.get("is_new") and card.get("new_since"):
-            try:
-                new_since = datetime.fromisoformat(card["new_since"])
-                if now - new_since > timedelta(days=7):
-                    card["is_new"] = False
-                    card["new_since"] = None
-                    changed = True
-            except Exception:
-                card["new_since"] = None
-    if changed:
-        write_json(DATA_FILE, cards)
-    return cards
+    return db_check_new_badges(cards)
 
 
 # =========================== ROTA PRINCIPAL ===========================
@@ -66,11 +44,27 @@ def admin():
     return render_template("admin.html")
 
 
+@admin_bp.route("/admin_access/<token>")
+def admin_access(token):
+    if db_get_admin_count() > 0:
+        return redirect(url_for("home.session_denied"))
+
+    expected = current_app.config.get("BOOTSTRAP_ADMIN_TOKEN")
+    used = current_app.config.get("BOOTSTRAP_ADMIN_TOKEN_USED", False)
+    if not expected or used or token != expected:
+        return redirect(url_for("home.session_denied"))
+
+    session["bootstrap_admin"] = True
+    session["is_admin"] = True
+    current_app.config["BOOTSTRAP_ADMIN_TOKEN_USED"] = True
+    return redirect(url_for("admin.admin"))
+
+
 # =========================== LISTAR USUÁRIOS ===========================
 @admin_bp.route("/admin/list_users")
 @admin_required
 def list_users():
-    users = load_users()
+    users = get_all_users()
     return jsonify([
         {
             "id": u["id"],
@@ -86,12 +80,12 @@ def list_users():
 @admin_bp.route("/admin/list_links")
 @admin_required
 def list_links():
-    cards = read_json(DATA_FILE, [])
-    links_data = read_json(LINKS_FILE, {})
+    cards = db_get_cards()
+    links_data = db_get_card_links()
 
     for card in cards:
         file = card["file"]
-        card_links = links_data.get(file, {}) # type: ignore
+        card_links = links_data.get(file, {})
         card["link_historia"] = card_links.get("historia", "")
         card["link_mapa"] = card_links.get("mapa", "")
 
@@ -121,8 +115,7 @@ def delete(user_id):
 @admin_bp.route("/admin/list_cards")
 @admin_required
 def list_cards():
-    cards = read_json(DATA_FILE, [])
-    # Atualiza status de "Novo!" baseado em new_since
+    cards = db_get_cards()
     cards = check_new_badges(cards)
     return jsonify(cards)
 
@@ -156,16 +149,7 @@ def add_map_story():
         title_path = os.path.join(TITLE_DIR, title_filename)
         shutil.copy(card_path, title_path)
 
-    # Atualiza JSON
-    cards = read_json(DATA_FILE, [])
-
-    cards.append({
-        "file": card_filename,
-        "title": title_text,
-        "description": description
-    })
-
-    write_json(DATA_FILE, cards)
+    db_insert_card(card_filename, title_text, description)
     return jsonify({"success": True})
 
 
@@ -174,22 +158,14 @@ def add_map_story():
 @admin_required
 def delete_map_story(filename):
     try:
-        cards = read_json(DATA_FILE, [])
-        card_to_delete = next((c for c in cards if c["file"] == filename), None)
-
-        if not card_to_delete:
+        deleted = db_delete_card(filename)
+        if not deleted:
             return jsonify({"success": False, "error": "Card não encontrado"})
 
-        # Remove do JSON
-        cards = [c for c in cards if c["file"] != filename]
-        write_json(DATA_FILE, cards)
-
-        # Remove imagem do card
         card_path = os.path.join(CARD_DIR, filename)
         if os.path.exists(card_path):
             os.remove(card_path)
 
-        # Remove imagem do título
         base_name = os.path.splitext(filename)[0]
         for f in os.listdir(TITLE_DIR):
             if os.path.splitext(f)[0] == base_name:
@@ -209,20 +185,7 @@ def save_cards_order():
         if not isinstance(new_cards, list):
             return jsonify({"success": False, "error": "Formato inválido"})
 
-        current_cards = read_json(DATA_FILE, [])
-        cards_dict = {c["file"]: c for c in current_cards}
-
-        updated_cards = [
-            {
-                "file": c.get("file"),
-                "title": cards_dict.get(c.get("file"), {}).get("title", os.path.splitext(c.get("file"))[0].capitalize()),
-                "description": cards_dict.get(c.get("file"), {}).get("description", ""),
-                "visible": c.get("visible", True),
-            }
-            for c in new_cards if c.get("file")
-        ]
-
-        write_json(DATA_FILE, updated_cards)
+        db_update_cards_order(new_cards)
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
@@ -233,20 +196,10 @@ def save_cards_order():
 @admin_bp.route("/admin/toggle_card_new/<filename>", methods=["POST"])
 @admin_required
 def toggle_card_new(filename):
-    cards = read_json(DATA_FILE, [])
     data = request.get_json()
     is_new = data.get("is_new", False)
-
-    for card in cards:
-        if card["file"] == filename:
-            card["is_new"] = is_new
-            if is_new:
-                card["new_since"] = datetime.now(pytz.timezone("America/Sao_Paulo")).isoformat()
-            else:
-                card["new_since"] = None
-            break
-
-    write_json(DATA_FILE, cards)
+    new_since = datetime.now(pytz.timezone("America/Sao_Paulo")).isoformat() if is_new else None
+    db_update_card(filename, is_new=is_new, new_since=new_since)
     return jsonify({"success": True})
 
 
@@ -255,14 +208,7 @@ def toggle_card_new(filename):
 @admin_required
 def save_card_links(filename):
     data = request.get_json()
-    links_data = read_json(LINKS_FILE, {})
-
-    links_data[filename] = {
-        "historia": data.get("historia", ""),
-        "mapa": data.get("mapa", "")
-    }
-
-    write_json(LINKS_FILE, links_data)
+    db_save_card_links(filename, data.get("historia", ""), data.get("mapa", ""))
     return jsonify({"success": True})
 
 # =========================== LISTAR PARCEIROS ===========================
@@ -270,15 +216,11 @@ def save_card_links(filename):
 @admin_bp.route("/admin/list_partners", methods=["GET"])
 @admin_required
 def list_partners():
-    partners = read_json(PARTNERS_FILE, [])
-    if not isinstance(partners, list):
-        partners = []
-
-    # retorna só o necessário
+    partners = db_get_partners()
     return jsonify([
         {
             "nome": p.get("nome", ""),
-            "file": p.get("file", "")  # se você usa file/id no front
+            "file": p.get("file", "")
         }
         for p in partners
         if p.get("nome")
@@ -347,36 +289,15 @@ def add_news():
 
     image.save(img_path)
 
-    # -------- atualizar news.json --------
-    news_list = read_json(NEWS_FILE, [])
-    if not isinstance(news_list, list):
-        news_list = []
+    item_id = db_insert_news(
+        title=title,
+        subtitle=subtitle,
+        text=text,
+        image=safe_name,
+        button={"text": btn_text, "type": btn_type, "target": btn_target, "url": btn_target} if btn_enabled else None,
+    )
 
-    created_at = datetime.now(pytz.timezone("America/Sao_Paulo")).isoformat()
-
-    item = {
-        "id": int(datetime.now().timestamp() * 1000),
-        "title": title,
-        "subtitle": subtitle,
-        "text": text,
-        "image": safe_name,      # só o nome do arquivo
-        "created_at": created_at
-    }
-
-    if btn_enabled:
-        # mantém compat com front antigo e deixa o novo completo
-        button_obj = {"text": btn_text, "type": btn_type, "target": btn_target}
-        if btn_type == "url":
-            button_obj["url"] = btn_target  # compat: quem ainda lê "url" continua funcionando
-        item["button"] = button_obj
-    else:
-        item["button"] = None
-
-
-    # mais recente primeiro
-    news_list.insert(0, item)
-    write_json(NEWS_FILE, news_list)
-
+    item = db_get_news_item(item_id)
     return jsonify({"success": True, "item": item})
 
 # =========================== NOTÍCIAS: EDITAR ===========================
@@ -384,11 +305,8 @@ def add_news():
 @admin_bp.route("/admin/list_news", methods=["GET"])
 @admin_required
 def list_news():
-    news_list = read_json(NEWS_FILE, [])
-    if not isinstance(news_list, list):
-        news_list = []
+    news_list = db_list_news()
 
-    # retorna só o necessário para a “lista de edição”
     def safe_item(n):
         return {
             "id": n.get("id"),
@@ -403,11 +321,7 @@ def list_news():
 @admin_bp.route("/admin/get_news/<int:news_id>", methods=["GET"])
 @admin_required
 def get_news(news_id: int):
-    news_list = read_json(NEWS_FILE, [])
-    if not isinstance(news_list, list):
-        news_list = []
-
-    item = next((n for n in news_list if int(n.get("id", -1)) == news_id), None)
+    item = db_get_news_item(news_id)
     if not item:
         return jsonify({"success": False, "error": "Notícia não encontrada."}), 404
 
@@ -453,18 +367,13 @@ def update_news(news_id: int):
         else:
             return jsonify({"success": False, "error": "Tipo de botão inválido."}), 400
 
-    news_list = read_json(NEWS_FILE, [])
-    if not isinstance(news_list, list):
-        news_list = []
-
-    idx = next((i for i, n in enumerate(news_list) if int(n.get("id", -1)) == news_id), None)
-    if idx is None:
+    item = db_get_news_item(news_id)
+    if not item:
         return jsonify({"success": False, "error": "Notícia não encontrada."}), 404
 
-    item = news_list[idx]
     old_image_name = item.get("image", "")
+    safe_name = old_image_name
 
-    # -------- troca de imagem (se enviou uma nova) --------
     if new_image and (new_image.filename or ""):
         os.makedirs(NEWS_DIR, exist_ok=True)
 
@@ -474,54 +383,43 @@ def update_news(news_id: int):
 
         new_path = os.path.join(NEWS_DIR, safe_name)
 
-        # Se já existe um arquivo com esse nome e ele não é o mesmo da notícia atual, bloqueia (evita sobrescrever outro)
         if os.path.exists(new_path) and safe_name != old_image_name:
             return jsonify({"success": False, "error": f"Já existe uma imagem com esse nome: {safe_name}. Renomeie o arquivo e tente novamente."}), 409
 
-        # salva nova
-        os.makedirs(NEWS_DIR, exist_ok=True)
         new_image.save(new_path)
 
-        # apaga antiga se for diferente
         if old_image_name and old_image_name != safe_name:
             old_path = os.path.join(NEWS_DIR, old_image_name)
             if os.path.exists(old_path):
                 os.remove(old_path)
 
-        item["image"] = safe_name
-
-    # -------- atualiza campos --------
-    item["title"] = title
-    item["subtitle"] = subtitle
-    item["text"] = text
-    item["button"] = (
-        {"text": btn_text, "type": btn_type, "target": btn_target, **({"url": btn_target} if btn_type == "url" else {})}
-        if btn_enabled else None
+    updated = db_update_news(
+        news_id,
+        title=title,
+        subtitle=subtitle,
+        text=text,
+        image=safe_name,
+        button={"text": btn_text, "type": btn_type, "target": btn_target, "url": btn_target} if btn_enabled else None,
     )
 
+    if not updated:
+        return jsonify({"success": False, "error": "Falha ao atualizar notícia."}), 500
 
-    news_list[idx] = item
-    write_json(NEWS_FILE, news_list)
-
-    return jsonify({"success": True, "item": item})
+    updated_item = db_get_news_item(news_id)
+    return jsonify({"success": True, "item": updated_item})
 
 
 @admin_bp.route("/admin/delete_news/<int:news_id>", methods=["DELETE"])
 @admin_required
 def delete_news(news_id: int):
-    news_list = read_json(NEWS_FILE, [])
-    if not isinstance(news_list, list):
-        news_list = []
-
-    item = next((n for n in news_list if int(n.get("id", -1)) == news_id), None)
+    item = db_get_news_item(news_id)
     if not item:
         return jsonify({"success": False, "error": "Notícia não encontrada."}), 404
 
-    # remove do json
-    news_list = [n for n in news_list if int(n.get("id", -1)) != news_id]
-    write_json(NEWS_FILE, news_list)
+    deleted = db_delete_news(news_id)
+    if not deleted:
+        return jsonify({"success": False, "error": "Falha ao excluir notícia."}), 500
 
-    # remove imagem
     img_name = item.get("image", "")
     if img_name:
         img_path = os.path.join(NEWS_DIR, img_name)
