@@ -1436,57 +1436,173 @@ async function showOverview() {
 }
 
 function initAdminMenu() {
-  const bindClick = (element, handler) => {
-    if (!element) return;
-    element.addEventListener("click", handler);
+  console.log("[DEBUG] initAdminMenu called");
+
+  const bindClick = (element, handler, label) => {
+    if (!element) {
+      console.warn(`[DEBUG] Element not found for ${label}`);
+      return;
+    }
+
+    // Diagnóstico do elemento
+    const computedStyle = window.getComputedStyle(element);
+    console.log(`[DEBUG] Element ${label} diagnostics:`, {
+      pointerEvents: computedStyle.pointerEvents,
+      cursor: computedStyle.cursor,
+      display: computedStyle.display,
+      visibility: computedStyle.visibility,
+      zIndex: computedStyle.zIndex
+    });
+
+    console.log(`[DEBUG] Binding click for ${label}`);
+    element.addEventListener("click", (e) => {
+      console.log(`[DEBUG] Click triggered for ${label}`, e.target);
+      handler(e);
+    });
   };
 
-  bindClick(hamburger, toggleSidebar);
-  bindClick(mapsItem, toggleMapsSubmenu);
-  bindClick(usersItem, toggleUsersSubmenu);
-  bindClick(newsItem, toggleNewsSubmenu);
+  bindClick(hamburger, toggleSidebar, "hamburger");
+  bindClick(mapsItem, toggleMapsSubmenu, "mapsItem");
+  bindClick(usersItem, toggleUsersSubmenu, "usersItem");
+  bindClick(newsItem, toggleNewsSubmenu, "newsItem");
 
   const visaoGeralItem = document.getElementById("visao-geral");
-  bindClick(visaoGeralItem, showOverview);
+  bindClick(visaoGeralItem, showOverview, "visaoGeralItem");
 
   const usersSubmenuEl = document.getElementById("users-submenu");
   const gerenciarUsersEl = usersSubmenuEl?.querySelector("li#gerenciar-usuarios");
-  bindClick(gerenciarUsersEl, gerenciarUsuarios);
+  bindClick(gerenciarUsersEl, gerenciarUsuarios, "gerenciarUsersEl");
 
   const mapsSubmenuEl = document.getElementById("maps-submenu");
   const addMapStoryEl = mapsSubmenuEl?.querySelector("li.add-map-story");
   const editarMapStoryEl = mapsSubmenuEl?.querySelector("li.edit-map-story");
   const linkarMapStoryEl = mapsSubmenuEl?.querySelector("li#linkar-map-story");
-  bindClick(addMapStoryEl, adicionarCards);
-  bindClick(editarMapStoryEl, editarCards);
-  bindClick(linkarMapStoryEl, abrirSubguiaLinkar);
+  bindClick(addMapStoryEl, adicionarCards, "addMapStoryEl");
+  bindClick(editarMapStoryEl, editarCards, "editarMapStoryEl");
+  bindClick(linkarMapStoryEl, abrirSubguiaLinkar, "linkarMapStoryEl");
 
   const newsSubmenuEl = document.getElementById("news-submenu");
   const addNewsEl = newsSubmenuEl?.querySelector("li.add-news");
   const editNewsEl = newsSubmenuEl?.querySelector("li.edit-news");
-  bindClick(addNewsEl, adicionarNoticia);
-  bindClick(editNewsEl, editarNoticias);
+  bindClick(addNewsEl, adicionarNoticia, "addNewsEl");
+  bindClick(editNewsEl, editarNoticias, "editNewsEl");
+
+  console.log("[DEBUG] initAdminMenu completed");
 }
 
 
-// ===========================
-// Inicialização: Página Carregada
-// ===========================
+// Função de diagnóstico para debug (pode ser chamada no console)
+window.debugAdminMenu = () => {
+  console.log("=== ADMIN MENU DEBUG ===");
+  const elements = {
+    hamburger: document.getElementById("hamburger"),
+    sidebar: document.getElementById("sidebar"),
+    mapsItem: document.getElementById("maps-stories"),
+    usersItem: document.getElementById("users"),
+    newsItem: document.getElementById("news"),
+    visaoGeralItem: document.getElementById("visao-geral"),
+    mapsSubmenu: document.getElementById("maps-submenu"),
+    usersSubmenu: document.getElementById("users-submenu"),
+    newsSubmenu: document.getElementById("news-submenu")
+  };
+
+  Object.entries(elements).forEach(([name, el]) => {
+    if (el) {
+      const style = window.getComputedStyle(el);
+      console.log(`${name}: EXISTS`, {
+        display: style.display,
+        pointerEvents: style.pointerEvents,
+        cursor: style.cursor,
+        zIndex: style.zIndex
+      });
+    } else {
+      console.warn(`${name}: NOT FOUND`);
+    }
+  });
+
+  console.log("=== EVENT LISTENERS CHECK ===");
+  // Verifica se os event listeners foram adicionados (aproximado)
+  const testElements = [elements.mapsItem, elements.usersItem, elements.newsItem, elements.visaoGeralItem].filter(Boolean);
+  testElements.forEach(el => {
+    console.log(`Event listeners on ${el.id}:`, el.onclick ? "HAS onclick" : "NO onclick");
+  });
+};
 // Força estado inicial
 const initializeAdminPage = () => {
+  console.log("[DEBUG] initializeAdminPage called");
+  console.log("[DEBUG] DOM readyState:", document.readyState);
+
+  // Verifica se todos os elementos necessários existem
+  const checkElements = () => {
+    const elements = {
+      hamburger: document.getElementById("hamburger"),
+      sidebar: document.getElementById("sidebar"),
+      mapsItem: document.getElementById("maps-stories"),
+      usersItem: document.getElementById("users"),
+      newsItem: document.getElementById("news"),
+      visaoGeralItem: document.getElementById("visao-geral")
+    };
+
+    console.log("[DEBUG] Elements check:", Object.fromEntries(
+      Object.entries(elements).map(([key, el]) => [key, !!el])
+    ));
+
+    return elements;
+  };
+
+  const elements = checkElements();
+
+  // Se algum elemento crítico não existe, tenta novamente em 100ms
+  if (!elements.hamburger || !elements.sidebar || !elements.mapsItem || !elements.usersItem || !elements.newsItem) {
+    console.warn("[DEBUG] Some critical elements not found, retrying in 100ms");
+    setTimeout(() => {
+      const retryElements = checkElements();
+      if (retryElements.hamburger && retryElements.sidebar) {
+        console.log("[DEBUG] Elements found on retry, proceeding");
+        initAdminMenu();
+        setupInitialState(retryElements);
+      } else {
+        console.error("[DEBUG] Elements still not found after retry");
+      }
+    }, 100);
+    return;
+  }
+
   initAdminMenu();
-  if (sidebar) sidebar.classList.add("active");
-  if (hamburger) {
-    hamburger.innerHTML = "✖";
-    hamburger.style.color = "white";
+  setupInitialState(elements);
+  console.log("[DEBUG] initializeAdminPage completed");
+};
+
+const setupInitialState = (elements) => {
+  if (elements.sidebar) elements.sidebar.classList.add("active");
+  if (elements.hamburger) {
+    elements.hamburger.innerHTML = "✖";
+    elements.hamburger.style.color = "white";
   }
 };
 
+console.log("[DEBUG] Script loaded, readyState:", document.readyState);
+
+// Verificação de integridade do script
+console.log("[DEBUG] Admin JS loaded successfully at", new Date().toISOString());
+console.log("[DEBUG] Window location:", window.location.href);
+console.log("[DEBUG] User agent:", navigator.userAgent);
+
 if (document.readyState === "loading") {
+  console.log("[DEBUG] Adding DOMContentLoaded listener");
   window.addEventListener("DOMContentLoaded", initializeAdminPage);
 } else {
+  console.log("[DEBUG] DOM already loaded, calling initializeAdminPage");
   initializeAdminPage();
 }
+
+// Fallback: tenta inicializar novamente após 1 segundo (para casos onde o DOM demora mais)
+setTimeout(() => {
+  if (!document.querySelector("#sidebar.active")) {
+    console.log("[DEBUG] Fallback initialization triggered");
+    initializeAdminPage();
+  }
+}, 1000);
 
 function initNewBadgeTimers() {
   const cards = document.querySelectorAll(".reorganizar-card");
