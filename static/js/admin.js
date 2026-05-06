@@ -176,16 +176,6 @@ function toggleNewsSubmenu() {
   if (newsItem) newsItem.classList.toggle("open");
 }
 
-// ===========================
-// Subguia "Notícias"
-// ===========================
-if (newsSubmenu) {
-  const addNewsItem = newsSubmenu.querySelector("li.add-news");
-  if (addNewsItem) addNewsItem.addEventListener("click", adicionarNoticia);
-
-  const editNewsItem = newsSubmenu.querySelector("li.edit-news");
-  if (editNewsItem) editNewsItem.addEventListener("click", editarNoticias);
-}
 
 
 
@@ -256,11 +246,6 @@ async function listarUsuarios() {
     console.error("Erro ao listar usuários:", err);
   }
 }
-
-// ===========================
-// Elementos do DOM - Gerenciar Usuários
-// ===========================
-const gerenciarUsersItem = usersSubmenu.querySelector("li#gerenciar-usuarios"); // "Gerenciar"
 
 // ===========================
 // Função: Gerenciar usuários (unificada)
@@ -440,13 +425,6 @@ async function gerenciarUsuarios() {
   } catch (err) {
     console.error("Erro ao gerenciar usuários:", err);
   }
-}
-
-// ===========================
-// Evento de clique - Gerenciar Usuários
-// ===========================
-if (gerenciarUsersItem) {
-  gerenciarUsersItem.addEventListener("click", gerenciarUsuarios);
 }
 
 // ===========================
@@ -643,17 +621,6 @@ function showDeletePopup(username) {
 // Função: Alterar usuários (promover/remover admin e deletar) - atualizado
 // ===========================
 
-
-
-// ===========================
-// Subguia "Adicionar" - Handler
-// ===========================
-const addMapStoryItem = mapsSubmenu?.querySelector("li.add-map-story");
-if (addMapStoryItem) {
-  addMapStoryItem.addEventListener("click", adicionarCards);
-} else {
-  console.warn("[admin] add-map-story não encontrado dentro de #maps-submenu");
-}
 
 
 // ===========================
@@ -1154,13 +1121,6 @@ async function adicionarCards() {
   });
 }
 
-const editarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(2)"); // "Editar" (antes era "Remover" e "Reorganizar")
-
-// Evento de clique - Editar Cards
-if (editarMapStoryItem) {
-  editarMapStoryItem.addEventListener("click", editarCards);
-}
-
 // ===========================
 // Função: Reorganizar cards (REMOVIDA - AGORA INTEGRADA EM editarCards)
 // ===========================
@@ -1216,7 +1176,6 @@ function atualizarBotoes() {
 // ===========================
 
 
-const linkarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(3)"); // "Linkar"
 const linkarContainer = document.getElementById("linkarContainer");
 
 async function abrirSubguiaLinkar() {
@@ -1294,9 +1253,6 @@ async function abrirSubguiaLinkar() {
   }
 }
 
-if (linkarMapStoryItem) {
-  linkarMapStoryItem.addEventListener("click", abrirSubguiaLinkar);
-}
 
 // ===========================
 // Site Online/Offline Toggle
@@ -1480,27 +1436,36 @@ async function showOverview() {
 }
 
 function initAdminMenu() {
-  if (hamburger) {
-    hamburger.addEventListener("click", toggleSidebar);
-  }
-  if (mapsItem) {
-    mapsItem.addEventListener("click", toggleMapsSubmenu);
-  }
-  if (usersItem) {
-    usersItem.addEventListener("click", toggleUsersSubmenu);
-  }
-  if (newsItem) {
-    newsItem.addEventListener("click", toggleNewsSubmenu);
-  }
+  const bindClick = (element, handler) => {
+    if (!element) return;
+    element.addEventListener("click", handler);
+  };
 
-  const visaoGeralItem = document.querySelector(
-    ".sidebar-menu li:first-child .menu-item"
-  );
-  if (visaoGeralItem) {
-    visaoGeralItem.addEventListener("click", () => {
-      showOverview();
-    });
-  }
+  bindClick(hamburger, toggleSidebar);
+  bindClick(mapsItem, toggleMapsSubmenu);
+  bindClick(usersItem, toggleUsersSubmenu);
+  bindClick(newsItem, toggleNewsSubmenu);
+
+  const visaoGeralItem = document.getElementById("visao-geral");
+  bindClick(visaoGeralItem, showOverview);
+
+  const usersSubmenuEl = document.getElementById("users-submenu");
+  const gerenciarUsersEl = usersSubmenuEl?.querySelector("li#gerenciar-usuarios");
+  bindClick(gerenciarUsersEl, gerenciarUsuarios);
+
+  const mapsSubmenuEl = document.getElementById("maps-submenu");
+  const addMapStoryEl = mapsSubmenuEl?.querySelector("li.add-map-story");
+  const editarMapStoryEl = mapsSubmenuEl?.querySelector("li.edit-map-story");
+  const linkarMapStoryEl = mapsSubmenuEl?.querySelector("li#linkar-map-story");
+  bindClick(addMapStoryEl, adicionarCards);
+  bindClick(editarMapStoryEl, editarCards);
+  bindClick(linkarMapStoryEl, abrirSubguiaLinkar);
+
+  const newsSubmenuEl = document.getElementById("news-submenu");
+  const addNewsEl = newsSubmenuEl?.querySelector("li.add-news");
+  const editNewsEl = newsSubmenuEl?.querySelector("li.edit-news");
+  bindClick(addNewsEl, adicionarNoticia);
+  bindClick(editNewsEl, editarNoticias);
 }
 
 
@@ -1508,12 +1473,20 @@ function initAdminMenu() {
 // Inicialização: Página Carregada
 // ===========================
 // Força estado inicial
-window.addEventListener("DOMContentLoaded", () => {
+const initializeAdminPage = () => {
   initAdminMenu();
-  sidebar.classList.add("active");
-  hamburger.innerHTML = "✖";
-  hamburger.style.color = "white";
-});
+  if (sidebar) sidebar.classList.add("active");
+  if (hamburger) {
+    hamburger.innerHTML = "✖";
+    hamburger.style.color = "white";
+  }
+};
+
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", initializeAdminPage);
+} else {
+  initializeAdminPage();
+}
 
 function initNewBadgeTimers() {
   const cards = document.querySelectorAll(".reorganizar-card");
