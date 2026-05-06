@@ -1595,14 +1595,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // fallback
 setTimeout(initializeAdminPage, 50);
 
-// Fallback: tenta inicializar novamente após 1 segundo (para casos onde o DOM demora mais)
-setTimeout(() => {
-  if (!document.querySelector("#sidebar.active")) {
-    console.log("[DEBUG] Fallback initialization triggered");
-    initializeAdminPage();
-  }
-}, 1000);
-
 function initNewBadgeTimers() {
   const cards = document.querySelectorAll(".reorganizar-card");
   cards.forEach((card) => {
