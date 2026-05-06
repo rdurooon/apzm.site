@@ -1588,13 +1588,12 @@ console.log("[DEBUG] Admin JS loaded successfully at", new Date().toISOString())
 console.log("[DEBUG] Window location:", window.location.href);
 console.log("[DEBUG] User agent:", navigator.userAgent);
 
-if (document.readyState === "loading") {
-  console.log("[DEBUG] Adding DOMContentLoaded listener");
-  window.addEventListener("DOMContentLoaded", initializeAdminPage);
-} else {
-  console.log("[DEBUG] DOM already loaded, calling initializeAdminPage");
+document.addEventListener("DOMContentLoaded", () => {
   initializeAdminPage();
-}
+});
+
+// fallback
+setTimeout(initializeAdminPage, 50);
 
 // Fallback: tenta inicializar novamente após 1 segundo (para casos onde o DOM demora mais)
 setTimeout(() => {
