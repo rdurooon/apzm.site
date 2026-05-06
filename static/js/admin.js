@@ -2868,3 +2868,5 @@ function createTargetSelect(options, placeholderText = "Selecione...") {
 
   return sel;
 }
+
+console.log("FINAL DO JS EXECUTADO");
