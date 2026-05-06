@@ -18,7 +18,7 @@ let __newsTargetsCache = {
   cards: null,
   partners: null,
 };
-
+let adminMenuInitialized = false;
 let targetMode = "input"; // "input" | "select"
 let targetSelectEl = null;
 
@@ -1436,6 +1436,13 @@ async function showOverview() {
 }
 
 function initAdminMenu() {
+  if (adminMenuInitialized) {
+    console.log("[DEBUG] Menu já inicializado, ignorando...");
+    return;
+  }
+
+  adminMenuInitialized = true;
+
   console.log("[DEBUG] initAdminMenu called");
 
   const bindClick = (element, handler, label) => {
