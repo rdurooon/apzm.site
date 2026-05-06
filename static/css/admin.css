@@ -42,6 +42,115 @@ body {
   margin-top: -100px;
 }
 
+#admin-content {
+  width: 100%;
+  max-width: 1400px;
+  box-sizing: border-box;
+  padding: 0 20px 40px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.dashboard-card {
+  background: #0e3f1c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 26px 28px;
+  color: #f6f9f2;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.16);
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dashboard-card h2 {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.dashboard-card .card-value {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: #c5f2a8;
+  line-height: 1.05;
+  margin-bottom: 12px;
+}
+
+.dashboard-card .card-meta {
+  font-size: 0.95rem;
+  opacity: 0.88;
+  line-height: 1.65;
+}
+
+.dashboard-card.status-card {
+  background: linear-gradient(135deg, #1f5c2d 0%, #0b2f19 100%);
+}
+
+.dashboard-card.note-card {
+  background: linear-gradient(135deg, #1f5c2d 0%, #0b2f19 100%);
+}
+
+.dashboard-card.note-card .card-value {
+  font-size: 1.55rem;
+  color: #f0f7e8;
+}
+
+.dashboard-card.note-card .card-meta {
+  opacity: 0.95;
+}
+
+.site-toggle {
+  position: relative;
+  display: inline-block;
+  width: 56px;
+  height: 32px;
+}
+
+.site-toggle-checkbox {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.site-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  transition: background-color 0.25s ease;
+}
+
+.site-toggle-slider::before {
+  content: "";
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 4px;
+  top: 4px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.25s ease;
+}
+
+.site-toggle-checkbox:checked + .site-toggle-slider {
+  background-color: #2ecc71;
+}
+
+.site-toggle-checkbox:checked + .site-toggle-slider::before {
+  transform: translateX(24px);
+}
+
 /* Container de Usuários */
 .users-list-container {
   display: grid;

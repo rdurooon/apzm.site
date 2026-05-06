@@ -11,6 +11,10 @@ from tools.db import (
     get_all_users,
     get_cards as db_get_cards,
     get_card_links as db_get_card_links,
+    get_site_status,
+    get_site_visits,
+    get_total_comments,
+    get_latest_comment,
     insert_card as db_insert_card,
     delete_card as db_delete_card,
     update_cards_order as db_update_cards_order,
@@ -118,6 +122,22 @@ def list_cards():
     cards = db_get_cards()
     cards = check_new_badges(cards)
     return jsonify(cards)
+
+
+@admin_bp.route("/admin/overview_stats")
+@admin_required
+def overview_stats():
+    users = get_all_users()
+    latest_comment = get_latest_comment() or {}
+    return jsonify({
+        "online": get_site_status(),
+        "site_visits": get_site_visits(),
+        "total_users": len(users),
+        "total_admins": db_get_admin_count(),
+        "total_cards": len(db_get_cards()),
+        "total_comments": get_total_comments(),
+        "latest_comment": latest_comment,
+    })
 
 
 # =========================== ADICIONAR MAPA/HISTÓRIA ===========================
