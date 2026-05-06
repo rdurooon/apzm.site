@@ -9,6 +9,8 @@ from tools.db import (
     get_visible_cards as db_get_visible_cards,
     get_partners as db_get_partners,
     get_site_status,
+    set_site_status,
+    increment_site_visits,
     get_comments_for_card,
     add_or_update_comment,
     delete_comment as db_delete_comment,
@@ -103,6 +105,8 @@ def home():
         "url": "https://amapazombies.com.br/",
         "image": "/static/images/icon.jpg"
     }
+
+    increment_site_visits()
 
     if not get_site_status():
         return render_template("off.html", seo=seo)

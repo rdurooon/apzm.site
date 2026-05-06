@@ -250,8 +250,23 @@ def demote_user(user_id):
     return result.rowcount > 0
 
 
+def _delete_user_associated_data(username):
+    db = get_db()
+    if not username:
+        return
+    normalized_username = username.strip()
+    db.execute("DELETE FROM comments WHERE LOWER(username) = LOWER(?)", (normalized_username,))
+    db.execute("DELETE FROM likes WHERE LOWER(username) = LOWER(?)", (normalized_username,))
+    db.execute("DELETE FROM ratings WHERE LOWER(username) = LOWER(?)", (normalized_username,))
+
+
 def delete_user(user_id):
     db = get_db()
+    user = db.execute("SELECT username FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user:
+        return False
+
+    _delete_user_associated_data(user["username"])
     result = db.execute("DELETE FROM users WHERE id = ?", (user_id,))
     db.commit()
     return result.rowcount > 0
@@ -259,6 +274,14 @@ def delete_user(user_id):
 
 def delete_user_by_username(username):
     db = get_db()
+    user = db.execute(
+        "SELECT username FROM users WHERE LOWER(username) = LOWER(?)",
+        (username or "",)
+    ).fetchone()
+    if not user:
+        return False
+
+    _delete_user_associated_data(user["username"])
     result = db.execute("DELETE FROM users WHERE LOWER(username) = LOWER(?)", (username or "",))
     db.commit()
     return result.rowcount > 0
@@ -340,6 +363,42 @@ def set_site_status(is_online):
     )
     db.commit()
     return True
+
+
+def get_site_visits():
+    db = get_db()
+    row = db.execute("SELECT value FROM settings WHERE key = ?", ("site_visits",)).fetchone()
+    if not row:
+        return 0
+    try:
+        return int(row["value"])
+    except (TypeError, ValueError):
+        return 0
+
+
+def increment_site_visits():
+    current = get_site_visits()
+    db = get_db()
+    db.execute(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+        ("site_visits", str(current + 1))
+    )
+    db.commit()
+    return current + 1
+
+
+def get_total_comments():
+    db = get_db()
+    row = db.execute("SELECT COUNT(*) AS count FROM comments").fetchone()
+    return row["count"] if row else 0
+
+
+def get_latest_comment():
+    db = get_db()
+    row = db.execute(
+        "SELECT card_id, username, comment, created_at FROM comments ORDER BY created_at DESC LIMIT 1"
+    ).fetchone()
+    return dict_from_row(row) if row else None
 
 
 def get_visible_cards():

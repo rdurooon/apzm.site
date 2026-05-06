@@ -114,6 +114,8 @@ function clearAdminContent() {
 function showView(viewName) {
   clearAdminContent();
   setHeaderVisible(false);
+  subguiaAtiva = viewName;
+  updateSiteToggleVisibility();
 
   if (viewName === "users") usersListContainer.style.display = "grid";
   if (viewName === "cards") cardsListContainer.style.display = "grid";
@@ -123,6 +125,8 @@ function showView(viewName) {
 function showDynamicPage(el) {
   clearAdminContent();
   setHeaderVisible(false);
+  subguiaAtiva = null;
+  updateSiteToggleVisibility();
 
   el.classList.add("dynamic-page");
   adminContent.appendChild(el);
@@ -207,27 +211,11 @@ function toggleUsersSubmenu() {
 // Limpa todo conteúdo principal (logo, título e container de usuários)
 // ===========================
 function limparConteudoPrincipal() {
-  // NÃO esconda o adminContainer se você está usando ele pra renderizar telas
-  // if (adminContainer) adminContainer.style.display = "none";
-
+  clearAdminContent();
+  setHeaderVisible(false);
   if (usersListContainer) {
-    usersListContainer.innerHTML = "";
-    usersListContainer.style.display = "none"; // <-- importante
-    usersListContainer.classList.remove("news-list-view"); // Remove classe de notícias
+    usersListContainer.classList.remove("news-list-view");
   }
-
-  if (cardsListContainer) {
-    cardsListContainer.innerHTML = "";
-    cardsListContainer.style.display = "none"; // <-- importante
-  }
-
-  if (linkarContainer) {
-    linkarContainer.innerHTML = "";
-    linkarContainer.style.display = "none"; // <-- importante
-  }
-
-  const existingSearchContainer = document.querySelector("#users-search-container");
-  if (existingSearchContainer) existingSearchContainer.remove();
 }
 
 
@@ -457,7 +445,9 @@ async function gerenciarUsuarios() {
 // ===========================
 // Evento de clique - Gerenciar Usuários
 // ===========================
-gerenciarUsersItem.addEventListener("click", gerenciarUsuarios);
+if (gerenciarUsersItem) {
+  gerenciarUsersItem.addEventListener("click", gerenciarUsuarios);
+}
 
 // ===========================
 // Função: Criar popup rápido customizado (Toast)
@@ -653,22 +643,6 @@ function showDeletePopup(username) {
 // Função: Alterar usuários (promover/remover admin e deletar) - atualizado
 // ===========================
 
-
-// ===========================
-// Eventos de clique
-// ===========================
-hamburger.addEventListener("click", toggleSidebar);
-mapsItem.addEventListener("click", () => {
-  toggleMapsSubmenu();
-});
-usersItem.addEventListener("click", () => {
-  toggleUsersSubmenu();
-});
-if (newsItem) {
-  newsItem.addEventListener("click", () => {
-    toggleNewsSubmenu();
-  });
-}
 
 
 // ===========================
@@ -952,11 +926,13 @@ async function adicionarCards() {
   container.style.display = "flex";
   container.style.flexDirection = "column";
   container.style.height = "100%";
+  container.style.maxWidth = "1120px";
+  container.style.margin = "0 auto";
 
   container.innerHTML = `
     <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Adicionar Mapa/História</h2>
     
-    <div style="display: flex; gap: 40px; flex: 1; align-items: stretch;">
+    <div style="display: flex; gap: 40px; flex: 1; align-items: stretch; justify-content: center; flex-wrap: wrap;">
       <!-- Card Image - Left Column (Full Height) -->
       <div class="add-card-image" style="
         flex: 0 0 350px;
@@ -978,7 +954,7 @@ async function adicionarCards() {
       </div>
 
       <!-- Right Column -->
-      <div style="display: flex; flex-direction: column; gap: 20px; flex: 1;">
+      <div style="display: flex; flex-direction: column; gap: 20px; flex: 1 1 560px; min-width: 320px; max-width: 680px;">
         <!-- Title Image -->
         <div class="add-title-image" style="
           width: 100%;
@@ -1017,7 +993,7 @@ async function adicionarCards() {
           border-radius: 8px;
           font-family: Arial, sans-serif;
           resize: none;
-          min-height: 100px;
+          min-height: 250px;
         "></textarea>
 
         <!-- Buttons -->
@@ -1181,7 +1157,9 @@ async function adicionarCards() {
 const editarMapStoryItem = mapsSubmenu.querySelector("li:nth-child(2)"); // "Editar" (antes era "Remover" e "Reorganizar")
 
 // Evento de clique - Editar Cards
-editarMapStoryItem.addEventListener("click", editarCards);
+if (editarMapStoryItem) {
+  editarMapStoryItem.addEventListener("click", editarCards);
+}
 
 // ===========================
 // Função: Reorganizar cards (REMOVIDA - AGORA INTEGRADA EM editarCards)
@@ -1316,7 +1294,9 @@ async function abrirSubguiaLinkar() {
   }
 }
 
-linkarMapStoryItem.addEventListener("click", abrirSubguiaLinkar);
+if (linkarMapStoryItem) {
+  linkarMapStoryItem.addEventListener("click", abrirSubguiaLinkar);
+}
 
 // ===========================
 // Site Online/Offline Toggle
@@ -1333,11 +1313,19 @@ const siteToggleLabel = document.createElement("span");
 siteToggleLabel.textContent = "Site Online:";
 siteToggleContainer.appendChild(siteToggleLabel);
 
+const siteToggleWrapper = document.createElement("label");
+siteToggleWrapper.className = "site-toggle";
+
 const siteToggle = document.createElement("input");
 siteToggle.type = "checkbox";
-siteToggle.style.width = "40px";
-siteToggle.style.height = "20px";
-siteToggleContainer.appendChild(siteToggle);
+siteToggle.className = "site-toggle-checkbox";
+
+const siteToggleSlider = document.createElement("span");
+siteToggleSlider.className = "site-toggle-slider";
+
+siteToggleWrapper.appendChild(siteToggle);
+siteToggleWrapper.appendChild(siteToggleSlider);
+siteToggleContainer.appendChild(siteToggleWrapper);
 
 document.body.appendChild(siteToggleContainer);
 
@@ -1379,24 +1367,141 @@ if (subguiaAtiva === "visao-geral") {
   siteToggleContainer.style.display = "none";
 }
 
-const visaoGeralItem = document.querySelector(
-  ".sidebar-menu li:first-child .menu-item"
-);
-
 function updateSiteToggleVisibility() {
   if (!siteToggleContainer) return;
   siteToggleContainer.style.display = (subguiaAtiva === "visao-geral") ? "flex" : "none";
 }
 
-visaoGeralItem.addEventListener("click", () => {
-  clearAdminContent();
-  setHeaderVisible(true);
-  fecharSidebar();
+async function fetchOverviewStats() {
+  try {
+    const res = await fetch("/admin/overview_stats");
+    if (!res.ok) throw new Error("Falha ao carregar estatísticas do admin");
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    showQuickWarning("Não foi possível carregar o painel geral.", "red");
+    return null;
+  }
+}
 
-  // toggle do site online/offline pode ficar aqui:
-  siteToggleContainer.style.display = "flex";
+function formatLargeNumber(value) {
+  if (typeof value !== "number") return value ?? "0";
+  return value.toLocaleString("pt-BR");
+}
+
+function createDashboardCard(title, value, subtitle, extraClass = "") {
+  const card = document.createElement("div");
+  card.className = `dashboard-card ${extraClass}`.trim();
+  card.innerHTML = `
+    <h2>${escapeHtmlAdmin(title)}</h2>
+    <div class="card-value">${escapeHtmlAdmin(value)}</div>
+    ${subtitle ? `<div class="card-meta">${escapeHtmlAdmin(subtitle)}</div>` : ""}
+  `;
+  return card;
+}
+
+function createRecentCommentCard(commentData) {
+  const card = document.createElement("div");
+  card.className = "dashboard-card note-card";
+  const commentText = commentData.comment || "Nenhum comentário encontrado.";
+  const username = commentData.username || "—";
+  const createdAt = commentData.created_at ? formatarDataBR(commentData.created_at) : "";
+  const cardId = commentData.card_id || "Não informado";
+
+  card.innerHTML = `
+    <h2>Último comentário</h2>
+    <div class="card-value">"${escapeHtmlAdmin(commentText)}"</div>
+    <div class="card-meta">Por ${escapeHtmlAdmin(username)}${createdAt ? ` em ${escapeHtmlAdmin(createdAt)}` : ""}</div>
+    <div class="card-meta">Card: ${escapeHtmlAdmin(cardId)}</div>
+  `;
+  return card;
+}
+
+function renderOverviewPage(data) {
+  const dashboardGrid = document.createElement("div");
+  dashboardGrid.className = "dashboard-grid";
+
+  dashboardGrid.appendChild(createDashboardCard(
+    "Status do site",
+    data.online ? "Online" : "Offline",
+    data.online ? "O site está disponível para visitantes" : "Apenas admins podem acessar enquanto estiver offline",
+    "status-card"
+  ));
+
+  dashboardGrid.appendChild(createDashboardCard(
+    "Visitas",
+    formatLargeNumber(data.site_visits),
+    "Contagem de acessos à home",
+  ));
+
+  dashboardGrid.appendChild(createDashboardCard(
+    "Usuários",
+    formatLargeNumber(data.total_users),
+    "Total de usuários cadastrados",
+  ));
+
+  dashboardGrid.appendChild(createDashboardCard(
+    "Administradores",
+    formatLargeNumber(data.total_admins),
+    "Contagem de admins ativos",
+  ));
+
+  dashboardGrid.appendChild(createDashboardCard(
+    "Cards",
+    formatLargeNumber(data.total_cards),
+    "Mapas/histórias no sistema",
+  ));
+
+  dashboardGrid.appendChild(createDashboardCard(
+    "Comentários",
+    formatLargeNumber(data.total_comments),
+    "Total de comentários postados",
+  ));
+
+  dashboardGrid.appendChild(createRecentCommentCard(data.latest_comment || {}));
+  return dashboardGrid;
+}
+
+async function showOverview() {
+  clearAdminContent();
+  setHeaderVisible(false);
+  fecharSidebar();
   subguiaAtiva = "visao-geral";
-});
+  updateSiteToggleVisibility();
+
+  const stats = await fetchOverviewStats();
+  if (!stats) return;
+
+  if (!adminContent) return;
+  const page = document.createElement("div");
+  page.className = "dynamic-page";
+  page.appendChild(renderOverviewPage(stats));
+  adminContent.appendChild(page);
+}
+
+function initAdminMenu() {
+  if (hamburger) {
+    hamburger.addEventListener("click", toggleSidebar);
+  }
+  if (mapsItem) {
+    mapsItem.addEventListener("click", toggleMapsSubmenu);
+  }
+  if (usersItem) {
+    usersItem.addEventListener("click", toggleUsersSubmenu);
+  }
+  if (newsItem) {
+    newsItem.addEventListener("click", toggleNewsSubmenu);
+  }
+
+  const visaoGeralItem = document.querySelector(
+    ".sidebar-menu li:first-child .menu-item"
+  );
+  if (visaoGeralItem) {
+    visaoGeralItem.addEventListener("click", () => {
+      showOverview();
+    });
+  }
+}
 
 
 // ===========================
@@ -1404,6 +1509,7 @@ visaoGeralItem.addEventListener("click", () => {
 // ===========================
 // Força estado inicial
 window.addEventListener("DOMContentLoaded", () => {
+  initAdminMenu();
   sidebar.classList.add("active");
   hamburger.innerHTML = "✖";
   hamburger.style.color = "white";
