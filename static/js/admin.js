@@ -1568,6 +1568,7 @@ const partnersSubmenu = document.getElementById("partners-submenu");
 // Função: Toggle Submenu Parceiros
 // ===========================
 function togglePartnersSubmenu() {
+  if (!partnersSubmenu || !partnersItem) return;
   const isVisible = partnersSubmenu.style.display === "block";
   partnersSubmenu.style.display = isVisible ? "none" : "block";
   partnersItem.classList.toggle("open");
@@ -1576,20 +1577,23 @@ function togglePartnersSubmenu() {
 // ===========================
 // Eventos de clique - Parceiros
 // ===========================
-partnersItem.addEventListener("click", () => {
-  togglePartnersSubmenu();
-});
+if (partnersItem) {
+  partnersItem.addEventListener("click", () => {
+    togglePartnersSubmenu();
+  });
+}
 
 // Selecionando subguias
-const addPartnerItem = partnersSubmenu.querySelector(".add-partner");
-const removePartnerItem = partnersSubmenu.querySelector(".remove-partner");
-const editPartnerItem = partnersSubmenu.querySelector(".edit-partner");
-const reorderPartnerItem = partnersSubmenu.querySelector(".reorder-partner");
+const addPartnerItem = partnersSubmenu?.querySelector(".add-partner");
+const removePartnerItem = partnersSubmenu?.querySelector(".remove-partner");
+const editPartnerItem = partnersSubmenu?.querySelector(".edit-partner");
+const reorderPartnerItem = partnersSubmenu?.querySelector(".reorder-partner");
 
 // ===========================
 // Ações de exemplo (ainda placeholders)
 // ===========================
-addPartnerItem.addEventListener("click", () => {
+if (addPartnerItem) {
+  addPartnerItem.addEventListener("click", () => {
   limparConteudoPrincipal();
   fecharSidebar();
 
@@ -1650,22 +1654,29 @@ addPartnerItem.addEventListener("click", () => {
 
   handlePreview("partner-logo", "preview-logo");
   handlePreview("partner-bg", "preview-bg");
-});
+  });
+}
 
-removePartnerItem.addEventListener("click", () => {
-  limparConteudoPrincipal();
-  fecharSidebar();
-});
+if (removePartnerItem) {
+  removePartnerItem.addEventListener("click", () => {
+    limparConteudoPrincipal();
+    fecharSidebar();
+  });
+}
 
-editPartnerItem.addEventListener("click", () => {
-  limparConteudoPrincipal();
-  fecharSidebar();
-});
+if (editPartnerItem) {
+  editPartnerItem.addEventListener("click", () => {
+    limparConteudoPrincipal();
+    fecharSidebar();
+  });
+}
 
-reorderPartnerItem.addEventListener("click", () => {
-  limparConteudoPrincipal();
-  fecharSidebar();
-});
+if (reorderPartnerItem) {
+  reorderPartnerItem.addEventListener("click", () => {
+    limparConteudoPrincipal();
+    fecharSidebar();
+  });
+}
 
 // ===========================
 // Função: Adicionar Notícia (UI apenas por enquanto)
