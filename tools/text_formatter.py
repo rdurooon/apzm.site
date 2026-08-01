@@ -44,6 +44,11 @@ def format_text_to_html(text: str) -> str:
     # Censurado (com classe CSS para estilização)
     text = re.sub(r'\|\|(.+?)\|\|', r'<span class="text-censored">\1</span>', text)
     
+    # Preserve explicit line breaks inside a paragraph by wrapping each line
+    # so every explicit break starts with its own block and indent.
+    lines = text.split('\n')
+    text = ''.join(f'<span class="historia-line">{line}</span>' for line in lines)
+    
     return text
 
 

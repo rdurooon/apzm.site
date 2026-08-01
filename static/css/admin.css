@@ -361,8 +361,24 @@ body {
   cursor: pointer;
 }
 
+.submenu li.sidebar-subtitle {
+  background: none;
+  color: #e8e8e8;
+  border: none;
+  cursor: default;
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin: 14px 15px 6px;
+  padding: 0;
+  pointer-events: none;
+}
+
 .submenu li:hover {
   background-color: #f0f0f0;
+}
+
+.submenu li.sidebar-subtitle:hover {
+  background: none;
 }
 
 /* Rotate arrow when open */
@@ -1168,4 +1184,248 @@ input:checked + .slider:before {
 
 .formatting-toolbar .fmt-btn:active {
   background-color: #1f618d;
+}
+
+/* ===========================
+   Modal de Agendamento
+   =========================== */
+.schedule-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.schedule-modal {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.schedule-modal h2 {
+  color: darkgreen;
+  margin: 0 0 24px;
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.schedule-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.schedule-date-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.schedule-date-section label {
+  font-weight: 700;
+  color: darkgreen;
+  font-size: 0.95rem;
+}
+
+.schedule-calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.schedule-calendar-header button {
+  background: darkgreen;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.schedule-calendar-header button:hover {
+  background: #2ecc71;
+}
+
+.schedule-calendar-header h3 {
+  margin: 0;
+  color: darkgreen;
+  font-size: 1.1rem;
+  flex: 1;
+  text-align: center;
+}
+
+.schedule-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.schedule-calendar .day-header {
+  text-align: center;
+  font-weight: 700;
+  color: darkgreen;
+  font-size: 0.85rem;
+  padding: 8px 0;
+  text-transform: uppercase;
+}
+
+.schedule-calendar .day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+  transition: all 0.2s;
+  background: white;
+}
+
+.schedule-calendar .day-cell:hover:not(.disabled):not(.other-month) {
+  background: #ecf0f1;
+  border-color: darkgreen;
+}
+
+.schedule-calendar .day-cell.selected {
+  background: darkgreen;
+  color: white;
+  font-weight: 700;
+  border-color: darkgreen;
+}
+
+.schedule-calendar .day-cell.today {
+  border-color: #2ecc71;
+  font-weight: 700;
+}
+
+.schedule-calendar .day-cell.other-month {
+  color: #bbb;
+  cursor: default;
+}
+
+.schedule-calendar .day-cell.disabled {
+  color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.schedule-time-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.schedule-time-section label {
+  font-weight: 700;
+  color: darkgreen;
+  font-size: 0.95rem;
+}
+
+.schedule-time-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.schedule-time-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schedule-time-input label {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 500;
+}
+
+.schedule-time-input input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: monospace;
+  transition: border-color 0.2s;
+}
+
+.schedule-time-input input:focus {
+  outline: none;
+  border-color: darkgreen;
+  box-shadow: 0 0 0 2px rgba(0, 100, 0, 0.1);
+}
+
+.schedule-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+
+.schedule-modal-actions button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.schedule-modal-actions .btn-confirm {
+  background: #2ecc71;
+  color: white;
+}
+
+.schedule-modal-actions .btn-confirm:hover {
+  background: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.schedule-modal-actions .btn-cancel {
+  background: #ecf0f1;
+  color: #333;
+}
+
+.schedule-modal-actions .btn-cancel:hover {
+  background: #d5dbdb;
+  transform: translateY(-2px);
 }

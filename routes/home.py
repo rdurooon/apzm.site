@@ -1,4 +1,6 @@
 import os
+import re
+import unicodedata
 from flask import (
     Blueprint, render_template, session, redirect, url_for,
     request, jsonify
@@ -19,6 +21,9 @@ from tools.db import (
     set_rating,
     get_rating_for_item,
     get_card_links,
+    get_story_by_slug,
+    get_story_slugs,
+    get_card_by_file,
 )
 from tools.crypto_utils import decrypt_value
 from tools.text_formatter import format_text_to_html
@@ -61,6 +66,108 @@ def get_visible_cards():
                 "is_new": bool(card.get("is_new", False)),
             })
     return visible_cards
+
+
+def slugify(text: str) -> str:
+    if not text:
+        return ""
+    normalized = unicodedata.normalize("NFKD", text)
+    normalized = normalized.encode("ascii", "ignore").decode("ascii")
+    normalized = normalized.lower()
+    normalized = re.sub(r"[^a-z0-9]+", "-", normalized)
+    normalized = normalized.strip("-")
+    return normalized
+
+
+def parse_story_content(raw_text: str):
+    if not raw_text:
+        return []
+
+    lines = raw_text.splitlines()
+    chapters = []
+    current = None
+    paragraph_buffer = []
+
+    def flush_paragraph():
+        nonlocal paragraph_buffer
+        if paragraph_buffer and current is not None:
+            paragraph = "\n".join(p.strip() for p in paragraph_buffer).strip()
+            if paragraph:
+                current["paragraphs"].append(format_text_to_html(paragraph))
+            paragraph_buffer = []
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            if current is not None:
+                flush_paragraph()
+                chapters.append(current)
+            title = stripped.lstrip("#").strip() or "Capítulo"
+            current = {"title": title, "paragraphs": []}
+        else:
+            if current is not None:
+                if stripped == "":
+                    flush_paragraph()
+                else:
+                    paragraph_buffer.append(stripped)
+
+    if current is not None:
+        flush_paragraph()
+        chapters.append(current)
+
+    return chapters
+
+
+def resolve_story_hero_image(card_file: str, stored_hero_image: str | None):
+    if stored_hero_image:
+        stored_path = os.path.join(STATIC_DIR, 'covers', stored_hero_image)
+        if os.path.exists(stored_path):
+            return url_for('static', filename=f'images/covers/{stored_hero_image}')
+        # backward compatibility only when the cover was previously stored in titles
+        stored_path = os.path.join(STATIC_DIR, 'titles', stored_hero_image)
+        if os.path.exists(stored_path):
+            return url_for('static', filename=f'images/titles/{stored_hero_image}')
+
+    return None
+
+
+def resolve_card_title_image(card_file: str):
+    """Resolve the title image (used as the card/story title graphic) from the titles folder.
+
+    This must not be mixed with the story cover/background which lives in `covers/`.
+    """
+    base_name = os.path.splitext(card_file)[0]
+    for ext in ('png', 'jpg', 'jpeg', 'webp'):
+        candidate = os.path.join(STATIC_DIR, 'titles', f'{base_name}.{ext}')
+        if os.path.exists(candidate):
+            return url_for('static', filename=f'images/titles/{base_name}.{ext}')
+    return None
+
+
+def parse_story_body(raw_text: str):
+    if not raw_text:
+        return []
+
+    paragraphs = []
+    buffer = []
+
+    for line in raw_text.splitlines():
+        stripped = line.strip()
+        if stripped == "":
+            if buffer:
+                paragraph = "\n".join(p.strip() for p in buffer).strip()
+                if paragraph:
+                    paragraphs.append(format_text_to_html(paragraph))
+                buffer = []
+        else:
+            buffer.append(stripped)
+
+    if buffer:
+        paragraph = "\n".join(p.strip() for p in buffer).strip()
+        if paragraph:
+            paragraphs.append(format_text_to_html(paragraph))
+
+    return paragraphs
 
 
 def load_parceiros():
@@ -147,6 +254,61 @@ def home():
 @home_bp.route("/session_denied")
 def session_denied():
     return render_template("session_denied.html")
+
+
+@home_bp.route("/historia/<slug>")
+def historia(slug):
+    story = get_story_by_slug(slug, public_view=True)
+    if not story:
+        seo = {
+            "title": "História não encontrada - Amapá Zombies",
+            "description": "A história requisitada não foi encontrada.",
+            "keywords": "história não encontrada, Amapá Zombies",
+            "url": f"https://amapazombies.com.br/historia/{slug}",
+            "image": "/static/images/icon.jpg"
+        }
+        return render_template("historia.html", seo=seo, story=None), 404
+
+    card = get_card_by_file(story["card_file"])
+    # hero_cover is the background image for the story page (uploaded in Escrever/Revisar -> /covers)
+    hero_cover = resolve_story_hero_image(story["card_file"], story.get("hero_image"))
+    # title_image is the card title graphic stored in /titles and must be shown in front of the hero background
+    title_image = resolve_card_title_image(story["card_file"]) if card and card.get("file") else None
+    # legacy behavior: if no cover was uploaded and the card has an image, fall back to the card image (small)
+    card_cover_fallback = None
+    if card and card.get("file"):
+        cover_path = os.path.join(CARDS_FOLDER, card["file"])
+        if os.path.exists(cover_path):
+            card_cover_fallback = url_for('static', filename=f'images/cards/{card["file"]}')
+
+    raw_content = story.get("content", "")
+    chapters = parse_story_content(raw_content)
+    body_paragraphs = [] if chapters else parse_story_body(raw_content)
+    title = card["title"] if card else story.get("slug", slug)
+
+    seo = {
+        "title": f"{title} - História | Amapá Zombies",
+        "description": f"Leia a história de {title} diretamente no site Amapá Zombies.",
+        "keywords": f"Amapá Zombies, {title}, história, leitura",
+        "url": f"https://amapazombies.com.br/historia/{slug}",
+        "image": "/static/images/icon.jpg"
+    }
+
+    return render_template(
+        "historia.html",
+        seo=seo,
+        story={
+            "slug": slug,
+            "title": title,
+            "chapters": chapters,
+            "body_paragraphs": body_paragraphs,
+            # `hero_image` in the template is the title graphic (from /titles)
+            "hero_image": title_image,
+            # `cover_image` in the template is the large background (from /covers or fallback to card image)
+            "cover_image": hero_cover or card_cover_fallback,
+            "card_file": story["card_file"],
+        }
+    )
 
 
 # ==================== API USUÁRIO ====================
@@ -288,7 +450,13 @@ def serve_data(filename):
     if filename == "site_status.json":
         return jsonify({"online": get_site_status()})
     if filename == "links.json":
-        return jsonify(get_card_links())
+        links = get_card_links()
+        story_slugs = get_story_slugs()
+        for card_file, slug in story_slugs.items():
+            if card_file not in links:
+                links[card_file] = {}
+            links[card_file]["story_slug"] = slug
+        return jsonify(links)
     return jsonify({"error": "Endpoint não encontrado."}), 404
 
 

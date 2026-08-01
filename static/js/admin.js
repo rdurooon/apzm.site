@@ -1196,30 +1196,45 @@ async function abrirSubguiaLinkar() {
       const div = document.createElement("div");
       div.classList.add("linkar-card-container");
 
-      div.innerHTML = `
-              <div class="linkar-card-left">
-                  <img src="/static/images/cards/${card.file}" alt="${card.title
-        }">
-              </div>
-              <div class="linkar-card-right">
-                  <h3 class="linkar-card-title">${card.title}</h3>
+        div.innerHTML = `
+            <div class="linkar-card-left">
+              <img src="/static/images/cards/${card.file}" alt="${card.title}">
+            </div>
+            <div class="linkar-card-right">
+              <h3 class="linkar-card-title">${card.title}</h3>
                   <div class="link-fields">
-                      <label>Linkar História</label>
-                      <input type="text" placeholder="Cole o link da história" value="${card.link_historia || ""
-        }" class="historia-link">
-                      
+                      <label>Ver história</label>
+                      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+                        <button class="open-editor-btn save-links" type="button">Escrever/Revisar</button>
+                      </div>
+
                       <label>Linkar Mapa</label>
-                      <input type="text" placeholder="Cole o link do mapa" value="${card.link_mapa || ""
-        }" class="mapa-link">
+                      <input type="text" placeholder="Cole o link do mapa" value="${card.link_mapa || ""}" class="mapa-link">
                   </div>
-                  <button class="save-links">Salvar Alterações</button>
-              </div>
+              <button class="save-links">Salvar Alterações</button>
+            </div>
           `;
 
       const btnSave = div.querySelector(".save-links");
-      const inputHistoria = div.querySelector(".historia-link");
       const inputMapa = div.querySelector(".mapa-link");
+      const btnOpenEditor = div.querySelector('.open-editor-btn');
+      const btnViewHistory = div.querySelector('.view-history-btn');
+      // Ação do botão Escrever/Revisar: abre a aba de editor com o card pré-selecionado
+      if (btnOpenEditor) {
+        btnOpenEditor.addEventListener('click', (e) => {
+          e.preventDefault();
+          // marca global temporária para que o editor pre-selecione o card
+          window._preselectCardFromLinkar = card.file;
+          abrirSubguiaEscrever();
+        });
+      }
 
+      // Ajuste: se não houver link público, desabilita o 'Ver história'
+      if (btnViewHistory && (!card.link_historia || card.link_historia.trim() === '')) {
+        btnViewHistory.classList.add('disabled');
+        btnViewHistory.style.opacity = '0.5';
+        btnViewHistory.style.pointerEvents = 'none';
+      }
       btnSave.addEventListener("click", async () => {
         btnSave.disabled = true;
         btnSave.textContent = "Salvando...";
@@ -1228,7 +1243,7 @@ async function abrirSubguiaLinkar() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              historia: inputHistoria.value.trim(),
+              historia: card.link_historia || '',
               mapa: inputMapa.value.trim(),
             }),
           });
@@ -1250,6 +1265,440 @@ async function abrirSubguiaLinkar() {
   } catch (err) {
     console.error(err);
     showQuickWarning("Erro ao carregar cards!", "red");
+  }
+}
+
+
+async function abrirSubguiaEscrever() {
+  updateSiteToggleVisibility();
+  fecharSidebar();
+
+  const container = document.createElement("div");
+  container.className = "admin-story-editor";
+  container.style.padding = "30px";
+  container.style.display = "flex";
+  container.style.flexDirection = "column";
+  container.style.gap = "20px";
+  container.style.maxWidth = "1200px";
+  container.style.margin = "0 auto";
+
+  container.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <h2 style="margin: 0; font-size: 28px; color: #222;">Escrever/Revisar História</h2>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 18px; max-width: 900px; margin: 0 auto; width: 100%;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-weight: 700;">Card</label>
+        <select id="story-card-select" style="padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 16px;">
+          <option value="">Selecione um card</option>
+        </select>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="font-weight: 700;">Imagem de capa</label>
+        <div class="story-hero-image" style="min-height: 190px; border: 2px dashed #ccc; border-radius: 14px; display: flex; align-items: center; justify-content: center; background: #fcfcfc; cursor: pointer; overflow: hidden;">
+          <div style="text-align: center; color: #999;">
+            <span style="font-size: 36px; display: block;">+</span>
+            <span style="font-size: 14px;">Selecionar herói</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <label style="font-weight: 700;">Conteúdo da História</label>
+        <textarea id="story-content" placeholder="Comece a escrever aqui..." style="min-height: 320px; resize: vertical; padding: 16px; border: 1px solid #ccc; border-radius: 14px; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.6;"></textarea>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 6px;">
+        <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+          <button id="save-draft-btn" style="background: #7f8c8d; color: white; border: none; border-radius: 10px; padding: 13px 22px; cursor: pointer; font-weight: 700; font-size: 15px;">Salvar rascunho</button>
+          <button id="schedule-story-btn" style="background: #3498db; color: white; border: none; border-radius: 10px; padding: 13px 22px; cursor: pointer; font-weight: 700; font-size: 15px;">Salvar e programar</button>
+          <button id="publish-story-btn" style="background: #2ecc71; color: white; border: none; border-radius: 10px; padding: 13px 22px; cursor: pointer; font-weight: 700; font-size: 15px;">Salvar e publicar</button>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+          <button id="undo-story-btn" style="background: #e74c3c; color: white; border: none; border-radius: 10px; padding: 13px 22px; cursor: pointer; font-weight: 700; font-size: 15px;">Desfazer alterações</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  showDynamicPage(container);
+
+  const selectCard = container.querySelector("#story-card-select");
+  const storySlugInfo = container.querySelector("#story-slug-info");
+  const storySlugValue = container.querySelector("#story-slug-value");
+  const heroImageEl = container.querySelector(".story-hero-image");
+  const storyContent = container.querySelector("#story-content");
+  const saveDraftBtn = container.querySelector("#save-draft-btn");
+  const scheduleStoryBtn = container.querySelector("#schedule-story-btn");
+  const publishStoryBtn = container.querySelector("#publish-story-btn");
+  const undoStoryBtn = container.querySelector("#undo-story-btn");
+
+  TextFormatter.createFormattingToolbar("#story-content");
+
+  
+
+  function setupCardHeroUpload(el) {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.style.display = "none";
+    document.body.appendChild(fileInput);
+
+    el.addEventListener("click", () => fileInput.click());
+    el.addEventListener("mouseenter", () => {
+      el.style.borderColor = "#27ae60";
+      el.style.backgroundColor = "#ecf0f1";
+    });
+    el.addEventListener("mouseleave", () => {
+      el.style.borderColor = "#ccc";
+      el.style.backgroundColor = "#fcfcfc";
+    });
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = document.createElement("img");
+        img.src = e.target.result;
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "cover";
+        img.style.borderRadius = "12px";
+        img.file = file;
+        el.innerHTML = "";
+        el.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    return fileInput;
+  }
+
+  const heroFileInput = setupCardHeroUpload(heroImageEl);
+
+  selectCard.addEventListener("change", async () => {
+    const selectedFile = selectCard.value;
+    if (!selectedFile) {
+      if (storySlugInfo) storySlugInfo.style.display = "none";
+      if (storySlugValue) storySlugValue.textContent = "";
+      if (storyContent) storyContent.value = "";
+      heroImageEl.innerHTML = '<div style="text-align: center; color: #999;"><span style="font-size: 36px; display: block;">+</span><span style="font-size: 14px;">Selecionar herói</span></div>';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/admin/get_story/${selectedFile}`);
+      const data = await res.json();
+      if (data.exists) {
+        if (storySlugInfo) storySlugInfo.style.display = "block";
+        if (storySlugValue) storySlugValue.textContent = data.slug || "";
+        if (storyContent) storyContent.value = data.content || "";
+        if (data.hero_image) {
+          heroImageEl.innerHTML = `<img src="/static/images/covers/${data.hero_image}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;" />`;
+        } else {
+          heroImageEl.innerHTML = '<div style="text-align: center; color: #999;"><span style="font-size: 36px; display: block;">+</span><span style="font-size: 14px;">Selecionar herói</span></div>';
+        }
+      } else {
+        if (storySlugInfo) storySlugInfo.style.display = "none";
+        if (storySlugValue) storySlugValue.textContent = "";
+        if (storyContent) storyContent.value = "";
+        heroImageEl.innerHTML = '<div style="text-align: center; color: #999;"><span style="font-size: 36px; display: block;">+</span><span style="font-size: 14px;">Selecionar herói</span></div>';
+      }
+    } catch (err) {
+      console.error(err);
+      showQuickWarning("Erro ao carregar história do card.", "error");
+    }
+  });
+
+  function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function createScheduleModal() {
+    const overlay = document.createElement("div");
+    overlay.className = "schedule-modal-overlay";
+
+    const modal = document.createElement("div");
+    modal.className = "schedule-modal";
+    modal.innerHTML = `
+      <h2>Programar publicação</h2>
+      <div class="schedule-modal-content">
+        <div class="schedule-date-section">
+          <label>Selecione a data</label>
+          <div class="schedule-calendar-header">
+            <button type="button" class="schedule-month-prev">←</button>
+            <h3 class="schedule-month-label"></h3>
+            <button type="button" class="schedule-month-next">→</button>
+          </div>
+          <div class="schedule-calendar"></div>
+        </div>
+
+        <div class="schedule-time-section">
+          <label>Selecione o horário</label>
+          <div class="schedule-time-inputs">
+            <div class="schedule-time-input">
+              <label for="schedule-hour">Hora</label>
+              <input id="schedule-hour" type="number" min="0" max="23" value="12" />
+            </div>
+            <div class="schedule-time-input">
+              <label for="schedule-minute">Minuto</label>
+              <input id="schedule-minute" type="number" min="0" max="59" value="00" />
+            </div>
+          </div>
+        </div>
+
+        <div class="schedule-modal-actions">
+          <button type="button" class="btn-cancel">Cancelar</button>
+          <button type="button" class="btn-confirm">Confirmar</button>
+        </div>
+      </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    const monthLabel = modal.querySelector(".schedule-month-label");
+    const calendar = modal.querySelector(".schedule-calendar");
+    const hourInput = modal.querySelector("#schedule-hour");
+    const minuteInput = modal.querySelector("#schedule-minute");
+    const prevBtn = modal.querySelector(".schedule-month-prev");
+    const nextBtn = modal.querySelector(".schedule-month-next");
+    const cancelBtn = modal.querySelector(".btn-cancel");
+    const confirmBtn = modal.querySelector(".btn-confirm");
+
+    let currentMonth = new Date();
+    let selectedDate = new Date();
+
+    function renderCalendar() {
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      monthLabel.textContent = currentMonth.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startingDay = (firstDay.getDay() + 6) % 7;
+      const totalDays = lastDay.getDate();
+      const prevMonthDays = new Date(year, month, 0).getDate();
+
+      const dayNames = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+      calendar.innerHTML = "";
+
+      dayNames.forEach((day) => {
+        const header = document.createElement("div");
+        header.className = "day-header";
+        header.textContent = day;
+        calendar.appendChild(header);
+      });
+
+      for (let i = 0; i < startingDay; i += 1) {
+        const cell = document.createElement("div");
+        cell.className = "day-cell other-month";
+        cell.textContent = prevMonthDays - startingDay + i + 1;
+        calendar.appendChild(cell);
+      }
+
+      for (let day = 1; day <= totalDays; day += 1) {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "day-cell";
+        cell.textContent = day;
+
+        const date = new Date(year, month, day);
+        const isToday = date.toDateString() === new Date().toDateString();
+        const isSelected = selectedDate.toDateString() === date.toDateString();
+
+        if (isToday) cell.classList.add("today");
+        if (isSelected) cell.classList.add("selected");
+
+        cell.addEventListener("click", () => {
+          selectedDate = date;
+          renderCalendar();
+        });
+
+        calendar.appendChild(cell);
+      }
+
+      const remainingCells = 42 - calendar.children.length;
+      for (let day = 1; day <= remainingCells; day += 1) {
+        const cell = document.createElement("div");
+        cell.className = "day-cell other-month";
+        cell.textContent = day;
+        calendar.appendChild(cell);
+      }
+    }
+
+    prevBtn.addEventListener("click", () => {
+      currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+      renderCalendar();
+    });
+
+    nextBtn.addEventListener("click", () => {
+      currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+      renderCalendar();
+    });
+
+    cancelBtn.addEventListener("click", () => closeModal(""));
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) closeModal("");
+    });
+
+    function closeModal(value) {
+      overlay.dataset.value = value || "";
+      overlay.remove();
+    }
+
+    confirmBtn.addEventListener("click", () => {
+      const hour = String(hourInput.value).padStart(2, "0");
+      const minute = String(minuteInput.value).padStart(2, "0");
+      const selectedValue = `${formatDateForInput(selectedDate)}T${hour}:${minute}:00`;
+      closeModal(selectedValue);
+    });
+
+    renderCalendar();
+    return overlay;
+  }
+
+  async function saveStory(action, message) {
+    const selectedFile = selectCard.value;
+    const content = storyContent.value.trim();
+
+    if (!selectedFile) {
+      showQuickWarning("Selecione um card antes de salvar.", "warning");
+      return;
+    }
+    if (!content) {
+      showQuickWarning("Escreva o conteúdo da história antes de salvar.", "warning");
+      return;
+    }
+
+    const buttons = [saveDraftBtn, scheduleStoryBtn, publishStoryBtn, undoStoryBtn];
+    buttons.forEach((button) => {
+      button.disabled = true;
+      button.textContent = "Salvando...";
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("content", content);
+      formData.append("action", action);
+      const heroImg = heroImageEl.querySelector("img");
+      if (heroImg && heroImg.file) {
+        formData.append("hero_image", heroImg.file);
+      }
+
+      if (action === "scheduled") {
+        const modal = createScheduleModal();
+        const result = await new Promise((resolve) => {
+          const originalRemove = modal.remove.bind(modal);
+          modal.remove = function () {
+            originalRemove();
+            resolve(modal.dataset.value || "");
+          };
+        });
+
+        if (!result) {
+          showQuickWarning("A publicação programada foi cancelada.", "warning");
+          return;
+        }
+        formData.append("scheduled_at", result);
+      }
+
+      const res = await fetch(`/admin/save_story/${selectedFile}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        if (storySlugInfo) storySlugInfo.style.display = "block";
+        if (storySlugValue) storySlugValue.textContent = data.slug || (storySlugValue.textContent || '');
+        showQuickWarning(message, "success");
+      } else {
+        showQuickWarning(data.error || "Erro ao salvar história.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showQuickWarning("Erro de rede ao salvar história.", "error");
+    } finally {
+      buttons.forEach((button) => {
+        button.disabled = false;
+        if (button === saveDraftBtn) button.textContent = "Salvar rascunho";
+        if (button === scheduleStoryBtn) button.textContent = "Salvar e programar";
+        if (button === publishStoryBtn) button.textContent = "Salvar e publicar";
+        if (button === undoStoryBtn) button.textContent = "Desfazer alterações";
+      });
+    }
+  }
+
+  saveDraftBtn.addEventListener("click", () => saveStory("draft", "Rascunho salvo com sucesso!"));
+  scheduleStoryBtn.addEventListener("click", () => saveStory("scheduled", "História programada para publicação!"));
+  publishStoryBtn.addEventListener("click", () => saveStory("publish", "História publicada com sucesso!"));
+
+  undoStoryBtn.addEventListener("click", async () => {
+    const selectedFile = selectCard.value;
+    if (!selectedFile) {
+      showQuickWarning("Selecione um card antes de desfazer.", "warning");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/admin/undo_story/${selectedFile}`, { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        const storyRes = await fetch(`/admin/get_story/${selectedFile}`);
+        const storyData = await storyRes.json();
+        if (storyData.exists) {
+          if (storyContent) storyContent.value = storyData.content || "";
+          if (storySlugInfo) storySlugInfo.style.display = "block";
+          if (storySlugValue) storySlugValue.textContent = storyData.slug || "";
+          if (storyData.hero_image) {
+            heroImageEl.innerHTML = `<img src="/static/images/covers/${storyData.hero_image}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;" />`;
+          } else {
+            heroImageEl.innerHTML = '<div style="text-align: center; color: #999;"><span style="font-size: 36px; display: block;">+</span><span style="font-size: 14px;">Selecionar herói</span></div>';
+          }
+        }
+        showQuickWarning("Alterações desfeitas com sucesso!", "success");
+      } else {
+        showQuickWarning(data.error || "Erro ao desfazer alterações.", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showQuickWarning("Erro de rede ao desfazer alterações.", "error");
+    }
+  });
+
+  try {
+    const res = await fetch("/admin/list_cards");
+    const cards = await res.json();
+    cards.forEach((card) => {
+      const option = document.createElement("option");
+      option.value = card.file;
+      option.textContent = card.title || card.file;
+      selectCard.appendChild(option);
+    });
+      // Se a subguia foi acionada a partir de Linkar, pre-seleciona o card correspondente
+      if (window._preselectCardFromLinkar) {
+        try {
+          selectCard.value = window._preselectCardFromLinkar;
+          selectCard.dispatchEvent(new Event('change'));
+        } catch (e) {
+          console.warn('Preselect failed:', e);
+        }
+        // limpa a flag global
+        window._preselectCardFromLinkar = null;
+      }
+  } catch (err) {
+    console.error(err);
+    showQuickWarning("Erro ao carregar lista de cards.", "error");
   }
 }
 
@@ -1405,7 +1854,7 @@ function renderOverviewPage(data) {
   dashboardGrid.appendChild(createDashboardCard(
     "Cards",
     formatLargeNumber(data.total_cards),
-    "Mapas/histórias no sistema",
+    "Cards no sistema",
   ));
 
   dashboardGrid.appendChild(createDashboardCard(
@@ -1467,11 +1916,16 @@ function initAdminMenu() {
       handler(e);
     });
   };
+  // Buscar elementos no DOM no momento da inicialização (evita referências nulas)
+  const hamburgerEl = document.getElementById("hamburger");
+  const mapsItemEl = document.getElementById("maps-stories");
+  const usersItemEl = document.getElementById("users");
+  const newsItemEl = document.getElementById("news");
 
-  bindClick(hamburger, toggleSidebar, "hamburger");
-  bindClick(mapsItem, toggleMapsSubmenu, "mapsItem");
-  bindClick(usersItem, toggleUsersSubmenu, "usersItem");
-  bindClick(newsItem, toggleNewsSubmenu, "newsItem");
+  bindClick(hamburgerEl, toggleSidebar, "hamburger");
+  bindClick(mapsItemEl, toggleMapsSubmenu, "mapsItem");
+  bindClick(usersItemEl, toggleUsersSubmenu, "usersItem");
+  bindClick(newsItemEl, toggleNewsSubmenu, "newsItem");
 
   const visaoGeralItem = document.getElementById("visao-geral");
   bindClick(visaoGeralItem, showOverview, "visaoGeralItem");
@@ -1483,9 +1937,11 @@ function initAdminMenu() {
   const mapsSubmenuEl = document.getElementById("maps-submenu");
   const addMapStoryEl = mapsSubmenuEl?.querySelector("li.add-map-story");
   const editarMapStoryEl = mapsSubmenuEl?.querySelector("li.edit-map-story");
+  const writeStoryEl = mapsSubmenuEl?.querySelector("li.write-story");
   const linkarMapStoryEl = mapsSubmenuEl?.querySelector("li#linkar-map-story");
   bindClick(addMapStoryEl, adicionarCards, "addMapStoryEl");
   bindClick(editarMapStoryEl, editarCards, "editarMapStoryEl");
+  bindClick(writeStoryEl, abrirSubguiaEscrever, "writeStoryEl");
   bindClick(linkarMapStoryEl, abrirSubguiaLinkar, "linkarMapStoryEl");
 
   const newsSubmenuEl = document.getElementById("news-submenu");

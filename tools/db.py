@@ -44,6 +44,19 @@ CREATE TABLE IF NOT EXISTS card_links (
     FOREIGN KEY(card_file) REFERENCES cards(file) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS stories (
+    card_file TEXT PRIMARY KEY,
+    slug TEXT UNIQUE,
+    content TEXT NOT NULL,
+    draft_content TEXT,
+    published_content TEXT,
+    hero_image TEXT,
+    status TEXT NOT NULL DEFAULT 'published',
+    scheduled_at DATETIME,
+    updated_at DATETIME,
+    FOREIGN KEY(card_file) REFERENCES cards(file) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS partners (
     file TEXT PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -141,6 +154,8 @@ def init_db():
     db.execute("PRAGMA foreign_keys = ON")
     db.executescript(SQL_INIT)
     _ensure_users_table_columns(db)
+    _ensure_story_hero_image_column(db)
+    _ensure_story_workflow_columns(db)
     db.commit()
     _seed_data(db)
     db.close()
@@ -162,6 +177,28 @@ def _ensure_users_table_columns(db):
         db.execute(
             "ALTER TABLE users ADD COLUMN username_change_locked_until DATETIME DEFAULT NULL"
         )
+
+
+def _ensure_story_hero_image_column(db):
+    if not _column_exists(db, "stories", "hero_image"):
+        db.execute(
+            "ALTER TABLE stories ADD COLUMN hero_image TEXT"
+        )
+
+
+def _ensure_story_workflow_columns(db):
+    for column_name, column_def in [
+        ("draft_content", "TEXT"),
+        ("published_content", "TEXT"),
+        ("status", "TEXT NOT NULL DEFAULT 'published'"),
+        ("scheduled_at", "DATETIME"),
+    ]:
+        if not _column_exists(db, "stories", column_name):
+            db.execute(f"ALTER TABLE stories ADD COLUMN {column_name} {column_def}")
+
+    db.execute("UPDATE stories SET published_content = COALESCE(published_content, content, '') WHERE published_content IS NULL")
+    db.execute("UPDATE stories SET status = COALESCE(status, 'published') WHERE status IS NULL OR status = ''")
+    db.execute("UPDATE stories SET content = COALESCE(content, '') WHERE content IS NULL")
 
 
 def _seed_data(db):
@@ -500,6 +537,134 @@ def save_card_links(file_name, historia, mapa):
     db.execute(
         "INSERT OR REPLACE INTO card_links (card_file, historia, mapa) VALUES (?, ?, ?)",
         (file_name, historia or "", mapa or "")
+    )
+    db.commit()
+    return True
+
+
+def _normalize_story_row(row):
+    if row is None:
+        return None
+
+    story = dict_from_row(row)
+    if not story:
+        return None
+
+    story["content"] = story.get("content") or ""
+    story["draft_content"] = story.get("draft_content")
+    story["published_content"] = story.get("published_content") or story.get("content") or ""
+    story["status"] = story.get("status") or "published"
+    story["scheduled_at"] = story.get("scheduled_at")
+    return story
+
+
+def _maybe_publish_scheduled_story(db, story, public_view=False):
+    if not story:
+        return None
+
+    status = story.get("status") or "published"
+    scheduled_at = story.get("scheduled_at")
+    if status != "scheduled" or not scheduled_at:
+        if public_view:
+            story["content"] = story.get("published_content") or story.get("content") or ""
+        else:
+            story["content"] = story.get("draft_content") if story.get("draft_content") is not None else story.get("content") or ""
+        return story
+
+    try:
+        scheduled_dt = datetime.fromisoformat(scheduled_at)
+    except ValueError:
+        return story
+
+    local_tz = pytz.timezone("America/Sao_Paulo")
+    if scheduled_dt.tzinfo is None:
+        scheduled_dt = local_tz.localize(scheduled_dt)
+    else:
+        scheduled_dt = scheduled_dt.astimezone(local_tz)
+
+    if scheduled_dt > datetime.now(local_tz):
+        if public_view:
+            story["content"] = story.get("published_content") or story.get("content") or ""
+        else:
+            story["content"] = story.get("draft_content") if story.get("draft_content") is not None else story.get("published_content") or story.get("content") or ""
+        return story
+
+    next_content = story.get("draft_content") or story.get("content") or ""
+    db.execute(
+        "UPDATE stories SET content = ?, published_content = ?, draft_content = NULL, status = 'published', scheduled_at = NULL, updated_at = ? WHERE card_file = ?",
+        (next_content, next_content, now_str(), story["card_file"])
+    )
+    db.commit()
+    row = db.execute("SELECT * FROM stories WHERE card_file = ?", (story["card_file"],)).fetchone()
+    return _normalize_story_row(row)
+
+
+def get_story_by_card_file(card_file):
+    db = get_db()
+    row = db.execute("SELECT * FROM stories WHERE card_file = ?", (card_file,)).fetchone()
+    story = _normalize_story_row(row)
+    return _maybe_publish_scheduled_story(db, story, public_view=False)
+
+
+def get_story_by_slug(slug, public_view=False):
+    db = get_db()
+    row = db.execute("SELECT * FROM stories WHERE slug = ?", (slug,)).fetchone()
+    story = _normalize_story_row(row)
+    return _maybe_publish_scheduled_story(db, story, public_view=public_view)
+
+
+def get_story_slugs():
+    db = get_db()
+    rows = db.execute("SELECT card_file, slug FROM stories WHERE slug IS NOT NULL AND slug != ''").fetchall()
+    return {row["card_file"]: row["slug"] for row in rows}
+
+
+def save_story(card_file, slug, content, hero_image=None, action="publish", scheduled_at=None):
+    db = get_db()
+
+    existing_row = db.execute("SELECT * FROM stories WHERE card_file = ?", (card_file,)).fetchone()
+    existing_story = _normalize_story_row(existing_row) or {}
+    now = now_str()
+    public_content = content or ""
+    published_content = existing_story.get("published_content") or existing_story.get("content") or ""
+    hero_image_value = hero_image or existing_story.get("hero_image") or ""
+    status = "published"
+    schedule_value = None
+
+    if action == "draft":
+        status = "draft"
+        db.execute(
+            "INSERT OR REPLACE INTO stories (card_file, slug, content, draft_content, published_content, hero_image, status, scheduled_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (card_file, slug, public_content, public_content, published_content, hero_image_value, status, None, now)
+        )
+    elif action == "scheduled":
+        status = "scheduled"
+        schedule_value = scheduled_at or now
+        db.execute(
+            "INSERT OR REPLACE INTO stories (card_file, slug, content, draft_content, published_content, hero_image, status, scheduled_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (card_file, slug, public_content, public_content, published_content, hero_image_value, status, schedule_value, now)
+        )
+    else:
+        published_content = public_content
+        db.execute(
+            "INSERT OR REPLACE INTO stories (card_file, slug, content, draft_content, published_content, hero_image, status, scheduled_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (card_file, slug, public_content, None, published_content, hero_image_value, status, None, now)
+        )
+
+    db.commit()
+    return True
+
+
+def undo_story_changes(card_file):
+    db = get_db()
+    story = get_story_by_card_file(card_file)
+    if not story:
+        return False
+
+    restored_content = story.get("published_content") or story.get("content") or ""
+    db.execute(
+        "UPDATE stories SET content = ?, draft_content = NULL, status = 'published', scheduled_at = NULL, updated_at = ? WHERE card_file = ?",
+        (restored_content, now_str(), card_file)
     )
     db.commit()
     return True

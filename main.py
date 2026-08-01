@@ -32,16 +32,11 @@ def _init_bootstrap_admin(app):
 
 def criar_app():
     app = Flask(__name__)
-<<<<<<< HEAD
     app.config['SECRET_KEY'] = ''
-    
-=======
-    app.config['SECRET_KEY'] = 'apzm2021'
 
     init_app(app)
     _init_bootstrap_admin(app)
 
->>>>>>> ef5d46f (V3.0.0 | Mudança no sys de armazenamento)
     # Carrega as rotas
     registrar_blueprints(app)
     

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}" />
+
+    <title>{{ seo.title }}</title>
+    <meta name="description" content="{{ seo.description }}" />
+    <meta name="keywords" content="{{ seo.keywords }}" />
+    <meta property="og:title" content="{{ seo.title }}" />
+    <meta property="og:description" content="{{ seo.description }}" />
+    <meta property="og:url" content="{{ seo.url }}" />
+    <meta property="og:image" content="{{ seo.image }}" />
+    <meta property="og:type" content="article" />
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}" />
+</head>
+
+<body class="historia-page-body">
+    <div class="historia-header-actions">
+        <a href="{{ url_for('home.home') }}" class="historia-back-btn">← Voltar</a>
+        {% if story and story.chapters %}
+            <button type="button" class="historia-chapters-btn" id="historia-chapters-toggle">Capítulos</button>
+        {% endif %}
+    </div>
+
+    <div class="historia-chapters-modal" id="historia-chapters-modal" aria-hidden="true">
+        <div class="historia-chapters-modal-dialog" role="dialog" aria-modal="true" aria-label="Lista de capítulos">
+            <div class="historia-chapters-modal-header">
+                <h2>Capítulos</h2>
+                <button type="button" class="historia-chapters-close" id="historia-chapters-close" aria-label="Fechar">×</button>
+            </div>
+            <nav class="historia-chapters-list">
+                <ul>
+                    {% for chapter in story.chapters %}
+                        <li><a href="#chapter-{{ loop.index0 }}">{{ chapter.title }}</a></li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <section class="historia-hero-section">
+        {% if story and story.cover_image %}
+            <div class="historia-hero-bg" style="background-image: url('{{ story.cover_image }}');"></div>
+        {% endif %}
+        <div class="historia-hero-overlay"></div>
+        <div class="historia-hero-copy">
+            {% if story and story.hero_image %}
+                <img src="{{ story.hero_image }}" alt="{{ story.title }}" class="historia-hero-image" />
+            {% else %}
+                <h1>{{ story.title if story else 'História não encontrada' }}</h1>
+            {% endif %}
+        </div>
+    </section>
+
+    <main class="historia-layout{% if story and story.body_paragraphs and not story.chapters %} historia-layout-single{% endif %}">
+        {% if story and story.chapters %}
+            <aside class="historia-sidebar">
+                <nav class="historia-summary">
+                    <ul>
+                        {% for chapter in story.chapters %}
+                            <li><a href="#chapter-{{ loop.index0 }}">{{ chapter.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+            </aside>
+
+            <section class="historia-content">
+                {% for chapter in story.chapters %}
+                    <article class="historia-chapter" id="chapter-{{ loop.index0 }}">
+                        <h2>{{ chapter.title }}</h2>
+                        {% for paragraph in chapter.paragraphs %}
+                            <p class="historia-paragraph">{{ paragraph | safe }}</p>
+                        {% endfor %}
+                    </article>
+                {% endfor %}
+            </section>
+        {% elif story and story.body_paragraphs %}
+            <section class="historia-content historia-single-body">
+                {% for paragraph in story.body_paragraphs %}
+                    <p class="historia-paragraph">{{ paragraph | safe }}</p>
+                {% endfor %}
+            </section>
+        {% else %}
+            <section class="historia-notfound">
+                <h2>História não encontrada</h2>
+                <p>Nenhuma história foi cadastrada para este endereço.</p>
+                <a href="{{ url_for('home.home') }}" class="historia-home-btn">Voltar para a página inicial</a>
+            </section>
+        {% endif %}
+    </main>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const chaptersToggle = document.getElementById('historia-chapters-toggle');
+        const modal = document.getElementById('historia-chapters-modal');
+        const closeBtn = document.getElementById('historia-chapters-close');
+        const modalLinks = Array.from(document.querySelectorAll('.historia-chapters-list a'));
+        const chapters = Array.from(document.querySelectorAll('.historia-chapter'));
+
+        function openModal() {
+          if (!modal) return;
+          modal.classList.add('is-open');
+          modal.setAttribute('aria-hidden', 'false');
+          document.body.classList.add('no-scroll');
+        }
+
+        function closeModal() {
+          if (!modal) return;
+          modal.classList.remove('is-open');
+          modal.setAttribute('aria-hidden', 'true');
+          document.body.classList.remove('no-scroll');
+        }
+
+        if (chaptersToggle && modal) {
+          chaptersToggle.addEventListener('click', openModal);
+        }
+
+        if (closeBtn) {
+          closeBtn.addEventListener('click', closeModal);
+        }
+
+        if (modal) {
+          modal.addEventListener('click', function (event) {
+            if (event.target === modal) {
+              closeModal();
+            }
+          });
+        }
+
+        const summaryLinks = Array.from(document.querySelectorAll('.historia-summary a'));
+
+        function scrollToChapter(target) {
+          const rect = target.getBoundingClientRect();
+          const scrollTop = window.pageYOffset + rect.top - Math.max(window.innerHeight * 0.25, 90);
+          window.scrollTo({ top: scrollTop, behavior: 'smooth' });
+        }
+
+        modalLinks.forEach((link) => {
+          link.addEventListener('click', function (event) {
+            const targetId = this.getAttribute('href');
+            if (!targetId) return;
+            const target = document.querySelector(targetId);
+            if (target) {
+              event.preventDefault();
+              scrollToChapter(target);
+              closeModal();
+            }
+          });
+        });
+
+        summaryLinks.forEach((link) => {
+          link.addEventListener('click', function (event) {
+            const targetId = this.getAttribute('href');
+            if (!targetId) return;
+            const target = document.querySelector(targetId);
+            if (target) {
+              event.preventDefault();
+              scrollToChapter(target);
+            }
+          });
+        });
+
+        function updateActiveLink() {
+          const activationPoint = window.innerHeight * 0.35;
+          let activeId = chapters[0]?.id;
+
+          for (const chapter of chapters) {
+            const rect = chapter.getBoundingClientRect();
+            if (rect.top <= activationPoint && rect.bottom > activationPoint) {
+              activeId = chapter.id;
+              break;
+            }
+          }
+
+          summaryLinks.forEach((link) => {
+            link.classList.toggle('active', link.getAttribute('href') === `#${activeId}`);
+          });
+        }
+
+        window.addEventListener('scroll', updateActiveLink);
+        window.addEventListener('resize', updateActiveLink);
+        updateActiveLink();
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') {
+            closeModal();
+          }
+        });
+
+        if (!chapters.length) {
+          return;
+        }
+      });
+    </script>
+</body>
+
+</html>

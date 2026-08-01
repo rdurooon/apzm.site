@@ -468,7 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function setPopupLinks(fileName) {
     const links = cardLinks[fileName];
-    
+
     if (links?.mapa) {
       btnDownloadMap.onclick = () => window.open(links.mapa, "_blank");
       btnDownloadMap.classList.remove("disabled");
@@ -477,8 +477,8 @@ document.addEventListener("DOMContentLoaded", () => {
       btnDownloadMap.classList.add("disabled");
     }
 
-    if (links?.historia) {
-      btnReadStory.onclick = () => window.open(links.historia, "_blank");
+    if (links?.story_slug) {
+      btnReadStory.onclick = () => window.location.href = `/historia/${links.story_slug}`;
       btnReadStory.classList.remove("disabled");
     } else {
       btnReadStory.onclick = null;

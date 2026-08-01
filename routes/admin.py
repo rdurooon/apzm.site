@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 import pytz
 import os
+import re
 import shutil
+import unicodedata
 from flask import Blueprint, render_template, jsonify, request, current_app, redirect, url_for, session
 from werkzeug.utils import secure_filename
 from .register import promote_user, demote_user, delete_user
@@ -10,6 +12,10 @@ from tools.db import (
     get_admin_count as db_get_admin_count,
     get_all_users,
     get_cards as db_get_cards,
+    get_story_by_card_file,
+    save_story as db_save_story,
+    undo_story_changes as db_undo_story_changes,
+    get_partners as db_get_partners,
     get_card_links as db_get_card_links,
     get_site_status,
     get_site_visits,
@@ -20,7 +26,6 @@ from tools.db import (
     update_cards_order as db_update_cards_order,
     update_card as db_update_card,
     save_card_links as db_save_card_links,
-    get_partners as db_get_partners,
     insert_news as db_insert_news,
     list_news as db_list_news,
     get_news_item as db_get_news_item,
@@ -34,6 +39,7 @@ admin_bp = Blueprint("admin", __name__)
 # =========================== CONSTANTES ===========================
 CARD_DIR = "static/images/cards/"
 TITLE_DIR = "static/images/titles/"
+COVER_DIR = "static/images/covers/"
 NEWS_DIR = "static/images/news/"
 
 # =========================== FUNÇÃO PARA CHECAR "NOVA" ===========================
@@ -158,10 +164,14 @@ def add_map_story():
     card_image.save(card_path)
 
     # Salva imagem do título (ou usa o mesmo arquivo do card)
+    # Salva imagem do título (nomeada com o mesmo base do card) ou usa o mesmo arquivo do card
     os.makedirs(TITLE_DIR, exist_ok=True)
     title_image = request.files.get("title_image")
+    base_name = os.path.splitext(card_filename)[0]
     if title_image:
-        title_filename = secure_filename(title_image.filename) # type: ignore
+        # Força o nome do arquivo do título a usar a base do card (mantendo a extensão original)
+        orig_ext = os.path.splitext(secure_filename(title_image.filename) or "")[1] or os.path.splitext(card_filename)[1]
+        title_filename = f"{base_name}{orig_ext}"
         title_path = os.path.join(TITLE_DIR, title_filename)
         title_image.save(title_path)
     else:
@@ -178,10 +188,14 @@ def add_map_story():
 @admin_required
 def delete_map_story(filename):
     try:
+        # pegar story associado antes de remover o card para poder limpar arquivos (hero_image)
+        story = get_story_by_card_file(filename)
+
         deleted = db_delete_card(filename)
         if not deleted:
             return jsonify({"success": False, "error": "Card não encontrado"})
 
+        # remover imagens do card e do título
         card_path = os.path.join(CARD_DIR, filename)
         if os.path.exists(card_path):
             os.remove(card_path)
@@ -189,7 +203,20 @@ def delete_map_story(filename):
         base_name = os.path.splitext(filename)[0]
         for f in os.listdir(TITLE_DIR):
             if os.path.splitext(f)[0] == base_name:
-                os.remove(os.path.join(TITLE_DIR, f))
+                try:
+                    os.remove(os.path.join(TITLE_DIR, f))
+                except Exception:
+                    pass
+
+        # remover imagem de capa/hero da história, se existir
+        if story and story.get("hero_image"):
+            hero_file = story.get("hero_image")
+            hero_path = os.path.join(COVER_DIR, hero_file)
+            if os.path.exists(hero_path):
+                try:
+                    os.remove(hero_path)
+                except Exception:
+                    pass
 
         return jsonify({"success": True, "card_name": base_name.capitalize()})
     except Exception as e:
@@ -230,6 +257,79 @@ def save_card_links(filename):
     data = request.get_json()
     db_save_card_links(filename, data.get("historia", ""), data.get("mapa", ""))
     return jsonify({"success": True})
+
+
+@admin_bp.route("/admin/get_story/<filename>")
+@admin_required
+def get_story(filename):
+    story = get_story_by_card_file(filename)
+    if not story:
+        return jsonify({"exists": False})
+    editor_content = story.get("draft_content") if story.get("draft_content") is not None else story.get("content", "")
+    return jsonify({
+        "exists": True,
+        "slug": story.get("slug"),
+        "content": editor_content,
+        "hero_image": story.get("hero_image", ""),
+        "draft_content": story.get("draft_content"),
+        "published_content": story.get("published_content") or story.get("content", ""),
+        "status": story.get("status", "published"),
+        "scheduled_at": story.get("scheduled_at"),
+    })
+
+
+@admin_bp.route("/admin/save_story/<filename>", methods=["POST"])
+@admin_required
+def save_story(filename):
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        content = (data.get("content") or "").strip()
+        action = (data.get("action") or "publish").strip()
+        scheduled_at = (data.get("scheduled_at") or "").strip()
+    else:
+        content = (request.form.get("content") or "").strip()
+        action = (request.form.get("action") or "publish").strip()
+        scheduled_at = (request.form.get("scheduled_at") or "").strip()
+
+    if content == "":
+        return jsonify({"success": False, "error": "Conteúdo da história não pode ficar vazio."}), 400
+
+    card = next((c for c in db_get_cards() if c["file"] == filename), None)
+    if not card:
+        return jsonify({"success": False, "error": "Card não encontrado."}), 404
+
+    def slugify(text):
+        normalized = unicodedata.normalize("NFKD", text)
+        normalized = normalized.encode("ascii", "ignore").decode("ascii")
+        normalized = normalized.lower()
+        normalized = re.sub(r"[^a-z0-9]+", "-", normalized)
+        normalized = normalized.strip("-")
+        return normalized
+
+    existing_story = get_story_by_card_file(filename)
+    slug = existing_story.get("slug") if existing_story and existing_story.get("slug") else slugify(card.get("title", ""))
+    hero_image = None
+    hero_file = request.files.get("hero_image")
+    if hero_file:
+        os.makedirs(COVER_DIR, exist_ok=True)
+        hero_filename = secure_filename(hero_file.filename)  # type: ignore
+        hero_path = os.path.join(COVER_DIR, hero_filename)
+        hero_file.save(hero_path)
+        hero_image = hero_filename
+    elif existing_story and existing_story.get("hero_image"):
+        hero_image = existing_story.get("hero_image")
+
+    db_save_story(filename, slug, content, hero_image, action=action, scheduled_at=scheduled_at or None)
+    return jsonify({"success": True, "slug": slug, "status": action if action in {"draft", "scheduled"} else "published"})
+
+
+@admin_bp.route("/admin/undo_story/<filename>", methods=["POST"])
+@admin_required
+def undo_story(filename):
+    if db_undo_story_changes(filename):
+        return jsonify({"success": True})
+    return jsonify({"success": False, "error": "Não foi possível desfazer as alterações."}), 400
+
 
 # =========================== LISTAR PARCEIROS ===========================
 
