@@ -4,9 +4,9 @@ import sqlite3
 import uuid
 from datetime import datetime, timedelta
 from flask import g
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import generate_password_hash
 import pytz
-from tools.crypto_utils import encrypt_value, decrypt_value
+from tools.crypto_utils import encrypt_value
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -97,14 +97,6 @@ CREATE TABLE IF NOT EXISTS likes (
     created_at DATETIME NOT NULL,
     PRIMARY KEY(card_file, username),
     FOREIGN KEY(card_file) REFERENCES cards(file) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS ratings (
-    item_id TEXT NOT NULL,
-    username TEXT NOT NULL,
-    rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
-    created_at DATETIME NOT NULL,
-    PRIMARY KEY(item_id, username)
 );
 
 CREATE TABLE IF NOT EXISTS settings (
@@ -294,7 +286,6 @@ def _delete_user_associated_data(username):
     normalized_username = username.strip()
     db.execute("DELETE FROM comments WHERE LOWER(username) = LOWER(?)", (normalized_username,))
     db.execute("DELETE FROM likes WHERE LOWER(username) = LOWER(?)", (normalized_username,))
-    db.execute("DELETE FROM ratings WHERE LOWER(username) = LOWER(?)", (normalized_username,))
 
 
 def delete_user(user_id):
@@ -529,14 +520,14 @@ def update_cards_order(cards_data):
 def get_card_links():
     db = get_db()
     rows = db.execute("SELECT * FROM card_links").fetchall()
-    return {row["card_file"]: {"historia": row["historia"], "mapa": row["mapa"]} for row in rows}
+    return {row["card_file"]: {"mapa": row["mapa"]} for row in rows}
 
 
-def save_card_links(file_name, historia, mapa):
+def save_card_links(file_name, mapa):
     db = get_db()
     db.execute(
         "INSERT OR REPLACE INTO card_links (card_file, historia, mapa) VALUES (?, ?, ?)",
-        (file_name, historia or "", mapa or "")
+        (file_name, "", mapa or "")
     )
     db.commit()
     return True
@@ -755,10 +746,14 @@ def get_comments_for_card(card_id):
 
 def add_or_update_comment(card_id, username, comment_text):
     db = get_db()
+    normalized_comment = (comment_text or "").strip()
+    normalized_comment = normalized_comment.replace("\x00", "")
+    normalized_comment = "".join(ch for ch in normalized_comment if ch.isprintable() or ch in "\n\t")
+    normalized_comment = normalized_comment[:120]
     now = datetime.now(pytz.timezone("America/Sao_Paulo")).isoformat()
     db.execute(
         "INSERT INTO comments (card_id, username, comment, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(card_id, username) DO UPDATE SET comment = excluded.comment, created_at = excluded.created_at",
-        (card_id, username, comment_text, now)
+        (card_id, username, normalized_comment, now)
     )
     db.commit()
     return True
@@ -801,28 +796,7 @@ def toggle_like_card(filename, username):
     return action, count
 
 
-def get_rating_for_item(item_id):
-    db = get_db()
-    rows = db.execute("SELECT username, rating FROM ratings WHERE item_id = ?", (item_id,)).fetchall()
-    ratings = {row["username"]: row["rating"] for row in rows}
-    average = 0
-    if ratings:
-        average = round(sum(ratings.values()) / len(ratings), 2)
-    return {"usuarios": ratings, "media": average}
-
-
-def set_rating(item_id, username, rating):
-    db = get_db()
-    db.execute(
-        "INSERT INTO ratings (item_id, username, rating, created_at) VALUES (?, ?, ?, ?) ON CONFLICT(item_id, username) DO UPDATE SET rating = excluded.rating, created_at = excluded.created_at",
-        (item_id, username, rating, datetime.now(pytz.timezone("America/Sao_Paulo")).isoformat())
-    )
-    db.commit()
-    return get_rating_for_item(item_id)
-
-
 def check_new_badges(cards):
-    updated = False
     now = datetime.now(pytz.timezone("America/Sao_Paulo"))
     for card in cards:
         if card.get("is_new") and card.get("new_since"):
@@ -832,9 +806,7 @@ def check_new_badges(cards):
                     update_card(card["file"], is_new=False, new_since=None)
                     card["is_new"] = False
                     card["new_since"] = None
-                    updated = True
             except Exception:
                 update_card(card["file"], is_new=False, new_since=None)
                 card["new_since"] = None
-                updated = True
     return cards

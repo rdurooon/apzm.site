@@ -1152,7 +1152,9 @@ document.addEventListener("DOMContentLoaded", () => {
         for (const [user, comment] of Object.entries(data)) {
           const div = document.createElement("div");
           div.classList.add("comment");
-          div.innerHTML = `<strong>${user}:</strong> ${comment}`;
+          const safeUser = escapeHtml(user || "");
+          const safeComment = escapeHtml(comment || "");
+          div.innerHTML = `<strong>${safeUser}:</strong> ${safeComment}`;
 
           if (LOGGED_USER.username === user || LOGGED_USER.is_admin) {
             const delBtn = document.createElement("button");

@@ -1218,7 +1218,6 @@ async function abrirSubguiaLinkar() {
       const btnSave = div.querySelector(".save-links");
       const inputMapa = div.querySelector(".mapa-link");
       const btnOpenEditor = div.querySelector('.open-editor-btn');
-      const btnViewHistory = div.querySelector('.view-history-btn');
       // Ação do botão Escrever/Revisar: abre a aba de editor com o card pré-selecionado
       if (btnOpenEditor) {
         btnOpenEditor.addEventListener('click', (e) => {
@@ -1228,13 +1227,6 @@ async function abrirSubguiaLinkar() {
           abrirSubguiaEscrever();
         });
       }
-
-      // Ajuste: se não houver link público, desabilita o 'Ver história'
-      if (btnViewHistory && (!card.link_historia || card.link_historia.trim() === '')) {
-        btnViewHistory.classList.add('disabled');
-        btnViewHistory.style.opacity = '0.5';
-        btnViewHistory.style.pointerEvents = 'none';
-      }
       btnSave.addEventListener("click", async () => {
         btnSave.disabled = true;
         btnSave.textContent = "Salvando...";
@@ -1243,7 +1235,6 @@ async function abrirSubguiaLinkar() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              historia: card.link_historia || '',
               mapa: inputMapa.value.trim(),
             }),
           });

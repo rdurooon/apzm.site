@@ -18,8 +18,6 @@ from tools.db import (
     delete_comment as db_delete_comment,
     get_likes_for_card,
     toggle_like_card,
-    set_rating,
-    get_rating_for_item,
     get_card_links,
     get_story_by_slug,
     get_story_slugs,
@@ -359,9 +357,14 @@ def add_comment(card_id):
         return jsonify({"status": "error", "message": "Usuário não autenticado"}), 401
 
     data = request.get_json(silent=True) or {}
-    comment_text = data.get("comment", "").strip()
+    raw_comment = data.get("comment", "") or ""
+    comment_text = raw_comment.strip()
     if not comment_text:
         return jsonify({"status": "error", "message": "Comentário vazio"}), 400
+
+    comment_text = comment_text.replace("\x00", "")
+    comment_text = "".join(ch for ch in comment_text if ch.isprintable() or ch in "\n\t")
+    comment_text = comment_text[:120]
 
     add_or_update_comment(card_id, user["username"], comment_text)
     return jsonify({"status": "success", "message": "Comentário adicionado!"})
@@ -417,31 +420,6 @@ def like_card(filename):
         "likes": likes,
         "action": action
     })
-
-
-# ==================== API RATINGS ====================
-@home_bp.route("/rate/<item_id>", methods=["POST"])
-def rate_item(item_id):
-    user = get_user_from_session()
-    if not user:
-        return jsonify({"success": False, "error": "Usuário não autenticado"}), 401
-
-    data = request.get_json(silent=True) or {}
-    try:
-        rating = int(data.get("rating", 0))
-    except (TypeError, ValueError):
-        rating = 0
-
-    if rating < 1 or rating > 5:
-        return jsonify({"success": False, "error": "Rating inválido"}), 400
-
-    rating_data = set_rating(item_id, user["username"], rating)
-    return jsonify({"success": True, "average": rating_data.get("media", 0)})
-
-
-@home_bp.route("/get_rating/<item_id>")
-def get_rating(item_id):
-    return jsonify(get_rating_for_item(item_id))
 
 
 # ==================== API DADOS ====================

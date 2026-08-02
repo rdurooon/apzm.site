@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytz
 import os
 import re
@@ -96,7 +96,6 @@ def list_links():
     for card in cards:
         file = card["file"]
         card_links = links_data.get(file, {})
-        card["link_historia"] = card_links.get("historia", "")
         card["link_mapa"] = card_links.get("mapa", "")
 
     return jsonify(cards)
@@ -255,7 +254,7 @@ def toggle_card_new(filename):
 @admin_required
 def save_card_links(filename):
     data = request.get_json()
-    db_save_card_links(filename, data.get("historia", ""), data.get("mapa", ""))
+    db_save_card_links(filename, data.get("mapa", ""))
     return jsonify({"success": True})
 
 

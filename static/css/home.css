@@ -267,11 +267,6 @@ body.dark-mode .news-item.news-empty p {
   gap: 6px;
 }
 
-.news-load-more-icon {
-  font-size: 14px;
-  line-height: 1;
-}
-
 @media (hover: hover) {
   .news-load-more:hover {
     opacity: 0.75;
@@ -629,10 +624,6 @@ body.dark-mode .news-load-more {
 #email-tooltip p.valid,
 #password-tooltip p.valid {
   color: greenyellow; /* verde quando válida */
-}
-
-#rule-email-format.invalid {
-  color: #ff5555; /* vermelho */
 }
 
 #rule-email-format.valid {

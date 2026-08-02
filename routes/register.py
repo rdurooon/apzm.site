@@ -1,9 +1,7 @@
-import uuid
 from datetime import datetime
 import pytz
 from flask import Blueprint, request, jsonify, session
 from werkzeug.security import check_password_hash
-from tools.crypto_utils import encrypt_value, decrypt_value
 from tools.db import (
     create_user,
     get_user_by_email,
@@ -12,7 +10,6 @@ from tools.db import (
     demote_user as db_demote_user,
     delete_user as db_delete_user,
     delete_user_by_username,
-    set_user_over18 as db_set_user_over18,
     can_change_username,
     update_username,
 )
@@ -49,7 +46,7 @@ def login_user():
         "is_admin": bool(user.get("is_admin", False))
     })
 
-    decrypted_email = decrypt_value(user.get("email_encrypted", "")) or "não informado"
+    decrypted_email = user.get("email_encrypted", "") or "não informado"
     return jsonify({
         "status": "success",
         "message": f"Bem-vindo de volta, {user['username']}!",
@@ -132,24 +129,6 @@ def api_delete_user():
 # ==========================
 # Rotas para alterar dados da conta
 # ==========================
-
-@register_bp.route("/api/check_username_lock", methods=["POST"])
-def check_username_lock():
-    """Verifica se o usuário pode alterar seu username."""
-    if not session.get("user_logged_in") or not session.get("username"):
-        return jsonify({"status": "error", "message": "Usuário não logado."}), 401
-
-    username = session["username"]
-    can_change, lock_until = can_change_username(username)
-    
-    response = {
-        "status": "success",
-        "can_change": can_change,
-        "locked_until": lock_until.isoformat() if lock_until else None
-    }
-    
-    return jsonify(response)
-
 
 @register_bp.route("/api/change_username", methods=["POST"])
 def change_username():

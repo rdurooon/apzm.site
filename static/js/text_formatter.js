@@ -116,17 +116,9 @@ function insertFormattingSymbols(textarea, symbol) {
   textarea.setSelectionRange(newStart, newEnd);
 }
 
-function previewFormattedText(rawText, previewElementSelector) {
-  const previewEl = document.querySelector(previewElementSelector);
-  if (!previewEl) return;
-  
-  previewEl.innerHTML = formatTextToHtml(rawText);
-}
-
 // Exportar para uso global
 window.TextFormatter = {
   formatTextToHtml,
   createFormattingToolbar,
   insertFormattingSymbols,
-  previewFormattedText,
 };

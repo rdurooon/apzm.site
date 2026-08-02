@@ -2,6 +2,7 @@ from flask import Flask, session, redirect, url_for
 from secrets import token_urlsafe
 from routes import registrar_blueprints
 from tools.db import init_app, get_admin_count, get_user_by_username
+from tools.secret_key import get_or_create_secret_key
 
 
 # ========== VERIFICAÇÃO DE SESSÃO ==========
@@ -32,7 +33,7 @@ def _init_bootstrap_admin(app):
 
 def criar_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = ''
+    app.config['SECRET_KEY'] = get_or_create_secret_key()
 
     init_app(app)
     _init_bootstrap_admin(app)

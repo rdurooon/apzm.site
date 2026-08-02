@@ -386,50 +386,6 @@ body {
   transform: rotate(90deg);
 }
 
-.remover-card {
-  position: relative;
-  display: block;
-  width: 100%;
-  border-radius: 10px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.3s;
-}
-
-.remover-card img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  border-radius: 5px;
-  display: block;
-}
-
-
-
-.remover-card .trash-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  transition: opacity 0.3s;
-  font-size: 4rem;
-  color: white;
-}
-
-.remover-card:hover .trash-overlay {
-  opacity: 1;
-}
-
-.remover-card:hover {
-  transform: scale(1.05);
-}
-
 /* Wrapper para card + botão de remover */
 .card-wrapper {
   display: flex;
@@ -636,34 +592,6 @@ body {
   opacity: 0;
   width: 0;
   height: 0;
-}
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #e74c3c;
-  transition: 0.4s;
-  border-radius: 34px;
-}
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: 0.4s;
-  border-radius: 50%;
-}
-input:checked + .slider {
-  background-color: #2ecc71;
-}
-input:checked + .slider:before {
-  transform: translateX(26px);
 }
 #status-container {
   margin-top: 20px;
