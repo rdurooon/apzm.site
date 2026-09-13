@@ -499,6 +499,7 @@ function removeToastAdmin(toastId) {
 }
 
 function escapeHtmlAdmin(text) {
+  text = String(text ?? "");
   const map = {
     "&": "&amp;",
     "<": "&lt;",
@@ -1195,36 +1196,79 @@ async function abrirSubguiaLinkar() {
     cards.forEach((card) => {
       const div = document.createElement("div");
       div.classList.add("linkar-card-container");
+      const safeCardFile = escapeHtmlAdmin(card.file);
+      const safeCardTitle = escapeHtmlAdmin(card.title);
+      const safePdfFilename = escapeHtmlAdmin(card.pdf_filename);
+      const safeMapLink = escapeHtmlAdmin(card.link_mapa);
 
         div.innerHTML = `
             <div class="linkar-card-left">
-              <img src="/static/images/cards/${card.file}" alt="${card.title}">
+              <img src="/static/images/cards/${safeCardFile}" alt="${safeCardTitle}">
             </div>
             <div class="linkar-card-right">
-              <h3 class="linkar-card-title">${card.title}</h3>
+              <h3 class="linkar-card-title">${safeCardTitle}</h3>
                   <div class="link-fields">
-                      <label>Ver história</label>
-                      <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                        <button class="open-editor-btn save-links" type="button">Escrever/Revisar</button>
+                      <label>Arquivo da história</label>
+                      <div class="story-pdf-controls">
+                        <button class="story-pdf-upload-btn" type="button">Enviar arquivo</button>
+                        ${card.pdf_filename
+                          ? `<button class="story-pdf-delete-btn" type="button" aria-label="Remover arquivo da história" title="Remover arquivo da história"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-.8 11.2a2 2 0 0 1-2 1.8H8.8a2 2 0 0 1-2-1.8L6 9Zm3 2v8h2v-8H9Zm4 0v8h2v-8h-2Z"/></svg></button>`
+                          : ""}
+                        <input class="story-pdf-input" type="file" accept="application/pdf,.pdf" hidden>
                       </div>
+                      <small class="story-pdf-name">${card.pdf_filename ? `Arquivo atual: ${safePdfFilename}` : "Nenhum PDF enviado"}</small>
 
                       <label>Linkar Mapa</label>
-                      <input type="text" placeholder="Cole o link do mapa" value="${card.link_mapa || ""}" class="mapa-link">
+                      <input type="text" placeholder="Cole o link do mapa" value="${safeMapLink}" class="mapa-link">
                   </div>
-              <button class="save-links">Salvar Alterações</button>
+              <button class="card-links-save-btn">Salvar Alterações</button>
             </div>
           `;
 
-      const btnSave = div.querySelector(".save-links");
+      const btnSave = div.querySelector(".card-links-save-btn");
       const inputMapa = div.querySelector(".mapa-link");
-      const btnOpenEditor = div.querySelector('.open-editor-btn');
-      // Ação do botão Escrever/Revisar: abre a aba de editor com o card pré-selecionado
-      if (btnOpenEditor) {
-        btnOpenEditor.addEventListener('click', (e) => {
-          e.preventDefault();
-          // marca global temporária para que o editor pre-selecione o card
-          window._preselectCardFromLinkar = card.file;
-          abrirSubguiaEscrever();
+      const pdfUploadButton = div.querySelector(".story-pdf-upload-btn");
+      const pdfInput = div.querySelector(".story-pdf-input");
+      const pdfDeleteButton = div.querySelector(".story-pdf-delete-btn");
+
+      pdfUploadButton.addEventListener("click", () => pdfInput.click());
+      pdfInput.addEventListener("change", async () => {
+        const pdf = pdfInput.files[0];
+        if (!pdf) return;
+        const formData = new FormData();
+        formData.append("pdf_file", pdf);
+        pdfUploadButton.disabled = true;
+        pdfUploadButton.textContent = "Enviando...";
+        try {
+          const res = await fetch(`/admin/upload_story_pdf/${encodeURIComponent(card.file)}`, {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) throw new Error(data.error || "Erro ao enviar PDF.");
+          showQuickWarning("PDF enviado com sucesso!", "green");
+          abrirSubguiaLinkar();
+        } catch (err) {
+          showQuickWarning(err.message || "Erro ao enviar PDF.", "red");
+          pdfUploadButton.disabled = false;
+          pdfUploadButton.textContent = "Enviar arquivo";
+        }
+      });
+
+      if (pdfDeleteButton) {
+        pdfDeleteButton.addEventListener("click", async () => {
+          const confirmed = await showDeletePopup("o arquivo desta história");
+          if (!confirmed) return;
+          const res = await fetch(`/admin/delete_story_pdf/${encodeURIComponent(card.file)}`, {
+            method: "DELETE",
+          });
+          const data = await res.json();
+          if (data.success) {
+            showQuickWarning("PDF removido com sucesso!", "green");
+            abrirSubguiaLinkar();
+          } else {
+            showQuickWarning(data.error || "Erro ao remover PDF.", "red");
+          }
         });
       }
       btnSave.addEventListener("click", async () => {

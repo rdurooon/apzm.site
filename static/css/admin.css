@@ -552,7 +552,8 @@ body {
   font-size: 1rem; /* aumenta fonte do input */
 }
 
-.save-links {
+.save-links,
+.card-links-save-btn {
   margin-top: 16px;
   background: darkgreen;
   color: white;
@@ -564,8 +565,68 @@ body {
   width: fit-content;
 }
 
-.save-links:hover {
+.save-links:hover,
+.card-links-save-btn:hover {
   background: #2ecc71;
+}
+
+.story-pdf-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.story-pdf-upload-btn,
+.story-pdf-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: darkgreen;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.story-pdf-upload-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.story-pdf-upload-btn:hover,
+.story-pdf-delete-btn:hover {
+  background: #2ecc71;
+}
+
+.story-pdf-delete-btn {
+  flex: 0 0 40px;
+  width: 40px;
+  padding: 8px;
+  background: #b42318;
+}
+
+.story-pdf-delete-btn:hover {
+  background: #8f1d14;
+}
+
+.story-pdf-delete-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.story-pdf-name {
+  display: block;
+  color: #666;
+  overflow-wrap: anywhere;
 }
 
 .linkar-cards-grid {

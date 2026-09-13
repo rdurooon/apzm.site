@@ -3,7 +3,7 @@ import re
 import unicodedata
 from flask import (
     Blueprint, render_template, session, redirect, url_for,
-    request, jsonify
+    request, jsonify, send_file
 )
 from tools.db import (
     get_user_by_username,
@@ -22,6 +22,7 @@ from tools.db import (
     get_story_by_slug,
     get_story_slugs,
     get_card_by_file,
+    get_story_pdf as db_get_story_pdf,
 )
 from tools.crypto_utils import decrypt_value
 from tools.text_formatter import format_text_to_html
@@ -32,6 +33,13 @@ home_bp = Blueprint("home", __name__)
 STATIC_DIR = os.path.join("static", "images")
 CARDS_FOLDER = os.path.join(STATIC_DIR, "cards")
 BACKGROUND_FOLDER = os.path.join(STATIC_DIR, "background")
+STORY_PDF_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "story_pdfs"))
+
+
+def story_pdf_path(stored_filename):
+    if not re.fullmatch(r"[a-f0-9]{32}\.pdf", stored_filename or ""):
+        return None
+    return os.path.join(STORY_PDF_DIR, stored_filename)
 
 # ==================== UTILITÁRIOS ====================
 def mask_password(password: str) -> str:
@@ -283,6 +291,8 @@ def historia(slug):
     chapters = parse_story_content(raw_content)
     body_paragraphs = [] if chapters else parse_story_body(raw_content)
     title = card["title"] if card else story.get("slug", slug)
+    pdf = db_get_story_pdf(story["card_file"])
+    pdf_available = bool(pdf and story_pdf_path(pdf["stored_filename"]) and os.path.isfile(story_pdf_path(pdf["stored_filename"])))
 
     seo = {
         "title": f"{title} - História | Amapá Zombies",
@@ -305,7 +315,27 @@ def historia(slug):
             # `cover_image` in the template is the large background (from /covers or fallback to card image)
             "cover_image": hero_cover or card_cover_fallback,
             "card_file": story["card_file"],
+            "pdf_available": pdf_available,
         }
+    )
+
+
+@home_bp.route("/historia/<slug>/baixar")
+def download_story_pdf(slug):
+    story = get_story_by_slug(slug, public_view=True)
+    if not story:
+        return redirect(url_for("home.session_denied"))
+    pdf = db_get_story_pdf(story["card_file"])
+    if not pdf:
+        return redirect(url_for("home.session_denied"))
+    pdf_path = story_pdf_path(pdf["stored_filename"])
+    if not pdf_path or not os.path.isfile(pdf_path):
+        return redirect(url_for("home.session_denied"))
+    return send_file(
+        pdf_path,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"APZM-{pdf['original_filename']}"
     )
 
 

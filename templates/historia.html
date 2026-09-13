@@ -20,10 +20,15 @@
 
 <body class="historia-page-body">
     <div class="historia-header-actions">
-        <a href="{{ url_for('home.home') }}" class="historia-back-btn">← Voltar</a>
+        <a href="{{ url_for('home.home') }}" class="historia-back-btn"><svg viewBox="0 0 956.199 956.199" aria-hidden="true"><path d="M859.649 385.6h-255.2L680.05 310c35.1-35.1 35.1-92.1 0-127.3-35.101-35.1-92.101-35.1-127.3 0L323.449 412c-21.6 22.6-32.199 55.3-23.6 85.9 2.3 8.299 5.8 17.5 10.5 24.799 3.9 6 8.4 11.201 13.1 16.602l234.2 234.199c17.601 17.6 40.601 26.4 63.601 26.4s46.1-8.801 63.6-26.4c35.1-35.1 35.1-92.1 0-127.301l-80.6-80.6h255.1c49.7 0 90-40.299 90-90C949.35 425.9 909.35 385.6 859.649 385.6Z"/><path d="M96.85 0c-49.7 0-90 40.3-90 90v776.199c0 49.701 40.3 90 90 90s90-40.299 90-90V90c0-49.7-40.3-90-90-90Z"/> </svg>Voltar</a>
+      <div class="historia-header-right">
         {% if story and story.chapters %}
-            <button type="button" class="historia-chapters-btn" id="historia-chapters-toggle">Capítulos</button>
+          <button type="button" class="historia-chapters-btn" id="historia-chapters-toggle"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M0 0h48v48H0z" fill="none"/><path d="M16.002 22.002h25.997v4H16.002zM16.002 11.995h25.997v4H16.002zM16.002 32.008h25.997v4H16.002zM6 12h4v4H6zM6 22.006h4v4H6zM6 32.013h4v4H6z"/></svg>Capítulos</button>
         {% endif %}
+        {% if story and story.pdf_available %}
+          <a href="{{ url_for('home.download_story_pdf', slug=story.slug) }}" class="historia-download-btn" download><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v13m0 0 4-4.375M12 16 8 11.625"/><path d="M15 21H9c-2.828 0-4.243 0-5.121-.879C3 19.243 3 17.828 3 15m18 0c0 2.828 0 4.243-.879 5.121-.3.3-.66.497-1 .627"/></svg>Baixar</a>
+        {% endif %}
+      </div>
     </div>
 
     <div class="historia-chapters-modal" id="historia-chapters-modal" aria-hidden="true">

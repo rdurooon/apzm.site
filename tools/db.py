@@ -57,6 +57,14 @@ CREATE TABLE IF NOT EXISTS stories (
     FOREIGN KEY(card_file) REFERENCES cards(file) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS story_pdfs (
+    card_file TEXT PRIMARY KEY,
+    stored_filename TEXT NOT NULL,
+    original_filename TEXT NOT NULL,
+    uploaded_at DATETIME NOT NULL,
+    FOREIGN KEY(card_file) REFERENCES cards(file) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS partners (
     file TEXT PRIMARY KEY,
     nome TEXT NOT NULL,
@@ -602,6 +610,36 @@ def get_story_by_slug(slug, public_view=False):
     row = db.execute("SELECT * FROM stories WHERE slug = ?", (slug,)).fetchone()
     story = _normalize_story_row(row)
     return _maybe_publish_scheduled_story(db, story, public_view=public_view)
+
+
+def get_story_pdf(card_file):
+    db = get_db()
+    row = db.execute(
+        "SELECT * FROM story_pdfs WHERE card_file = ?",
+        (card_file,)
+    ).fetchone()
+    return dict_from_row(row)
+
+
+def save_story_pdf(card_file, stored_filename, original_filename):
+    db = get_db()
+    previous = get_story_pdf(card_file)
+    db.execute(
+        "INSERT OR REPLACE INTO story_pdfs (card_file, stored_filename, original_filename, uploaded_at) VALUES (?, ?, ?, ?)",
+        (card_file, stored_filename, original_filename, now_str())
+    )
+    db.commit()
+    return previous
+
+
+def delete_story_pdf(card_file):
+    db = get_db()
+    row = get_story_pdf(card_file)
+    if not row:
+        return None
+    db.execute("DELETE FROM story_pdfs WHERE card_file = ?", (card_file,))
+    db.commit()
+    return row
 
 
 def get_story_slugs():

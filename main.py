@@ -33,6 +33,7 @@ def _init_bootstrap_admin(app):
 
 def criar_app():
     app = Flask(__name__)
+    app.config['SECRET_KEY'] = ''
     app.config['SECRET_KEY'] = get_or_create_secret_key()
 
     init_app(app)

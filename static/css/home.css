@@ -661,8 +661,15 @@ body.dark-mode .news-load-more {
   pointer-events: none;
 }
 
+.historia-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .historia-back-btn,
-.historia-chapters-btn {
+.historia-chapters-btn,
+.historia-download-btn {
   pointer-events: auto;
   background: rgba(0, 0, 0, 0.72);
   color: #fff;
@@ -674,10 +681,38 @@ body.dark-mode .news-load-more {
   border: none;
   cursor: pointer;
   font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.historia-back-btn svg,
+.historia-chapters-btn svg,
+.historia-download-btn svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.historia-back-btn svg,
+.historia-chapters-btn svg {
+  fill: currentColor;
+}
+
+.historia-download-btn svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .historia-chapters-btn {
   display: none;
+}
+
+.historia-download-btn {
+  display: inline-flex;
 }
 
 .historia-chapters-modal {
@@ -996,9 +1031,20 @@ body.dark-mode .news-load-more {
   }
 
   .historia-back-btn,
-  .historia-chapters-btn {
+  .historia-chapters-btn,
+  .historia-download-btn {
     padding: 9px 13px;
     font-size: 0.9rem;
+  }
+
+  .historia-header-actions {
+    align-items: flex-start;
+  }
+
+  .historia-header-right {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
   }
 
   .historia-hero-section {

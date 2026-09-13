@@ -4,8 +4,10 @@ import os
 import re
 import shutil
 import unicodedata
-from flask import Blueprint, render_template, jsonify, request, current_app, redirect, url_for, session
+import re
+from flask import Blueprint, render_template, jsonify, request, current_app, redirect, url_for, session, send_file
 from werkzeug.utils import secure_filename
+from uuid import uuid4
 from .register import promote_user, demote_user, delete_user
 from tools.decorators import admin_required
 from tools.db import (
@@ -13,6 +15,9 @@ from tools.db import (
     get_all_users,
     get_cards as db_get_cards,
     get_story_by_card_file,
+    get_story_pdf as db_get_story_pdf,
+    save_story_pdf as db_save_story_pdf,
+    delete_story_pdf as db_delete_story_pdf,
     save_story as db_save_story,
     undo_story_changes as db_undo_story_changes,
     get_partners as db_get_partners,
@@ -41,6 +46,7 @@ CARD_DIR = "static/images/cards/"
 TITLE_DIR = "static/images/titles/"
 COVER_DIR = "static/images/covers/"
 NEWS_DIR = "static/images/news/"
+STORY_PDF_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "story_pdfs"))
 
 # =========================== FUNÇÃO PARA CHECAR "NOVA" ===========================
 def check_new_badges(cards):
@@ -97,8 +103,91 @@ def list_links():
         file = card["file"]
         card_links = links_data.get(file, {})
         card["link_mapa"] = card_links.get("mapa", "")
+        pdf = db_get_story_pdf(file)
+        card["pdf_filename"] = pdf.get("original_filename", "") if pdf else ""
+        card["pdf_url"] = url_for("admin.view_story_pdf", filename=file) if pdf else ""
 
     return jsonify(cards)
+
+
+def _safe_pdf_original_name(filename):
+    name = os.path.basename((filename or "").replace("\x00", "")).strip()
+    name = "".join(char for char in name if ord(char) >= 32 and char not in "\r\n")
+    if not name.lower().endswith(".pdf"):
+        return None
+    return name or None
+
+
+def _is_pdf_upload(file):
+    if not file or not file.filename:
+        return False
+    original_name = _safe_pdf_original_name(file.filename)
+    if not original_name:
+        return False
+    header = file.stream.read(5)
+    file.stream.seek(0)
+    return header == b"%PDF-"
+
+
+def _stored_pdf_path(stored_filename):
+    if not re.fullmatch(r"[a-f0-9]{32}\.pdf", stored_filename or ""):
+        return None
+    return os.path.join(STORY_PDF_DIR, stored_filename)
+
+
+@admin_bp.route("/admin/upload_story_pdf/<filename>", methods=["POST"])
+@admin_required
+def upload_story_pdf(filename):
+    if request.content_length and request.content_length > 50 * 1024 * 1024:
+        return jsonify({"success": False, "error": "O PDF não pode ultrapassar 50 MB."}), 413
+    card = next((card for card in db_get_cards() if card.get("file") == filename), None)
+    if not card:
+        return jsonify({"success": False, "error": "Card não encontrado."}), 404
+
+    pdf_file = request.files.get("pdf_file")
+    if not _is_pdf_upload(pdf_file):
+        return jsonify({"success": False, "error": "Envie um arquivo PDF válido."}), 400
+
+    original_name = _safe_pdf_original_name(pdf_file.filename)
+    stored_name = f"{uuid4().hex}.pdf"
+    os.makedirs(STORY_PDF_DIR, exist_ok=True)
+    stored_path = os.path.join(STORY_PDF_DIR, stored_name)
+    try:
+        pdf_file.save(stored_path)
+        previous = db_save_story_pdf(filename, stored_name, original_name)
+        if previous:
+            previous_path = _stored_pdf_path(previous["stored_filename"])
+            if previous_path and os.path.isfile(previous_path) and previous_path != stored_path:
+                os.remove(previous_path)
+        return jsonify({"success": True, "filename": original_name})
+    except Exception:
+        if os.path.isfile(stored_path):
+            os.remove(stored_path)
+        return jsonify({"success": False, "error": "Não foi possível salvar o PDF."}), 500
+
+
+@admin_bp.route("/admin/delete_story_pdf/<filename>", methods=["DELETE"])
+@admin_required
+def delete_story_pdf(filename):
+    pdf = db_delete_story_pdf(filename)
+    if not pdf:
+        return jsonify({"success": False, "error": "Arquivo não encontrado."}), 404
+    stored_path = _stored_pdf_path(pdf["stored_filename"])
+    if stored_path and os.path.isfile(stored_path):
+        os.remove(stored_path)
+    return jsonify({"success": True})
+
+
+@admin_bp.route("/admin/story_pdf/<filename>")
+@admin_required
+def view_story_pdf(filename):
+    pdf = db_get_story_pdf(filename)
+    if not pdf:
+        return redirect(url_for("home.session_denied"))
+    stored_path = _stored_pdf_path(pdf["stored_filename"])
+    if not stored_path or not os.path.isfile(stored_path):
+        return redirect(url_for("home.session_denied"))
+    return send_file(stored_path, mimetype="application/pdf", download_name=pdf["original_filename"], as_attachment=False)
 
 
 # =========================== PROMOVER/DEMOVER/DELETAR USUÁRIO ===========================
@@ -189,6 +278,7 @@ def delete_map_story(filename):
     try:
         # pegar story associado antes de remover o card para poder limpar arquivos (hero_image)
         story = get_story_by_card_file(filename)
+        story_pdf = db_get_story_pdf(filename)
 
         deleted = db_delete_card(filename)
         if not deleted:
@@ -214,6 +304,14 @@ def delete_map_story(filename):
             if os.path.exists(hero_path):
                 try:
                     os.remove(hero_path)
+                except Exception:
+                    pass
+
+        if story_pdf:
+            pdf_path = os.path.join(STORY_PDF_DIR, story_pdf["stored_filename"])
+            if os.path.isfile(pdf_path):
+                try:
+                    os.remove(pdf_path)
                 except Exception:
                     pass
 
