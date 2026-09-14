@@ -11,3 +11,4 @@ venv.bak/
 .gitkeep
 *.db
 tests/
+.pytest_cache/

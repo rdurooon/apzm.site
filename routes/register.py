@@ -46,14 +46,12 @@ def login_user():
         "is_admin": bool(user.get("is_admin", False))
     })
 
-    decrypted_email = user.get("email_encrypted", "") or "não informado"
     return jsonify({
         "status": "success",
         "message": f"Bem-vindo de volta, {user['username']}!",
         "username": user["username"],
         "is_over_18": bool(user.get("is_over_18", False)),
         "is_admin": bool(user.get("is_admin", False)),
-        "email": decrypted_email,
         "password_masked": mask_password(password),
     })
 

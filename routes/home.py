@@ -228,14 +228,13 @@ def home():
     user = get_user_from_session()
 
     if user:
-        email = decrypt_value(user.get("email", "")) or "não informado"
         raw_password = decrypt_value(user.get("password", "")) or ""
         password_masked = mask_password(raw_password)
     else:
         if session.get("user_logged_in"):
             session.clear()
             return redirect(url_for("home.session_denied"))
-        email, password_masked = "", ""
+        password_masked = ""
 
     slide_images = [
         f"/static/images/background/{f}"
@@ -249,7 +248,6 @@ def home():
         cards=visible_cards,
         logged_in=bool(user),
         username=user["username"] if user else None,
-        email=email,
         password_masked=password_masked,
         is_admin=user.get("is_admin", False) if user else False,
         slide_images=slide_images,
@@ -346,11 +344,9 @@ def current_user():
     if not user:
         return jsonify({"logged_in": False})
 
-    email = decrypt_value(user.get("email_encrypted", "")) or "não informado"
     return jsonify({
         "logged_in": True,
         "username": user["username"],
-        "email": email,
         "password_masked": mask_password(None),
         "is_admin": bool(user.get("is_admin", False)),
         "is_over_18": bool(user.get("is_over_18", False)),

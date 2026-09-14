@@ -1225,17 +1225,20 @@ body.dark-mode .news-load-more {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .popup-overlay.show {
-  display: flex;
   opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 /* ==================== 11. POPUP CARD - CONTEÚDO ==================== */
@@ -1251,14 +1254,34 @@ body.dark-mode .news-load-more {
   position: relative;
   display: flex;
   gap: 20px;
-  animation: fadeIn 0.3s ease forwards;
-  overflow: visible;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.popup-overlay.show > .popup,
+#partner-popup-overlay.show .partner-popup {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .popup img {
-  width: 50%;
+  max-width: 100%;
   border-radius: 8px;
-  object-fit: cover;
+  object-fit: contain;
+}
+
+.popup img.card-image {
+  width: 42%;
+  height: auto;
+  max-height: calc(80vh - 40px);
+  object-fit: contain;
+  align-self: flex-start;
+  flex: 0 1 42%;
 }
 
 .popup-content {
@@ -1268,6 +1291,8 @@ body.dark-mode .news-load-more {
   justify-content: flex-start; /* centraliza título + descrição verticalmente */
   align-items: center; /* centraliza horizontalmente */
   height: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 0 10px; /* espaço lateral */
 }
 
@@ -1280,8 +1305,9 @@ body.dark-mode .news-load-more {
 }
 
 .popup-title img {
-  width: 300px;
-  height: 200px; /* altura uniforme */
+  width: min(300px, 100%);
+  height: auto;
+  max-height: 200px;
   object-fit: contain;
 }
 
@@ -1290,7 +1316,10 @@ body.dark-mode .news-load-more {
   font-size: 20px;
   line-height: 1.6;
   text-align: justify; /* centraliza horizontalmente */
-  margin: 20px 0; /* separação do título e do popup */
+  margin: 12px 0;
+  max-height: 9em;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
 }
 
 .popup-description,
@@ -1302,6 +1331,9 @@ body.dark-mode .news-load-more {
   display: flex;
   gap: 15px;
   justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
   margin-top: auto; /* empurra os botões para o final do popup */
   padding: 15px 0;
   padding-bottom: 10px; /* mantém distância mínima da borda inferior */
@@ -1311,8 +1343,12 @@ body.dark-mode .news-load-more {
   background-color: darkgreen;
   color: white;
   border: none;
-  padding: 10px 20px;
-  font-size: 24px;
+  padding: 10px 16px;
+  font-size: clamp(14px, 2vw, 24px);
+  flex: 1 1 140px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -1320,7 +1356,7 @@ body.dark-mode .news-load-more {
 
 @media (hover: hover) {
   .popup-buttons button {
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: background-color 0.3s ease, transform 0.3s ease;
   }
 
   .popup-buttons button:hover {
@@ -1448,6 +1484,24 @@ body.dark-mode .news-load-more {
   align-items: center;
   margin-top: 8px;
   width: 100%;
+}
+
+.comment-input-area.is-guest {
+  justify-content: center;
+}
+
+.comment-input-area.is-guest #comment-input,
+.comment-input-area.is-guest #comment-submit {
+  display: none;
+}
+
+.comment-input-area.is-guest .login-warning {
+  display: block;
+  max-width: 100%;
+}
+
+.comment-input-area.is-authenticated .login-warning {
+  display: none !important;
 }
 
 #comment-input {
@@ -1688,6 +1742,7 @@ body.dark-mode .news-load-more {
   flex-direction: column;
   justify-content: center; /* centraliza o conteúdo */
   min-height: 400px;
+  overflow: visible;
 }
 
 .account-guide {
@@ -1790,12 +1845,16 @@ body.dark-mode .news-load-more {
   padding: 10px 14px;
   border-radius: 6px;
   font-size: 0.9rem;
-  z-index: 99999;
+  z-index: 2147483646;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .account-input-wrapper .tooltip.show {
   display: block;
+}
+
+.account-popup:not(.is-editing) #account-username-tooltip-popup {
+  display: none;
 }
 
 .account-input-wrapper .tooltip p {
@@ -2585,20 +2644,21 @@ body.dark-mode #login-link:hover {
   }
 
   .popup {
-    flex-direction: row; /* mantém empilhamento */
+    flex-direction: column;
     align-items: center;
-  }
-
-  .popup img {
-    width: 40%; /* menor que 90%, mantém espaço para conteúdo */
+    max-height: 85vh;
   }
 
   .popup img.card-image {
-    display: none;
+    width: auto;
+    max-width: 100%;
+    max-height: 32vh;
+    flex-basis: auto;
   }
 
   .popup-content {
-    width: 90%; /* ocupa quase toda a largura */
+    width: 100%;
+    box-sizing: border-box;
     text-align: center; /* centraliza título e botões */
   }
 
@@ -2614,7 +2674,7 @@ body.dark-mode #login-link:hover {
 
   .popup-buttons button {
     font-size: 16px;
-    padding: 10px 18px;
+    padding: 10px 12px;
   }
 
   .btn-logout {
@@ -2806,10 +2866,6 @@ body.dark-mode #login-link:hover {
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   }
 
-  .popup img {
-    width: 50%; /* menor que 90%, mantém espaço para conteúdo */
-  }
-
   .btn-logout {
     margin-top: 16px;
   }
@@ -2873,8 +2929,8 @@ body.dark-mode #login-link:hover {
 }
 
 /* ==================== 28.1 RESPONSIVIDADE - 425px ==================== */
-@media (max-width: 425px){
-  .news-btn {
+@media (max-width: 1024px){
+  .popup img.card-image {
     display: none;
   }
 }
@@ -2882,6 +2938,10 @@ body.dark-mode #login-link:hover {
 /* ==================== 28.2 RESPONSIVIDADE - 425px ==================== */
 @media (max-width: 425px){
   .news-btn {
+    display: none;
+  }
+
+  .popup img.card-image {
     display: none;
   }
 
@@ -2903,14 +2963,8 @@ body.dark-mode #login-link:hover {
     max-width: 240px;
   }
 
-  .popup .popup-title {
-    width: 50%;
-    border-radius: 8px;
-    object-fit: cover;
-  }
-
   .popup img.card-image {
-    max-width: 38%;
+    max-width: 100%;
   }
 
   .popup-buttons {
@@ -2919,6 +2973,65 @@ body.dark-mode #login-link:hover {
 
   #comments-container {
     max-height: 70px;
+  }
+}
+
+#popup {
+  width: min(900px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: visible;
+  align-items: stretch;
+}
+
+#popup > img.card-image {
+  width: 42%;
+  max-width: 42%;
+  max-height: calc(100vh - 72px);
+  height: auto;
+  flex: 0 1 42%;
+  object-fit: contain;
+}
+
+#popup .popup-content {
+  height: auto;
+  max-height: calc(100vh - 72px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 58%;
+}
+
+#popup .popup-buttons .like-btn {
+  flex: 0 1 auto;
+  width: auto;
+  background: transparent !important;
+}
+
+@media (max-width: 1023px) {
+  #popup {
+    width: min(600px, calc(100vw - 24px));
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  #popup > img.card-image {
+    display: none;
+  }
+
+  #popup .popup-content {
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    flex: 1 1 100%;
+    padding: 0;
+  }
+
+  #popup .popup-buttons {
+    gap: 10px;
+  }
+
+  #popup .popup-buttons button:not(.like-btn) {
+    flex: 1 1 140px;
   }
 }
 

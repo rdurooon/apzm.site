@@ -1,10 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
   // ==================== ESTADO GLOBAL ====================
   let LOGGED_USER = {
-    username: null,
-    email: null,
-    password_masked: null,
-    is_admin: false,
+    username: window.__INITIAL_USER__?.username || null,
+    password_masked: window.__INITIAL_USER__?.password_masked || null,
+    is_admin: window.__INITIAL_USER__?.is_admin === true,
     is_over_18: false,
   };
 
@@ -169,36 +168,68 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ==================== DADOS DO USUÁRIO ====================
 
-  function updateLoggedUser(username, email = "", password_masked = "", is_over_18 = false) {
+  function updateLoggedUser(username, password_masked = "", is_over_18 = false, is_admin = false) {
     LOGGED_USER.username = username;
-    LOGGED_USER.email = email;
     LOGGED_USER.password_masked = password_masked;
     LOGGED_USER.is_over_18 = is_over_18 === true || is_over_18 === "true";
+    LOGGED_USER.is_admin = is_admin === true || is_admin === "true";
   }
 
-  function updateAccountPopupFields(username, email, passwordMasked) {
+  function updateAccountPopupFields(username, passwordMasked) {
     const inputUsername = document.getElementById("account-username-popup");
-    const inputEmail = document.getElementById("account-email-popup");
     const inputPassword = document.getElementById("account-password");
 
     if (inputUsername) inputUsername.value = username;
-    if (inputEmail && email) inputEmail.value = email;
     if (inputPassword && passwordMasked) inputPassword.value = passwordMasked;
+  }
+
+  function updateAuthButtons() {
+    const authButtons = document.querySelector(".auth-buttons");
+    if (!authButtons || !LOGGED_USER.username) return;
+
+    let buttonsHTML = `<span class="welcome-message">Olá, ${escapeHtml(LOGGED_USER.username)}!</span><button class="btn-logout" onclick="location.href='/logout'">Sair</button>`;
+    if (LOGGED_USER.is_admin) buttonsHTML += `<button class="btn-admin" onclick="location.href='/admin'">Admin</button>`;
+    authButtons.innerHTML = buttonsHTML;
+  }
+
+  async function refreshLoggedUser() {
+    const response = await fetch("/api/current_user", { credentials: "same-origin", cache: "no-store" });
+    const data = await response.json();
+
+    if (!data.logged_in) {
+      LOGGED_USER.username = null;
+      updateCommentInterface();
+      return data;
+    }
+
+    updateLoggedUser(data.username, data.password_masked || "", data.is_over_18, data.is_admin);
+    updateAccountPopupFields(LOGGED_USER.username, LOGGED_USER.password_masked);
+    updateAuthButtons();
+    updateCommentInterface();
+    return data;
   }
 
   function updateCommentInterface() {
     const commentInput = document.getElementById("comment-input");
     const commentBtn = document.getElementById("comment-submit");
+    const loginWarning = document.querySelector(".login-warning");
+    const commentArea = document.querySelector(".comment-input-area");
     if (!commentInput || !commentBtn) return;
 
     if (LOGGED_USER.username) {
+      commentArea?.classList.add("is-authenticated");
+      commentArea?.classList.remove("is-guest");
       commentInput.disabled = false;
       commentBtn.disabled = false;
       commentInput.placeholder = "Escreva seu comentário...";
+      if (loginWarning) loginWarning.style.display = "none";
     } else {
+      commentArea?.classList.add("is-guest");
+      commentArea?.classList.remove("is-authenticated");
       commentInput.disabled = true;
       commentBtn.disabled = true;
       commentInput.placeholder = "Faça login para comentar";
+      if (loginWarning) loginWarning.style.display = "block";
     }
   }
 
@@ -284,15 +315,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Carrega dados do usuário atual
-  fetch("/api/current_user")
-    .then((res) => res.json())
+  refreshLoggedUser()
     .then((data) => {
-      if (data.logged_in) {
-        updateLoggedUser(data.username, data.email || "", data.password_masked || "", data.is_over_18);
-        LOGGED_USER.is_admin = data.is_admin === true || data.is_admin === "true";
-        updateAccountPopupFields(LOGGED_USER.username, LOGGED_USER.email, LOGGED_USER.password_masked);
-        ensureAgeVerified();
-      }
+      if (data.logged_in) ensureAgeVerified();
     })
     .catch((err) => console.error("Erro ao carregar usuário:", err));
 
@@ -686,18 +711,18 @@ document.addEventListener("DOMContentLoaded", () => {
       body: JSON.stringify(payload),
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then(async (data) => {
         if (data.status === "success") {
           showQuickWarning(data.message, "success");
-          LOGGED_USER.username = payload.username;
-          LOGGED_USER.email = payload.email;
-          LOGGED_USER.is_admin = data.is_admin || false;
+          updateLoggedUser(data.username || payload.username, data.password_masked || "", data.is_over_18, data.is_admin);
 
           usernameInput.value = emailInput.value = passwordInput.value = "";
           checkbox.checked = false;
 
-          setTimeout(() => authOverlay.classList.remove("show"), 1000);
-          setTimeout(() => location.reload(), 100);
+          await refreshLoggedUser();
+          authOverlay.classList.remove("show");
+          updateScrollLock();
+          ensureAgeVerified();
         } else {
           showQuickWarning(data.message, "error");
         }
@@ -730,21 +755,13 @@ document.addEventListener("DOMContentLoaded", () => {
       body: JSON.stringify({ email: emailVal, password: passwordVal }),
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then(async (data) => {
         showQuickWarning(data.message, data.status === "success" ? "success" : "error");
 
         if (data.status === "success") {
           authOverlay.classList.remove("show");
           updateScrollLock();
-          LOGGED_USER.username = data.username || emailVal;
-          LOGGED_USER.email = data.email || emailVal;
-          LOGGED_USER.is_admin = data.is_admin || false;
-          LOGGED_USER.is_over_18 = data.is_over_18 === true || data.is_over_18 === "true";
-
-          const displayUsername = LOGGED_USER.username || "Usuário";
-          let buttonsHTML = `<span class="welcome-message">Olá, ${displayUsername}!</span><button class="btn-logout" onclick="location.href='/logout'">Sair</button>`;
-          if (LOGGED_USER.is_admin) buttonsHTML += `<button class="btn-admin" onclick="location.href='/admin'">Admin</button>`;
-          document.querySelector(".auth-buttons").innerHTML = buttonsHTML;
+          await refreshLoggedUser();
 
           if (!LOGGED_USER.is_over_18) {
             ensureAgeVerified();
@@ -813,7 +830,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     closeSidebar();
     accountOverlay.classList.add("show");
-    updateAccountPopupFields(LOGGED_USER.username, LOGGED_USER.email, LOGGED_USER.password_masked);
+    updateAccountPopupFields(LOGGED_USER.username, LOGGED_USER.password_masked);
   });
 
   accountPopupClose.addEventListener("click", () => {
@@ -874,7 +891,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveEditBtn = document.getElementById("btn-save-edit");
   const accountUsernameInput = document.getElementById("account-username-popup");
   const accountUsernameTooltip = document.getElementById("account-username-tooltip-popup");
-  const accountEmailInput = document.getElementById("account-email-popup");
   const accountPasswordInput = document.getElementById("account-password");
   const accountPasswordLabel = document.getElementById("account-password-label");
 
@@ -885,10 +901,7 @@ document.addEventListener("DOMContentLoaded", () => {
     accountUsernameInput.removeAttribute("readonly");
     accountUsernameInput.focus();
     
-    // Desativa input de email (mostra bloqueado)
-    accountEmailInput.setAttribute("disabled", "disabled");
-    accountEmailInput.style.opacity = "0.5";
-    accountEmailInput.style.backgroundColor = "#f0f0f0";
+    document.getElementById("account-popup").classList.add("is-editing");
     
     // Mostra campo de confirmar senha
     accountPasswordLabel.style.display = "block";
@@ -909,10 +922,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Desativa input de username
     accountUsernameInput.setAttribute("readonly", "readonly");
     
-    // Desativa input de email
-    accountEmailInput.removeAttribute("disabled");
-    accountEmailInput.style.opacity = "1";
-    accountEmailInput.style.backgroundColor = "#fff";
+    document.getElementById("account-popup").classList.remove("is-editing");
     
     // Oculta campo de confirmar senha
     accountPasswordLabel.style.display = "none";
@@ -1002,7 +1012,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .then((res) => res.json())
             .then((data) => {
               if (data.logged_in) {
-                updateLoggedUser(data.username, data.email || "", data.password_masked || "", data.is_over_18);
+                updateLoggedUser(data.username, data.password_masked || "", data.is_over_18, data.is_admin);
               }
             })
             .catch((err) => console.error("Erro ao atualizar usuário:", err));
@@ -1034,7 +1044,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (accountUsernameInput) {
     accountUsernameInput.addEventListener("focus", () => {
       const tooltip = document.getElementById("account-username-tooltip-popup");
-      if (tooltip) tooltip.classList.add("show");
+      if (isEditingAccount && tooltip) tooltip.classList.add("show");
       validateUsername(accountUsernameInput.value);
     });
 
