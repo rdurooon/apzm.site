@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Confirmar acesso administrativo</title>
+</head>
+<body>
+    <main>
+        <h1>Ativar acesso administrativo</h1>
+        <p>Confirme para concluir a configuração do primeiro administrador.</p>
+        <form method="post" action="{{ url_for('admin.admin_access', token=token) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit">Confirmar acesso</button>
+        </form>
+    </main>
+</body>
+</html>

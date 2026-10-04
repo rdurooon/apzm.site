@@ -24,7 +24,7 @@ from tools.db import (
     get_card_by_file,
     get_story_pdf as db_get_story_pdf,
 )
-from tools.crypto_utils import decrypt_value
+from tools.decorators import admin_required
 from tools.text_formatter import format_text_to_html
 
 home_bp = Blueprint("home", __name__)
@@ -228,8 +228,7 @@ def home():
     user = get_user_from_session()
 
     if user:
-        raw_password = decrypt_value(user.get("password", "")) or ""
-        password_masked = mask_password(raw_password)
+        password_masked = mask_password(None)
     else:
         if session.get("user_logged_in"):
             session.clear()
@@ -466,6 +465,7 @@ def serve_data(filename):
 
 # ==================== API ADMIN ====================
 @home_bp.route("/admin/toggle_site", methods=["POST"])
+@admin_required
 def toggle_site():
     data = request.get_json(silent=True) or {}
     online = data.get("online", True)

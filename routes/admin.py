@@ -2,14 +2,15 @@ from datetime import datetime
 import pytz
 import os
 import re
-import shutil
 import unicodedata
-import re
+import hmac
+from io import BytesIO
 from flask import Blueprint, render_template, jsonify, request, current_app, redirect, url_for, session, send_file
-from werkzeug.utils import secure_filename
+from pypdf import PdfReader
 from uuid import uuid4
 from .register import promote_user, demote_user, delete_user
 from tools.decorators import admin_required
+from tools.uploads import is_safe_stored_filename, read_validated_image, save_internal_upload
 from tools.db import (
     get_admin_count as db_get_admin_count,
     get_all_users,
@@ -60,15 +61,18 @@ def admin():
     return render_template("admin.html")
 
 
-@admin_bp.route("/admin_access/<token>")
+@admin_bp.route("/admin_access/<token>", methods=["GET", "POST"])
 def admin_access(token):
     if db_get_admin_count() > 0:
         return redirect(url_for("home.session_denied"))
 
     expected = current_app.config.get("BOOTSTRAP_ADMIN_TOKEN")
     used = current_app.config.get("BOOTSTRAP_ADMIN_TOKEN_USED", False)
-    if not expected or used or token != expected:
+    if not expected or used or not hmac.compare_digest(token, expected):
         return redirect(url_for("home.session_denied"))
+
+    if request.method == "GET":
+        return render_template("admin_access.html", token=token)
 
     session["bootstrap_admin"] = True
     session["is_admin"] = True
@@ -110,23 +114,30 @@ def list_links():
     return jsonify(cards)
 
 
-def _safe_pdf_original_name(filename):
-    name = os.path.basename((filename or "").replace("\x00", "")).strip()
-    name = "".join(char for char in name if ord(char) >= 32 and char not in "\r\n")
-    if not name.lower().endswith(".pdf"):
+def _read_validated_pdf(upload):
+    name = getattr(upload, "filename", None) or ""
+    if (
+        not name
+        or len(name) > 255
+        or "/" in name
+        or "\\" in name
+        or "\x00" in name
+        or any(ord(char) < 32 for char in name)
+        or not name.lower().endswith(".pdf")
+        or getattr(upload, "mimetype", "").lower() != "application/pdf"
+    ):
         return None
-    return name or None
-
-
-def _is_pdf_upload(file):
-    if not file or not file.filename:
-        return False
-    original_name = _safe_pdf_original_name(file.filename)
-    if not original_name:
-        return False
-    header = file.stream.read(5)
-    file.stream.seek(0)
-    return header == b"%PDF-"
+    content = upload.stream.read(50 * 1024 * 1024 + 1)
+    upload.stream.seek(0)
+    if not content or len(content) > 50 * 1024 * 1024:
+        return None
+    try:
+        pdf = PdfReader(BytesIO(content), strict=True)
+        if pdf.is_encrypted or len(pdf.pages) == 0:
+            return None
+    except Exception:
+        return None
+    return name, content
 
 
 def _stored_pdf_path(stored_filename):
@@ -138,22 +149,22 @@ def _stored_pdf_path(stored_filename):
 @admin_bp.route("/admin/upload_story_pdf/<filename>", methods=["POST"])
 @admin_required
 def upload_story_pdf(filename):
-    if request.content_length and request.content_length > 50 * 1024 * 1024:
-        return jsonify({"success": False, "error": "O PDF não pode ultrapassar 50 MB."}), 413
     card = next((card for card in db_get_cards() if card.get("file") == filename), None)
     if not card:
         return jsonify({"success": False, "error": "Card não encontrado."}), 404
 
     pdf_file = request.files.get("pdf_file")
-    if not _is_pdf_upload(pdf_file):
+    validated_pdf = _read_validated_pdf(pdf_file)
+    if not validated_pdf:
         return jsonify({"success": False, "error": "Envie um arquivo PDF válido."}), 400
 
-    original_name = _safe_pdf_original_name(pdf_file.filename)
+    original_name, pdf_content = validated_pdf
     stored_name = f"{uuid4().hex}.pdf"
     os.makedirs(STORY_PDF_DIR, exist_ok=True)
     stored_path = os.path.join(STORY_PDF_DIR, stored_name)
     try:
-        pdf_file.save(stored_path)
+        with open(stored_path, "xb") as stored_file:
+            stored_file.write(pdf_content)
         previous = db_save_story_pdf(filename, stored_name, original_name)
         if previous:
             previous_path = _stored_pdf_path(previous["stored_filename"])
@@ -245,27 +256,24 @@ def add_map_story():
     if not description or not title_text or not card_image:
         return jsonify({"success": False, "error": "Faltando descrição, título ou imagem do card"})
 
-    # Salva imagem do card
-    os.makedirs(CARD_DIR, exist_ok=True)
-    card_filename = secure_filename(card_image.filename) # type: ignore
-    card_path = os.path.join(CARD_DIR, card_filename)
-    card_image.save(card_path)
+    card_upload = read_validated_image(card_image)
+    if not card_upload:
+        return jsonify({"success": False, "error": "Imagem do card inválida ou acima de 10 MB."}), 400
 
-    # Salva imagem do título (ou usa o mesmo arquivo do card)
-    # Salva imagem do título (nomeada com o mesmo base do card) ou usa o mesmo arquivo do card
-    os.makedirs(TITLE_DIR, exist_ok=True)
     title_image = request.files.get("title_image")
-    base_name = os.path.splitext(card_filename)[0]
+    title_upload = read_validated_image(title_image) if title_image else None
+    if title_image and not title_upload:
+        return jsonify({"success": False, "error": "Imagem do título inválida ou acima de 10 MB."}), 400
+
+    base_name = uuid4().hex
+    card_filename = f"{base_name}{card_upload[0]}"
+    save_internal_upload(CARD_DIR, card_filename, card_upload[1])
     if title_image:
-        # Força o nome do arquivo do título a usar a base do card (mantendo a extensão original)
-        orig_ext = os.path.splitext(secure_filename(title_image.filename) or "")[1] or os.path.splitext(card_filename)[1]
-        title_filename = f"{base_name}{orig_ext}"
-        title_path = os.path.join(TITLE_DIR, title_filename)
-        title_image.save(title_path)
+        title_filename = f"{base_name}{title_upload[0]}"
+        save_internal_upload(TITLE_DIR, title_filename, title_upload[1])
     else:
         title_filename = card_filename
-        title_path = os.path.join(TITLE_DIR, title_filename)
-        shutil.copy(card_path, title_path)
+        save_internal_upload(TITLE_DIR, title_filename, card_upload[1])
 
     db_insert_card(card_filename, title_text, description)
     return jsonify({"success": True})
@@ -276,6 +284,9 @@ def add_map_story():
 @admin_required
 def delete_map_story(filename):
     try:
+        if not is_safe_stored_filename(filename):
+            return jsonify({"success": False, "error": "Card inválido"}), 400
+
         # pegar story associado antes de remover o card para poder limpar arquivos (hero_image)
         story = get_story_by_card_file(filename)
         story_pdf = db_get_story_pdf(filename)
@@ -300,8 +311,8 @@ def delete_map_story(filename):
         # remover imagem de capa/hero da história, se existir
         if story and story.get("hero_image"):
             hero_file = story.get("hero_image")
-            hero_path = os.path.join(COVER_DIR, hero_file)
-            if os.path.exists(hero_path):
+            hero_path = os.path.join(COVER_DIR, hero_file) if is_safe_stored_filename(hero_file) else None
+            if hero_path and os.path.exists(hero_path):
                 try:
                     os.remove(hero_path)
                 except Exception:
@@ -408,10 +419,12 @@ def save_story(filename):
     hero_image = None
     hero_file = request.files.get("hero_image")
     if hero_file:
+        hero_upload = read_validated_image(hero_file)
+        if not hero_upload:
+            return jsonify({"success": False, "error": "Imagem de capa inválida ou acima de 10 MB."}), 400
         os.makedirs(COVER_DIR, exist_ok=True)
-        hero_filename = secure_filename(hero_file.filename)  # type: ignore
-        hero_path = os.path.join(COVER_DIR, hero_filename)
-        hero_file.save(hero_path)
+        hero_filename = f"{uuid4().hex}{hero_upload[0]}"
+        save_internal_upload(COVER_DIR, hero_filename, hero_upload[1])
         hero_image = hero_filename
     elif existing_story and existing_story.get("hero_image"):
         hero_image = existing_story.get("hero_image")
@@ -488,23 +501,11 @@ def add_news():
         else:
             return jsonify({"success": False, "error": "Tipo de botão inválido."}), 400
 
-    # -------- salvar imagem --------
-    os.makedirs(NEWS_DIR, exist_ok=True)
-
-    original_name = image.filename or ""
-    safe_name = secure_filename(original_name)
-
-    if not safe_name:
-        return jsonify({"success": False, "error": "Nome de arquivo inválido."}), 400
-
-    os.makedirs(NEWS_DIR, exist_ok=True)
-    img_path = os.path.join(NEWS_DIR, safe_name)
-
-    # não sobrescreve se já existir
-    if os.path.exists(img_path):
-        return jsonify({"success": False, "error": f"Já existe uma imagem com esse nome: {safe_name}. Renomeie o arquivo e tente novamente."}), 409
-
-    image.save(img_path)
+    validated_image = read_validated_image(image)
+    if not validated_image:
+        return jsonify({"success": False, "error": "Imagem inválida ou acima de 10 MB."}), 400
+    safe_name = f"{uuid4().hex}{validated_image[0]}"
+    save_internal_upload(NEWS_DIR, safe_name, validated_image[1])
 
     item_id = db_insert_news(
         title=title,
@@ -592,22 +593,16 @@ def update_news(news_id: int):
     safe_name = old_image_name
 
     if new_image and (new_image.filename or ""):
-        os.makedirs(NEWS_DIR, exist_ok=True)
+        validated_image = read_validated_image(new_image)
+        if not validated_image:
+            return jsonify({"success": False, "error": "Imagem inválida ou acima de 10 MB."}), 400
 
-        safe_name = secure_filename(new_image.filename)  # type: ignore
-        if not safe_name:
-            return jsonify({"success": False, "error": "Nome de arquivo inválido."}), 400
-
-        new_path = os.path.join(NEWS_DIR, safe_name)
-
-        if os.path.exists(new_path) and safe_name != old_image_name:
-            return jsonify({"success": False, "error": f"Já existe uma imagem com esse nome: {safe_name}. Renomeie o arquivo e tente novamente."}), 409
-
-        new_image.save(new_path)
+        safe_name = f"{uuid4().hex}{validated_image[0]}"
+        save_internal_upload(NEWS_DIR, safe_name, validated_image[1])
 
         if old_image_name and old_image_name != safe_name:
-            old_path = os.path.join(NEWS_DIR, old_image_name)
-            if os.path.exists(old_path):
+            old_path = os.path.join(NEWS_DIR, old_image_name) if is_safe_stored_filename(old_image_name) else None
+            if old_path and os.path.exists(old_path):
                 os.remove(old_path)
 
     updated = db_update_news(
@@ -639,8 +634,8 @@ def delete_news(news_id: int):
 
     img_name = item.get("image", "")
     if img_name:
-        img_path = os.path.join(NEWS_DIR, img_name)
-        if os.path.exists(img_path):
+        img_path = os.path.join(NEWS_DIR, img_name) if is_safe_stored_filename(img_name) else None
+        if img_path and os.path.exists(img_path):
             os.remove(img_path)
 
     return jsonify({"success": True})

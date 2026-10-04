@@ -5,6 +5,7 @@
     <!-- Metadados básicos -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/icon.jpg') }}" />
     
     <!-- SEO e metadados -->
@@ -34,6 +35,7 @@
     
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/text_formatter.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/csrf.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/home.js') }}" defer></script>
 </head>
 
@@ -86,7 +88,10 @@
                 <button class="btn-login">Entrar</button>
             {% else %}
                 <span class="welcome-message">Olá, {{ username }}!</span>
-                <button class="btn-logout" onclick="location.href='/logout'">Sair</button>
+                <form action="{{ url_for('auth.logout') }}" method="post" class="logout-form">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}" />
+                    <button type="submit" class="btn-logout">Sair</button>
+                </form>
                 {% if is_admin %}
                     <button class="btn-admin" onclick="location.href='/admin'">Admin</button>
                 {% endif %}

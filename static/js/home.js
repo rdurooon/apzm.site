@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const authButtons = document.querySelector(".auth-buttons");
     if (!authButtons || !LOGGED_USER.username) return;
 
-    let buttonsHTML = `<span class="welcome-message">Olá, ${escapeHtml(LOGGED_USER.username)}!</span><button class="btn-logout" onclick="location.href='/logout'">Sair</button>`;
+    let buttonsHTML = `<span class="welcome-message">Olá, ${escapeHtml(LOGGED_USER.username)}!</span><button class="btn-logout" onclick="fetch('/logout',{method:'POST'}).finally(()=>location.reload())">Sair</button>`;
     if (LOGGED_USER.is_admin) buttonsHTML += `<button class="btn-admin" onclick="location.href='/admin'">Admin</button>`;
     authButtons.innerHTML = buttonsHTML;
   }
@@ -1002,7 +1002,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const displayUsername = LOGGED_USER.username || "Usuário";
           const authButtons = document.querySelector(".auth-buttons");
           if (authButtons) {
-            let buttonsHTML = `<span class="welcome-message">Olá, ${displayUsername}!</span><button class="btn-logout" onclick="location.href='/logout'">Sair</button>`;
+            let buttonsHTML = `<span class="welcome-message">Olá, ${displayUsername}!</span><button class="btn-logout" onclick="fetch('/logout',{method:'POST'}).finally(()=>location.reload())">Sair</button>`;
             if (LOGGED_USER.is_admin) buttonsHTML += `<button class="btn-admin" onclick="location.href='/admin'">Admin</button>`;
             authButtons.innerHTML = buttonsHTML;
           }

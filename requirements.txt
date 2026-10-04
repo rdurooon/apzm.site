@@ -2,3 +2,5 @@ cryptography
 Flask
 Werkzeug
 pytz
+Pillow
+pypdf

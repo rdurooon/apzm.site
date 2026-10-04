@@ -2,15 +2,22 @@
 import os
 import smtplib
 import secrets
-import string
-from tools.users_manip import update_user_password, user_exists
+import hashlib
+import logging
+from tools.db import (
+    create_password_reset_token,
+    get_user_by_email,
+    get_valid_password_reset_token,
+    reset_password_with_token,
+)
+from tools.csrf import get_csrf_token
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from flask import Blueprint, request, jsonify, url_for
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 email_bp = Blueprint("email", __name__)
-RESET_TOKENS = {}
+RESET_RESPONSE = "Se houver uma conta associada a este email, enviaremos as instruções para redefinição da senha."
 
 # ==========================
 # CONFIGURAÇÃO SMTP DINÂMICA
@@ -51,22 +58,22 @@ FROM_EMAIL = "suporte@amapazombies.com.br"
 # ==========================
 @email_bp.route("/forgot_password", methods=["POST"])
 def forgot_password():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
     email = data.get("email")
 
-    if not email:
+    if not isinstance(email, str) or not email.strip():
         return jsonify({"status": "error", "message": "Informe o email."}), 400
+    email = email.strip()
 
-    if not user_exists(email):
-        return jsonify({"status": "error", "message": "Email não cadastrado."}), 404
-
-    token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
-    RESET_TOKENS[token] = {
-        "email": email,
-        "expires": datetime.now() + timedelta(hours=1)
-    }
-
-    reset_link = url_for("email.reset_password", token=token, _external=True)
+    user = get_user_by_email(email)
+    if user:
+        token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        expires_at = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+        create_password_reset_token(user["id"], token_hash, expires_at)
+        reset_link = url_for("email.reset_password", token=token, _external=True)
+    else:
+        reset_link = ""
 
     # Monta mensagem HTML estilizada
     html = f"""
@@ -153,24 +160,27 @@ def forgot_password():
     msg["To"] = email
     msg.attach(MIMEText(html, "html"))
 
-    try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.sendmail(SMTP_USER, email, msg.as_string())
-        return jsonify({"status": "success", "message": "Email de recuperação enviado."})
-    except Exception as e:
-        return jsonify({"status": "error", "message": f"Erro ao enviar: {str(e)}"}), 500
+    if user:
+        try:
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(SMTP_USER, SMTP_PASS)
+                server.sendmail(SMTP_USER, email, msg.as_string())
+        except Exception:
+            logging.exception("Falha ao enviar email de recuperação de senha.")
+
+    return jsonify({"status": "success", "message": RESET_RESPONSE})
 
 # ==========================
 # Rota: resetar senha
 # ==========================
 @email_bp.route("/reset_password/<token>", methods=["GET", "POST"])
 def reset_password(token):
-    info = RESET_TOKENS.get(token)
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    info = get_valid_password_reset_token(token_hash)
 
     # ================== TOKEN INVÁLIDO OU EXPIRADO ==================
-    if not info or datetime.now() > info["expires"]:
+    if not info:
         return f"""
         <html>
         <head>
@@ -243,6 +253,7 @@ def reset_password(token):
 
     # ================== GET: PÁGINA DE REDEFINIÇÃO ==================
     if request.method == "GET":
+        csrf_value = get_csrf_token()
         reset_html = f"""
         <html>
         <head>
@@ -342,6 +353,7 @@ def reset_password(token):
             <div class="form-container">
                 <h2>Redefinir Senha</h2>
                 <form method="POST" id="reset-form">
+                    <input type="hidden" name="_csrf_token" value="{csrf_value}">
                     <div class="input-wrapper">
                         <div class="password-tooltip" id="password-tooltip">
                             <p id="rule-password-length">• Mínimo de 8 caracteres</p>
@@ -396,7 +408,7 @@ def reset_password(token):
 
     # ================== POST: PROCESSA NOVA SENHA ==================
     if request.method == "POST":
-        new_password = request.form.get("password")
+        new_password = request.form.get("password", "")
 
         import re
         errors = []
@@ -414,10 +426,7 @@ def reset_password(token):
         if errors:
             return "<br>".join(errors), 400
 
-        email = info["email"]
-
-        if update_user_password(email, new_password):
-            del RESET_TOKENS[token]
+        if reset_password_with_token(token_hash, new_password):
 
             # ================== PÁGINA DE SUCESSO COM REDIRECIONAMENTO ==================
             return f"""

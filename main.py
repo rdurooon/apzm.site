@@ -1,6 +1,8 @@
+import os
 from flask import Flask, session, redirect, url_for
 from secrets import token_urlsafe
 from routes import registrar_blueprints
+from tools.csrf import get_csrf_token, register_csrf_protection
 from tools.db import init_app, get_admin_count, get_user_by_username
 from tools.secret_key import get_or_create_secret_key
 
@@ -35,15 +37,26 @@ def criar_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = ''
     app.config['SECRET_KEY'] = get_or_create_secret_key()
+    app.config.update(
+        MAX_CONTENT_LENGTH=50 * 1024 * 1024,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE", "").lower() in {"1", "true"},
+    )
 
     init_app(app)
     _init_bootstrap_admin(app)
+
+    @app.context_processor
+    def inject_csrf_token():
+        return {"csrf_token": get_csrf_token}
 
     # Carrega as rotas
     registrar_blueprints(app)
     
     # Middleware de autenticação
     app.before_request(_verificar_sessao_usuario)
+    register_csrf_protection(app)
 
     return app
 

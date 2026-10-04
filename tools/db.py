@@ -2,7 +2,7 @@ import hashlib
 import os
 import sqlite3
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import g
 from werkzeug.security import generate_password_hash
 import pytz
@@ -110,6 +110,16 @@ CREATE TABLE IF NOT EXISTS likes (
 CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used_at TEXT DEFAULT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 """
 
@@ -255,6 +265,59 @@ def update_user_password(email, new_password):
     )
     db.commit()
     return result.rowcount > 0
+
+
+def create_password_reset_token(user_id, token_hash, expires_at):
+    db = get_db()
+    created_at = datetime.now(timezone.utc).isoformat()
+    db.execute(
+        "UPDATE password_reset_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL",
+        (created_at, user_id),
+    )
+    db.execute(
+        "INSERT INTO password_reset_tokens (id, user_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?, ?)",
+        (str(uuid.uuid4()), user_id, token_hash, created_at, expires_at),
+    )
+    db.commit()
+
+
+def get_valid_password_reset_token(token_hash):
+    db = get_db()
+    now = datetime.now(timezone.utc).isoformat()
+    row = db.execute(
+        "SELECT user_id FROM password_reset_tokens WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?",
+        (token_hash, now),
+    ).fetchone()
+    return dict_from_row(row)
+
+
+def reset_password_with_token(token_hash, new_password):
+    db = get_db()
+    now = datetime.now(timezone.utc).isoformat()
+    password_hash = generate_password_hash(new_password)
+    db.execute("BEGIN IMMEDIATE")
+    row = db.execute(
+        "SELECT user_id FROM password_reset_tokens WHERE token_hash = ? AND used_at IS NULL AND expires_at > ?",
+        (token_hash, now),
+    ).fetchone()
+    if not row:
+        db.rollback()
+        return False
+
+    updated_user = db.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (password_hash, row["user_id"]),
+    )
+    marked_used = db.execute(
+        "UPDATE password_reset_tokens SET used_at = ? WHERE token_hash = ? AND used_at IS NULL",
+        (now, token_hash),
+    )
+    if updated_user.rowcount != 1 or marked_used.rowcount != 1:
+        db.rollback()
+        return False
+
+    db.commit()
+    return True
 
 
 def user_exists(email):
