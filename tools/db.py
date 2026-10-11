@@ -525,7 +525,7 @@ def insert_card(file_name, title, description):
     current_max = db.execute("SELECT COALESCE(MAX(sort_order), -1) FROM cards").fetchone()[0]
     db.execute(
         "INSERT INTO cards (file, title, description, visible, is_new, new_since, sort_order) VALUES (?, ?, ?, 1, 0, NULL, ?)",
-        (file_name, title, description or "", current_max + 1)
+        (file_name, title, description, current_max + 1)
     )
     db.commit()
     return True
@@ -534,8 +534,10 @@ def insert_card(file_name, title, description):
 def delete_card(file_name):
     db = get_db()
     result = db.execute("DELETE FROM cards WHERE file = ?", (file_name,))
+    if result.rowcount != 1:
+        return False
     db.commit()
-    return result.rowcount > 0
+    return True
 
 
 def update_card(file_name, title=None, description=None, visible=None, is_new=None, new_since=None, sort_order=None):
@@ -554,7 +556,7 @@ def update_card(file_name, title=None, description=None, visible=None, is_new=No
     if is_new is not None:
         updates.append("is_new = ?")
         params.append(1 if is_new else 0)
-    if new_since is not None:
+    if new_since is not None or (is_new is not None and not is_new):
         updates.append("new_since = ?")
         params.append(new_since)
     if sort_order is not None:
@@ -563,28 +565,57 @@ def update_card(file_name, title=None, description=None, visible=None, is_new=No
     if not updates:
         return False
     params.append(file_name)
-    db.execute(f"UPDATE cards SET {', '.join(updates)} WHERE file = ?", tuple(params))
+    result = db.execute(f"UPDATE cards SET {', '.join(updates)} WHERE file = ?", tuple(params))
+    if result.rowcount != 1:
+        return False
     db.commit()
     return True
 
 
 def update_cards_order(cards_data):
     db = get_db()
-    for index, card in enumerate(cards_data):
+    if not isinstance(cards_data, list):
+        raise ValueError("A lista de Cards é inválida.")
+
+    entries = []
+    files = set()
+    for card in cards_data:
+        if not isinstance(card, dict):
+            raise ValueError("Cada Card deve ser um objeto.")
         file_name = card.get("file")
-        if not file_name:
-            continue
-        db.execute(
-            "UPDATE cards SET visible = ?, sort_order = ?, title = ?, description = ? WHERE file = ?",
-            (
-                1 if card.get("visible", True) else 0,
-                index,
-                card.get("title") or os.path.splitext(file_name)[0].capitalize(),
-                card.get("description") or "",
-                file_name,
+        visible = card.get("visible")
+        if not isinstance(file_name, str) or not file_name.strip() or type(visible) is not bool:
+            raise ValueError("Cada Card deve informar arquivo e visibilidade válidos.")
+        if file_name in files:
+            raise ValueError("A lista contém Cards duplicados.")
+        files.add(file_name)
+        entries.append((file_name, visible))
+
+    existing_files = {row[0] for row in db.execute("SELECT file FROM cards").fetchall()}
+    if files != existing_files:
+        raise ValueError("A lista deve conter exatamente os Cards existentes.")
+
+    db.execute("SAVEPOINT cards_order_update")
+    try:
+        for index, (file_name, visible) in enumerate(entries):
+            result = db.execute(
+                "UPDATE cards SET visible = ?, sort_order = ? WHERE file = ?",
+                (1 if visible else 0, index, file_name),
             )
-        )
-    db.commit()
+            if result.rowcount != 1:
+                raise ValueError(f"Card não encontrado: {file_name}")
+        db.execute("RELEASE SAVEPOINT cards_order_update")
+    except Exception:
+        db.execute("ROLLBACK TO SAVEPOINT cards_order_update")
+        db.execute("RELEASE SAVEPOINT cards_order_update")
+        db.rollback()
+        raise
+
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return True
 
 
@@ -596,10 +627,15 @@ def get_card_links():
 
 def save_card_links(file_name, mapa):
     db = get_db()
-    db.execute(
-        "INSERT OR REPLACE INTO card_links (card_file, historia, mapa) VALUES (?, ?, ?)",
-        (file_name, "", mapa or "")
+    if not db.execute("SELECT 1 FROM cards WHERE file = ?", (file_name,)).fetchone():
+        return False
+    result = db.execute(
+        "INSERT INTO card_links (card_file, historia, mapa) VALUES (?, '', ?) "
+        "ON CONFLICT(card_file) DO UPDATE SET mapa = excluded.mapa",
+        (file_name, mapa or "")
     )
+    if result.rowcount != 1:
+        return False
     db.commit()
     return True
 
@@ -614,7 +650,8 @@ def _normalize_story_row(row):
 
     story["content"] = story.get("content") or ""
     story["draft_content"] = story.get("draft_content")
-    story["published_content"] = story.get("published_content") or story.get("content") or ""
+    published_content = story.get("published_content")
+    story["published_content"] = story.get("content") or "" if published_content is None else published_content
     story["status"] = story.get("status") or "published"
     story["scheduled_at"] = story.get("scheduled_at")
     return story
@@ -628,14 +665,20 @@ def _maybe_publish_scheduled_story(db, story, public_view=False):
     scheduled_at = story.get("scheduled_at")
     if status != "scheduled" or not scheduled_at:
         if public_view:
-            story["content"] = story.get("published_content") or story.get("content") or ""
+            published_content = story.get("published_content")
+            story["content"] = story.get("content") or "" if published_content is None else published_content
         else:
             story["content"] = story.get("draft_content") if story.get("draft_content") is not None else story.get("content") or ""
         return story
 
     try:
         scheduled_dt = datetime.fromisoformat(scheduled_at)
-    except ValueError:
+    except (TypeError, ValueError):
+        if public_view:
+            published_content = story.get("published_content")
+            story["content"] = story.get("content") or "" if published_content is None else published_content
+        else:
+            story["content"] = story.get("draft_content") if story.get("draft_content") is not None else story.get("published_content") or story.get("content") or ""
         return story
 
     local_tz = pytz.timezone("America/Sao_Paulo")
@@ -646,16 +689,21 @@ def _maybe_publish_scheduled_story(db, story, public_view=False):
 
     if scheduled_dt > datetime.now(local_tz):
         if public_view:
-            story["content"] = story.get("published_content") or story.get("content") or ""
+            published_content = story.get("published_content")
+            story["content"] = story.get("content") or "" if published_content is None else published_content
         else:
             story["content"] = story.get("draft_content") if story.get("draft_content") is not None else story.get("published_content") or story.get("content") or ""
         return story
 
-    next_content = story.get("draft_content") or story.get("content") or ""
-    db.execute(
+    next_content = story.get("draft_content")
+    if next_content is None:
+        next_content = story.get("content") or ""
+    result = db.execute(
         "UPDATE stories SET content = ?, published_content = ?, draft_content = NULL, status = 'published', scheduled_at = NULL, updated_at = ? WHERE card_file = ?",
         (next_content, next_content, now_str(), story["card_file"])
     )
+    if result.rowcount != 1:
+        return None
     db.commit()
     row = db.execute("SELECT * FROM stories WHERE card_file = ?", (story["card_file"],)).fetchone()
     return _normalize_story_row(row)
@@ -688,7 +736,9 @@ def save_story_pdf(card_file, stored_filename, original_filename):
     db = get_db()
     previous = get_story_pdf(card_file)
     db.execute(
-        "INSERT OR REPLACE INTO story_pdfs (card_file, stored_filename, original_filename, uploaded_at) VALUES (?, ?, ?, ?)",
+        "INSERT INTO story_pdfs (card_file, stored_filename, original_filename, uploaded_at) VALUES (?, ?, ?, ?) "
+        "ON CONFLICT(card_file) DO UPDATE SET stored_filename = excluded.stored_filename, "
+        "original_filename = excluded.original_filename, uploaded_at = excluded.uploaded_at",
         (card_file, stored_filename, original_filename, now_str())
     )
     db.commit()
@@ -714,35 +764,52 @@ def get_story_slugs():
 def save_story(card_file, slug, content, hero_image=None, action="publish", scheduled_at=None):
     db = get_db()
 
+    if not isinstance(content, str) or not content.strip():
+        raise ValueError("O conteúdo da história não pode ficar vazio.")
+    if not isinstance(action, str) or action not in {"draft", "scheduled", "publish"}:
+        raise ValueError("A ação da história é inválida.")
+    if not isinstance(slug, str) or not slug:
+        raise ValueError("O slug da história é inválido.")
+    if not db.execute("SELECT 1 FROM cards WHERE file = ?", (card_file,)).fetchone():
+        raise ValueError("Card não encontrado.")
+    if action == "scheduled":
+        if not isinstance(scheduled_at, str) or not scheduled_at:
+            raise ValueError("Informe uma data válida para a publicação.")
+        try:
+            datetime.fromisoformat(scheduled_at)
+        except ValueError as error:
+            raise ValueError("A data da publicação é inválida.") from error
+
     existing_row = db.execute("SELECT * FROM stories WHERE card_file = ?", (card_file,)).fetchone()
     existing_story = _normalize_story_row(existing_row) or {}
     now = now_str()
-    public_content = content or ""
-    published_content = existing_story.get("published_content") or existing_story.get("content") or ""
+    public_content = content
+    published_content = existing_story.get("published_content")
+    if published_content is None:
+        published_content = existing_story.get("content") or ""
     hero_image_value = hero_image or existing_story.get("hero_image") or ""
     status = "published"
     schedule_value = None
 
     if action == "draft":
         status = "draft"
-        db.execute(
-            "INSERT OR REPLACE INTO stories (card_file, slug, content, draft_content, published_content, hero_image, status, scheduled_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (card_file, slug, public_content, public_content, published_content, hero_image_value, status, None, now)
-        )
     elif action == "scheduled":
         status = "scheduled"
-        schedule_value = scheduled_at or now
-        db.execute(
-            "INSERT OR REPLACE INTO stories (card_file, slug, content, draft_content, published_content, hero_image, status, scheduled_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (card_file, slug, public_content, public_content, published_content, hero_image_value, status, schedule_value, now)
-        )
+        schedule_value = scheduled_at
     else:
         published_content = public_content
-        db.execute(
-            "INSERT OR REPLACE INTO stories (card_file, slug, content, draft_content, published_content, hero_image, status, scheduled_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (card_file, slug, public_content, None, published_content, hero_image_value, status, None, now)
-        )
 
+    draft_content = public_content if action in {"draft", "scheduled"} else None
+    result = db.execute(
+        "INSERT INTO stories (card_file, slug, content, draft_content, published_content, hero_image, status, scheduled_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(card_file) DO UPDATE SET slug = excluded.slug, content = excluded.content, "
+        "draft_content = excluded.draft_content, published_content = excluded.published_content, "
+        "hero_image = excluded.hero_image, status = excluded.status, scheduled_at = excluded.scheduled_at, updated_at = excluded.updated_at",
+        (card_file, slug, public_content, draft_content, published_content, hero_image_value, status, schedule_value, now),
+    )
+    if result.rowcount != 1:
+        return False
     db.commit()
     return True
 
@@ -753,11 +820,15 @@ def undo_story_changes(card_file):
     if not story:
         return False
 
-    restored_content = story.get("published_content") or story.get("content") or ""
-    db.execute(
-        "UPDATE stories SET content = ?, draft_content = NULL, status = 'published', scheduled_at = NULL, updated_at = ? WHERE card_file = ?",
-        (restored_content, now_str(), card_file)
+    restored_content = story.get("published_content")
+    if restored_content is None:
+        restored_content = story.get("content") or ""
+    result = db.execute(
+        "UPDATE stories SET content = ?, draft_content = NULL, published_content = ?, status = 'published', scheduled_at = NULL, updated_at = ? WHERE card_file = ?",
+        (restored_content, restored_content, now_str(), card_file)
     )
+    if result.rowcount != 1:
+        return False
     db.commit()
     return True
 

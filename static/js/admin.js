@@ -667,10 +667,11 @@ async function editarCards() {
 
       // Imagem e botões
       cardDiv.innerHTML = `
-        <img src="/static/images/cards/${card.file}" alt="${card.title}">
+        <img src="/static/images/cards/${encodeURIComponent(card.file)}?v=${card.image_version || 0}" alt="">
         <button class="btn-left">&lt;</button>
         <button class="btn-right">&gt;</button>
       `;
+      cardDiv.querySelector("img").alt = card.title;
 
       cardDiv.dataset.newSince = card.new_since || "";
 
@@ -699,27 +700,6 @@ async function editarCards() {
 
       cardDiv.appendChild(badgeBtn);
 
-      // ========== OVERLAY PARA TOGGLE DE VISIBILIDADE ==========
-      const toggleOverlay = document.createElement("div");
-      toggleOverlay.className = "toggle-overlay";
-
-      // Listener para o overlay (não interfere com badge nem com botões)
-      toggleOverlay.addEventListener("click", (e) => {
-        e.stopPropagation();
-
-        // Toggle visibilidade
-        const currentlyVisible = cardDiv.dataset.visible === "true";
-        cardDiv.dataset.visible = currentlyVisible ? "false" : "true";
-        cardDiv.classList.toggle("invisible", currentlyVisible);
-
-        showQuickWarning(
-          `Card ${currentlyVisible ? "marcado para desaparecer" : "marcado para aparecer"}. Clique em "Salvar Alterações" para confirmar.`,
-          "info"
-        );
-      });
-
-      cardDiv.appendChild(toggleOverlay);
-
       // ========== BOTÕES DE NAVEGAÇÃO (SETAS) ==========
       const btnLeft = cardDiv.querySelector(".btn-left");
       btnLeft.addEventListener("click", (e) => {
@@ -735,28 +715,31 @@ async function editarCards() {
         atualizarBotoes();
       });
 
-      // ========== BOTÃO REMOVER (FORA DO CARD) ==========
+      cardDiv.addEventListener("click", () => abrirEditorCard(card, cardDiv));
+
+      // ========== AÇÕES DO CARD ==========
+      const actions = document.createElement("div");
+      actions.className = "card-action-buttons";
+
+      const visibilityBtn = document.createElement("button");
+      visibilityBtn.className = "btn-toggle-card-visibility";
+      visibilityBtn.type = "button";
+      visibilityBtn.textContent = "Visibilidade";
+      visibilityBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const currentlyVisible = cardDiv.dataset.visible === "true";
+        cardDiv.dataset.visible = currentlyVisible ? "false" : "true";
+        cardDiv.classList.toggle("invisible", currentlyVisible);
+        showQuickWarning(
+          `Card ${currentlyVisible ? "marcado para desaparecer" : "marcado para aparecer"}. Clique em "Salvar Alterações" para confirmar.`,
+          "info"
+        );
+      });
+
       const removeBtn = document.createElement("button");
       removeBtn.className = "btn-remove-card";
-      removeBtn.innerHTML = "🗑️ Remover";
-      removeBtn.style.backgroundColor = "#e74c3c";
-      removeBtn.style.color = "white";
-      removeBtn.style.border = "none";
-      removeBtn.style.padding = "10px 15px";
-      removeBtn.style.borderRadius = "6px";
-      removeBtn.style.cursor = "pointer";
-      removeBtn.style.fontSize = "14px";
-      removeBtn.style.fontWeight = "bold";
-      removeBtn.style.transition = "background-color 0.3s ease";
-      removeBtn.style.width = "100%";
-      removeBtn.style.marginTop = "8px";
-
-      removeBtn.addEventListener("mouseenter", () => {
-        removeBtn.style.backgroundColor = "#c0392b";
-      });
-      removeBtn.addEventListener("mouseleave", () => {
-        removeBtn.style.backgroundColor = "#e74c3c";
-      });
+      removeBtn.type = "button";
+      removeBtn.textContent = "🗑️ Remover";
       removeBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
         const confirmar = await showDeletePopup(card.title);
@@ -775,7 +758,9 @@ async function editarCards() {
 
       // Montar wrapper
       cardWrapper.appendChild(cardDiv);
-      cardWrapper.appendChild(removeBtn);
+      actions.appendChild(visibilityBtn);
+      actions.appendChild(removeBtn);
+      cardWrapper.appendChild(actions);
       cardsListContainer.appendChild(cardWrapper);
     });
 
@@ -798,6 +783,182 @@ async function editarCards() {
   initNewBadgeTimers();
 }
 
+async function abrirEditorCard(card, cardDiv) {
+  try {
+    const response = await fetch(`/admin/edit_card/${encodeURIComponent(card.file)}`);
+    const cardData = await response.json();
+    if (!response.ok || !cardData.success) {
+      showQuickWarning(cardData.error || "Não foi possível carregar o Card.", "error");
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "card-edit-overlay";
+    overlay.innerHTML = `
+      <section class="card-edit-modal" role="dialog" aria-modal="true" aria-label="Editar Card">
+        <div class="card-edit-fields">
+          <div class="card-edit-image-field">
+            <div class="card-edit-image-preview card-edit-main-preview" role="button" aria-label="Selecionar imagem principal" tabindex="0"></div>
+          </div>
+          <div class="card-edit-details">
+            <div class="card-edit-image-field">
+              <div class="card-edit-image-preview card-edit-title-preview" role="button" aria-label="Selecionar imagem do título" tabindex="0"></div>
+            </div>
+            <div class="card-edit-text-field">
+              <input class="card-edit-name" type="text" maxlength="255" placeholder="Inserir texto do título aqui..." aria-label="Nome do Card">
+            </div>
+            <div class="card-edit-text-field card-edit-description-field">
+              <textarea class="card-edit-description" placeholder="Inserir descrição aqui..." aria-label="Descrição ou sinopse"></textarea>
+            </div>
+            <div class="card-edit-actions">
+              <button class="card-edit-save" type="button">Salvar</button>
+              <button class="card-edit-cancel" type="button">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+    document.body.appendChild(overlay);
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const mainPreview = overlay.querySelector(".card-edit-main-preview");
+    const titlePreview = overlay.querySelector(".card-edit-title-preview");
+    const nameInput = overlay.querySelector(".card-edit-name");
+    const descriptionInput = overlay.querySelector(".card-edit-description");
+    const saveButton = overlay.querySelector(".card-edit-save");
+    const cancelButton = overlay.querySelector(".card-edit-cancel");
+    nameInput.value = cardData.title;
+    descriptionInput.value = cardData.description;
+
+    const imageInputs = [];
+    const previewUrls = [];
+    function setupEditorImagePicker(preview, initialUrl, label) {
+      let selectedFile = null;
+      let previewUrl = null;
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = ".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp";
+      fileInput.hidden = true;
+      overlay.appendChild(fileInput);
+      imageInputs.push(fileInput);
+
+      function showPreview(source, altText) {
+        preview.replaceChildren();
+        if (!source) {
+          const emptyState = document.createElement("span");
+          emptyState.textContent = `Selecionar ${label}`;
+          preview.appendChild(emptyState);
+          return;
+        }
+        const image = document.createElement("img");
+        image.src = source;
+        image.alt = altText;
+        preview.appendChild(image);
+      }
+
+      showPreview(initialUrl, label);
+      preview.addEventListener("click", () => fileInput.click());
+      preview.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          fileInput.click();
+        }
+      });
+      fileInput.addEventListener("change", () => {
+        selectedFile = fileInput.files[0] || null;
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = selectedFile ? URL.createObjectURL(selectedFile) : null;
+        if (previewUrl) previewUrls.push(previewUrl);
+        showPreview(previewUrl || initialUrl, label);
+      });
+      return () => selectedFile;
+    }
+
+    const getCardImage = setupEditorImagePicker(mainPreview, cardData.card_image_url, "a imagem principal");
+    const getTitleImage = setupEditorImagePicker(titlePreview, cardData.title_image_url, "a imagem do título");
+    TextFormatter.createFormattingToolbar(".card-edit-description");
+
+    function closeEditor() {
+      imageInputs.forEach((input) => input.remove());
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
+      overlay.remove();
+      document.body.style.overflow = previousBodyOverflow;
+      document.removeEventListener("keydown", handleEscape);
+    }
+
+    function handleEscape(event) {
+      if (event.key === "Escape") closeEditor();
+    }
+
+    cancelButton.addEventListener("click", closeEditor);
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) closeEditor();
+    });
+    document.addEventListener("keydown", handleEscape);
+
+    saveButton.addEventListener("click", async () => {
+      if (!nameInput.value.trim()) {
+        showQuickWarning("O nome do Card não pode ficar vazio.", "warning");
+        nameInput.focus();
+        return;
+      }
+
+      const formData = new FormData();
+      let hasChanges = false;
+      if (nameInput.value !== cardData.title) {
+        formData.append("title_text", nameInput.value.trim());
+        hasChanges = true;
+      }
+      if (descriptionInput.value !== cardData.description) {
+        formData.append("description", descriptionInput.value);
+        hasChanges = true;
+      }
+      if (getCardImage()) {
+        formData.append("card_image", getCardImage());
+        hasChanges = true;
+      }
+      if (getTitleImage()) {
+        formData.append("title_image", getTitleImage());
+        hasChanges = true;
+      }
+      if (!hasChanges) {
+        showQuickWarning("Nenhuma alteração para salvar.", "info");
+        return;
+      }
+      saveButton.disabled = true;
+
+      try {
+        const saveResponse = await fetch(`/admin/edit_card/${encodeURIComponent(card.file)}`, {
+          method: "POST",
+          body: formData,
+        });
+        const result = await saveResponse.json();
+        if (!saveResponse.ok || !result.success) {
+          showQuickWarning(result.error || "Não foi possível salvar o Card.", "error");
+          return;
+        }
+
+        card.title = result.title;
+        card.description = result.description;
+        cardDiv.dataset.cardTitle = result.title;
+        cardDiv.querySelector("img").src = result.card_image_url;
+        cardDiv.querySelector("img").alt = result.title;
+        closeEditor();
+        showQuickWarning("Card atualizado com sucesso!", "success");
+      } catch (error) {
+        console.error("Erro ao salvar Card:", error);
+        showQuickWarning("Erro de rede ao salvar o Card.", "error");
+      } finally {
+        saveButton.disabled = false;
+      }
+    });
+  } catch (error) {
+    console.error("Erro ao carregar o editor do Card:", error);
+    showQuickWarning("Não foi possível carregar o editor do Card.", "error");
+  }
+}
+
 // ===========================
 // Função: Salvar alterações (visibilidade, ordem e badges)
 // ===========================
@@ -813,6 +974,7 @@ async function salvarAlteracoes(originalCards) {
       try {
         const resp = await fetch(`/admin/delete_map_story/${file}`, {
           method: "DELETE",
+          headers: { "X-Card-Delete-Confirmed": "true" },
         });
         const data = await resp.json();
         if (data.success) {
@@ -1604,13 +1766,13 @@ async function abrirSubguiaEscrever() {
 
   async function saveStory(action, message) {
     const selectedFile = selectCard.value;
-    const content = storyContent.value.trim();
+    const content = storyContent.value;
 
     if (!selectedFile) {
       showQuickWarning("Selecione um card antes de salvar.", "warning");
       return;
     }
-    if (!content) {
+    if (!content.trim()) {
       showQuickWarning("Escreva o conteúdo da história antes de salvar.", "warning");
       return;
     }

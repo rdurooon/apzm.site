@@ -154,7 +154,7 @@
                         <div class="new-badge">Novo!</div>
                     {% endif %}
                     <img 
-                        src="{{ url_for('static', filename='images/cards/' ~ card.file) }}" 
+                        src="{{ url_for('static', filename='images/cards/' ~ card.file, v=card.image_version) }}"
                         alt="{{ card.title }}" 
                     />
                 </div>

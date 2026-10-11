@@ -62,9 +62,11 @@ def get_visible_cards():
     visible_cards = []
     for card in all_cards:
         card_file = card.get("file")
-        if card_file and os.path.exists(os.path.join(CARDS_FOLDER, card_file)):
+        image_path = os.path.join(CARDS_FOLDER, card_file) if card_file else None
+        if image_path and os.path.exists(image_path):
             visible_cards.append({
                 "file": card_file,
+                "image_version": os.stat(image_path).st_mtime_ns,
                 "title": card.get("title", "Sem título"),
                 "description": card.get("description", ""),
                 "description_formatted": format_text_to_html(card.get("description", "")),

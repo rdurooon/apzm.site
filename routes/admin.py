@@ -2,10 +2,12 @@ from datetime import datetime
 import pytz
 import os
 import re
+import tempfile
 import unicodedata
 import hmac
 from io import BytesIO
 from flask import Blueprint, render_template, jsonify, request, current_app, redirect, url_for, session, send_file
+from PIL import Image
 from pypdf import PdfReader
 from uuid import uuid4
 from .register import promote_user, demote_user, delete_user
@@ -13,8 +15,10 @@ from tools.decorators import admin_required
 from tools.uploads import is_safe_stored_filename, read_validated_image, save_internal_upload
 from tools.db import (
     get_admin_count as db_get_admin_count,
+    get_db as db_get_connection,
     get_all_users,
     get_cards as db_get_cards,
+    get_card_by_file as db_get_card_by_file,
     get_story_by_card_file,
     get_story_pdf as db_get_story_pdf,
     save_story_pdf as db_save_story_pdf,
@@ -48,6 +52,96 @@ TITLE_DIR = "static/images/titles/"
 COVER_DIR = "static/images/covers/"
 NEWS_DIR = "static/images/news/"
 STORY_PDF_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "story_pdfs"))
+CARD_IMAGE_FORMATS = {".jpg": "JPEG", ".jpeg": "JPEG", ".png": "PNG", ".webp": "WEBP"}
+
+
+def _card_title_image_path(filename):
+    base_name = os.path.splitext(filename)[0]
+    for extension in (".png", ".jpg", ".jpeg", ".webp"):
+        path = os.path.join(TITLE_DIR, f"{base_name}{extension}")
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def _card_image_version(path):
+    try:
+        return os.stat(path).st_mtime_ns
+    except OSError:
+        return 0
+
+
+def _image_bytes_for_extension(image_content, extension):
+    target_format = CARD_IMAGE_FORMATS.get(extension.lower())
+    if not target_format:
+        raise ValueError("O formato da imagem atual não pode ser substituído.")
+
+    with Image.open(BytesIO(image_content)) as image:
+        if image.format == target_format:
+            return image_content
+        if target_format == "JPEG":
+            if image.mode in ("RGBA", "LA") or "transparency" in image.info:
+                rgba_image = image.convert("RGBA")
+                background = Image.new("RGB", rgba_image.size, "white")
+                background.paste(rgba_image, mask=rgba_image.getchannel("A"))
+                image = background
+            else:
+                image = image.convert("RGB")
+        output = BytesIO()
+        image.save(output, format=target_format, quality=92)
+        return output.getvalue()
+
+
+def _replace_card_images_and_update(filename, title_text, description, replacements):
+    staged = []
+    applied = []
+    committed = False
+    try:
+        for target_path, content in replacements.items():
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+            descriptor, staged_path = tempfile.mkstemp(prefix=".card-edit-", dir=os.path.dirname(target_path))
+            with os.fdopen(descriptor, "wb") as staged_file:
+                staged_file.write(content)
+            staged.append((target_path, staged_path))
+
+        for target_path, staged_path in staged:
+            state = {"target": target_path, "backup": None, "original_moved": False, "installed": False}
+            applied.append(state)
+            if os.path.exists(target_path):
+                descriptor, backup_path = tempfile.mkstemp(prefix=".card-edit-backup-", dir=os.path.dirname(target_path))
+                os.close(descriptor)
+                state["backup"] = backup_path
+                os.replace(target_path, backup_path)
+                state["original_moved"] = True
+            os.replace(staged_path, target_path)
+            state["installed"] = True
+
+        updates = {}
+        if title_text is not None:
+            updates["title"] = title_text
+        if description is not None:
+            updates["description"] = description
+        if updates and not db_update_card(filename, **updates):
+            raise LookupError("Card não encontrado ou não atualizado.")
+        committed = True
+    except Exception:
+        for state in reversed(applied):
+            if state["installed"] and os.path.exists(state["target"]):
+                os.remove(state["target"])
+            if state["original_moved"] and state["backup"] and os.path.exists(state["backup"]):
+                os.replace(state["backup"], state["target"])
+        raise
+    finally:
+        for _, staged_path in staged:
+            if os.path.exists(staged_path):
+                os.remove(staged_path)
+        if committed:
+            for state in applied:
+                if state["backup"] and os.path.exists(state["backup"]):
+                    try:
+                        os.remove(state["backup"])
+                    except OSError:
+                        current_app.logger.warning("Não foi possível remover backup temporário de imagem: %s", state["backup"])
 
 # =========================== FUNÇÃO PARA CHECAR "NOVA" ===========================
 def check_new_badges(cards):
@@ -226,7 +320,117 @@ def delete(user_id):
 def list_cards():
     cards = db_get_cards()
     cards = check_new_badges(cards)
+    for card in cards:
+        card["image_version"] = _card_image_version(os.path.join(CARD_DIR, card["file"]))
     return jsonify(cards)
+
+
+@admin_bp.route("/admin/edit_card/<filename>", methods=["GET", "POST"])
+@admin_required
+def edit_card(filename):
+    if not is_safe_stored_filename(filename):
+        return jsonify({"success": False, "error": "Card inválido."}), 400
+
+    card = db_get_card_by_file(filename)
+    if not card:
+        return jsonify({"success": False, "error": "Card não encontrado."}), 404
+
+    card_path = os.path.join(CARD_DIR, filename)
+    title_path = _card_title_image_path(filename)
+    if request.method == "GET":
+        return jsonify({
+            "success": True,
+            "file": card["file"],
+            "title": card["title"],
+            "description": card.get("description") or "",
+            "card_image_url": url_for(
+                "static", filename=f"images/cards/{filename}", v=_card_image_version(card_path)
+            ),
+            "title_image_url": url_for(
+                "static",
+                filename=f"images/titles/{os.path.basename(title_path)}",
+                v=_card_image_version(title_path),
+            ) if title_path else None,
+        })
+
+    title_text = request.form.get("title_text") if "title_text" in request.form else None
+    description = request.form.get("description") if "description" in request.form else None
+    if title_text is not None and (not isinstance(title_text, str) or not title_text.strip()):
+        return jsonify({"success": False, "error": "O nome do Card não pode ficar vazio."}), 400
+    if description is not None and not isinstance(description, str):
+        return jsonify({"success": False, "error": "Informe a descrição do Card."}), 400
+
+    replacements = {}
+    card_upload = request.files.get("card_image")
+    if card_upload and card_upload.filename:
+        validated_card = read_validated_image(card_upload)
+        if not validated_card:
+            return jsonify({"success": False, "error": "Imagem do Card inválida ou acima de 10 MB."}), 400
+        card_extension = os.path.splitext(filename)[1].lower()
+        try:
+            replacements[card_path] = _image_bytes_for_extension(validated_card[1], card_extension)
+        except ValueError as error:
+            return jsonify({"success": False, "error": str(error)}), 400
+
+    title_upload = request.files.get("title_image")
+    if title_upload and title_upload.filename:
+        base_name = os.path.splitext(filename)[0]
+        if any(
+            other_card["file"] != filename
+            and os.path.splitext(other_card["file"])[0] == base_name
+            for other_card in db_get_cards()
+        ):
+            return jsonify({"success": False, "error": "A imagem do título é compartilhada com outro Card e não pode ser substituída com segurança."}), 409
+        validated_title = read_validated_image(title_upload)
+        if not validated_title:
+            return jsonify({"success": False, "error": "Imagem do título inválida ou acima de 10 MB."}), 400
+        title_extension = os.path.splitext(title_path)[1].lower() if title_path else validated_title[0]
+        title_target = title_path or os.path.join(
+            TITLE_DIR, f"{os.path.splitext(filename)[0]}{title_extension}"
+        )
+        shared_story_image = db_get_connection().execute(
+            "SELECT 1 FROM stories WHERE hero_image = ? LIMIT 1",
+            (os.path.basename(title_target),),
+        ).fetchone()
+        if shared_story_image:
+            return jsonify({"success": False, "error": "A imagem do título também é usada por uma história e não pode ser substituída com segurança."}), 409
+        try:
+            replacements[title_target] = _image_bytes_for_extension(validated_title[1], title_extension)
+        except ValueError as error:
+            return jsonify({"success": False, "error": str(error)}), 400
+
+    if title_text is None and description is None and not replacements:
+        return jsonify({"success": False, "error": "Nenhuma alteração foi enviada."}), 400
+
+    try:
+        _replace_card_images_and_update(
+            filename,
+            title_text.strip() if title_text is not None else None,
+            description,
+            replacements,
+        )
+    except LookupError as error:
+        return jsonify({"success": False, "error": str(error)}), 404
+    except Exception:
+        current_app.logger.exception("Falha ao editar Card")
+        return jsonify({"success": False, "error": "Não foi possível salvar as alterações do Card."}), 500
+
+    updated_card = db_get_card_by_file(filename)
+    title_path = _card_title_image_path(filename)
+    return jsonify({
+        "success": True,
+        "file": updated_card["file"],
+        "title": updated_card["title"],
+        "description": updated_card.get("description") or "",
+        "card_image_url": url_for(
+            "static", filename=f"images/cards/{filename}", v=_card_image_version(card_path)
+        ),
+        "title_image_url": url_for(
+            "static",
+            filename=f"images/titles/{os.path.basename(title_path)}",
+            v=_card_image_version(title_path),
+        ) if title_path else None,
+    })
 
 
 @admin_bp.route("/admin/overview_stats")
@@ -267,15 +471,26 @@ def add_map_story():
 
     base_name = uuid4().hex
     card_filename = f"{base_name}{card_upload[0]}"
-    save_internal_upload(CARD_DIR, card_filename, card_upload[1])
-    if title_image:
-        title_filename = f"{base_name}{title_upload[0]}"
-        save_internal_upload(TITLE_DIR, title_filename, title_upload[1])
-    else:
-        title_filename = card_filename
-        save_internal_upload(TITLE_DIR, title_filename, card_upload[1])
+    created_paths = []
+    try:
+        save_internal_upload(CARD_DIR, card_filename, card_upload[1])
+        created_paths.append(os.path.join(CARD_DIR, card_filename))
+        if title_image:
+            title_filename = f"{base_name}{title_upload[0]}"
+            save_internal_upload(TITLE_DIR, title_filename, title_upload[1])
+        else:
+            title_filename = card_filename
+            save_internal_upload(TITLE_DIR, title_filename, card_upload[1])
+        created_paths.append(os.path.join(TITLE_DIR, title_filename))
 
-    db_insert_card(card_filename, title_text, description)
+        if not db_insert_card(card_filename, title_text, description):
+            raise RuntimeError("A inserção do Card não foi confirmada.")
+    except Exception:
+        for path in created_paths:
+            if os.path.isfile(path):
+                os.remove(path)
+        current_app.logger.exception("Falha ao criar Card")
+        return jsonify({"success": False, "error": "Não foi possível criar o Card."}), 500
     return jsonify({"success": True})
 
 
@@ -284,6 +499,8 @@ def add_map_story():
 @admin_required
 def delete_map_story(filename):
     try:
+        if request.headers.get("X-Card-Delete-Confirmed") != "true":
+            return jsonify({"success": False, "error": "Confirme a remoção do Card."}), 400
         if not is_safe_stored_filename(filename):
             return jsonify({"success": False, "error": "Card inválido"}), 400
 
@@ -336,14 +553,17 @@ def delete_map_story(filename):
 @admin_required
 def save_cards_order():
     try:
-        new_cards = request.get_json()
+        new_cards = request.get_json(silent=True)
         if not isinstance(new_cards, list):
-            return jsonify({"success": False, "error": "Formato inválido"})
+            return jsonify({"success": False, "error": "Formato inválido"}), 400
 
         db_update_cards_order(new_cards)
         return jsonify({"success": True})
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+        current_app.logger.exception("Falha ao salvar ordem dos Cards")
+        return jsonify({"success": False, "error": "Não foi possível salvar a ordem dos Cards."}), 500
 
 # ===========================
 # Toggle "Novo!" do card
@@ -351,10 +571,13 @@ def save_cards_order():
 @admin_bp.route("/admin/toggle_card_new/<filename>", methods=["POST"])
 @admin_required
 def toggle_card_new(filename):
-    data = request.get_json()
-    is_new = data.get("is_new", False)
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or type(data.get("is_new")) is not bool:
+        return jsonify({"success": False, "error": "Formato inválido."}), 400
+    is_new = data["is_new"]
     new_since = datetime.now(pytz.timezone("America/Sao_Paulo")).isoformat() if is_new else None
-    db_update_card(filename, is_new=is_new, new_since=new_since)
+    if not db_update_card(filename, is_new=is_new, new_since=new_since):
+        return jsonify({"success": False, "error": "Card não encontrado."}), 404
     return jsonify({"success": True})
 
 
@@ -362,8 +585,15 @@ def toggle_card_new(filename):
 @admin_bp.route("/admin/save_card_links/<filename>", methods=["POST"])
 @admin_required
 def save_card_links(filename):
-    data = request.get_json()
-    db_save_card_links(filename, data.get("mapa", ""))
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not isinstance(data.get("mapa", ""), str):
+        return jsonify({"success": False, "error": "Formato inválido."}), 400
+    try:
+        if not db_save_card_links(filename, data.get("mapa", "")):
+            return jsonify({"success": False, "error": "Card não encontrado."}), 404
+    except Exception:
+        current_app.logger.exception("Falha ao salvar link do Card")
+        return jsonify({"success": False, "error": "Não foi possível salvar o link."}), 500
     return jsonify({"success": True})
 
 
@@ -390,17 +620,28 @@ def get_story(filename):
 @admin_required
 def save_story(filename):
     if request.is_json:
-        data = request.get_json(silent=True) or {}
-        content = (data.get("content") or "").strip()
-        action = (data.get("action") or "publish").strip()
-        scheduled_at = (data.get("scheduled_at") or "").strip()
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify({"success": False, "error": "Formato inválido."}), 400
+        content = data.get("content")
+        action = data.get("action", "publish")
+        scheduled_at = data.get("scheduled_at", "")
     else:
-        content = (request.form.get("content") or "").strip()
-        action = (request.form.get("action") or "publish").strip()
-        scheduled_at = (request.form.get("scheduled_at") or "").strip()
+        content = request.form.get("content")
+        action = request.form.get("action", "publish")
+        scheduled_at = request.form.get("scheduled_at", "")
 
-    if content == "":
+    if not isinstance(content, str) or not content.strip():
         return jsonify({"success": False, "error": "Conteúdo da história não pode ficar vazio."}), 400
+    if not isinstance(action, str) or action not in {"draft", "scheduled", "publish"}:
+        return jsonify({"success": False, "error": "Ação da história inválida."}), 400
+    if not isinstance(scheduled_at, str):
+        return jsonify({"success": False, "error": "Data de publicação inválida."}), 400
+    if action == "scheduled":
+        try:
+            datetime.fromisoformat(scheduled_at)
+        except ValueError:
+            return jsonify({"success": False, "error": "Data de publicação inválida."}), 400
 
     card = next((c for c in db_get_cards() if c["file"] == filename), None)
     if not card:
@@ -417,6 +658,7 @@ def save_story(filename):
     existing_story = get_story_by_card_file(filename)
     slug = existing_story.get("slug") if existing_story and existing_story.get("slug") else slugify(card.get("title", ""))
     hero_image = None
+    new_hero_path = None
     hero_file = request.files.get("hero_image")
     if hero_file:
         hero_upload = read_validated_image(hero_file)
@@ -425,11 +667,23 @@ def save_story(filename):
         os.makedirs(COVER_DIR, exist_ok=True)
         hero_filename = f"{uuid4().hex}{hero_upload[0]}"
         save_internal_upload(COVER_DIR, hero_filename, hero_upload[1])
+        new_hero_path = os.path.join(COVER_DIR, hero_filename)
         hero_image = hero_filename
     elif existing_story and existing_story.get("hero_image"):
         hero_image = existing_story.get("hero_image")
 
-    db_save_story(filename, slug, content, hero_image, action=action, scheduled_at=scheduled_at or None)
+    try:
+        if not db_save_story(filename, slug, content, hero_image, action=action, scheduled_at=scheduled_at or None):
+            raise RuntimeError("A gravação da história não foi confirmada.")
+    except ValueError as e:
+        if new_hero_path and os.path.isfile(new_hero_path):
+            os.remove(new_hero_path)
+        return jsonify({"success": False, "error": str(e)}), 400
+    except Exception:
+        if new_hero_path and os.path.isfile(new_hero_path):
+            os.remove(new_hero_path)
+        current_app.logger.exception("Falha ao salvar história")
+        return jsonify({"success": False, "error": "Não foi possível salvar a história."}), 500
     return jsonify({"success": True, "slug": slug, "status": action if action in {"draft", "scheduled"} else "published"})
 
 

@@ -424,7 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function getTitleImage(baseName) {
     const exts = ["png", "jpg", "jpeg", "webp"];
     for (const ext of exts) {
-      const path = `/static/images/titles/${baseName}.${ext}`;
+      const path = `/static/images/titles/${baseName}.${ext}?v=${Date.now()}`;
       if (imageExists(path)) return path;
     }
     return null;
@@ -446,6 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function openPopup(cardImgSrc, titleImgSrc, description, cardFileName) {
     popupImage.src = cardImgSrc;
+    popupImage.dataset.cardFile = cardFileName;
     popupImage.classList.add("card-image");
 
     if (titleImgSrc) {
@@ -465,10 +466,10 @@ document.addEventListener("DOMContentLoaded", () => {
     card.addEventListener("click", () => {
       const img = card.querySelector("img");
       const cardImgSrc = img?.src || "";
-      const baseName = cardImgSrc.split("/").pop().split(".")[0];
+      const cardFileName = new URL(cardImgSrc).pathname.split("/").pop();
+      const baseName = cardFileName.split(".")[0];
       const titleImgSrc = getTitleImage(baseName);
       const description = card.dataset.description;
-      const cardFileName = cardImgSrc.split("/").pop();
 
       openPopup(cardImgSrc, titleImgSrc, description, cardFileName);
     });
@@ -517,7 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cardLinks = data;
       cards.forEach((card) => {
         card.addEventListener("click", () => {
-          const cardFileName = popupImage.src.split("/").pop();
+          const cardFileName = popupImage.dataset.cardFile;
           setPopupLinks(cardFileName);
           loadLikes(cardFileName);
         });

@@ -392,11 +392,52 @@ body {
   flex-direction: column;
   width: 100%;
   height: 100%;
+  min-width: 0;
+}
+
+.card-action-buttons {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.card-action-buttons button {
+  min-width: 0;
+  padding: 9px 3px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-toggle-card-visibility {
+  background: #28664a;
+}
+
+.btn-toggle-card-visibility:hover {
+  background: #1e503a;
+}
+
+.card-action-buttons .btn-remove-card {
+  background: #e74c3c;
+  transition: background-color 0.3s ease;
+}
+
+.card-action-buttons .btn-remove-card:hover {
+  background: #c0392b;
 }
 
 /* Card de reorganização */
 .reorganizar-card {
   position: relative;
+  z-index: 0;
   display: block;
   border-radius: 10px;
   overflow: hidden;
@@ -444,18 +485,6 @@ body {
   right: 15px; /* afastado da borda direita */
 }
 
-/* overlay para capturar clique e permitir toggle mesmo quando "esmaecido" */
-.toggle-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 5; /* abaixo dos botões (que estão em z-index:10) */
-  background: transparent;
-  cursor: pointer;
-}
-
 /* aparência do card quando marcado como invisível (ainda clicável via overlay) */
 .reorganizar-card.invisible {
   opacity: 0.45;
@@ -489,6 +518,193 @@ body {
 }
 .btn-save-cards:hover {
   background: #2ecc71;
+}
+
+.card-edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.card-edit-modal {
+  width: min(1120px, 100%);
+  max-height: calc(100vh - 24px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 12px 16px 16px 12px;
+  border-radius: 8px;
+  background: #fff;
+  color: #292d2b;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+}
+
+.card-edit-modal h2 {
+  margin: 0 0 20px;
+  font-size: 22px;
+  text-align: center;
+}
+
+.card-edit-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 350px) minmax(0, 1fr);
+  gap: 46px;
+}
+
+.card-edit-image-field,
+.card-edit-text-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.card-edit-image-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px dashed #aab3ae;
+  border-radius: 6px;
+  background: #f3f6f4;
+  color: #58635d;
+  cursor: pointer;
+}
+
+.card-edit-main-preview {
+  height: min(92vh, 623px);
+  min-height: 0;
+}
+
+.card-edit-title-preview {
+  height: 150px;
+}
+
+.card-edit-image-preview img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.card-edit-image-preview:focus-visible,
+.card-edit-image-preview:hover {
+  border-color: #28664a;
+  outline: none;
+}
+
+.card-edit-details {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+.card-edit-text-field input,
+.card-edit-text-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px;
+  border: 1px solid #aab3ae;
+  border-radius: 6px;
+  color: #202522;
+  font: inherit;
+  font-weight: 400;
+}
+
+.card-edit-text-field textarea {
+  min-height: 250px;
+  resize: vertical;
+}
+
+.card-edit-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 0;
+}
+
+.card-edit-actions button {
+  min-width: 110px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.card-edit-save {
+  background: #28664a;
+}
+
+.card-edit-cancel {
+  background: #a83732;
+}
+
+.card-edit-actions button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@media (max-width: 700px) {
+  .card-edit-overlay {
+    padding: 10px;
+  }
+
+  .card-edit-modal {
+    max-height: calc(100vh - 20px);
+    padding: 16px;
+  }
+
+  .card-edit-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .card-edit-details {
+    gap: 14px;
+  }
+
+  .card-edit-main-preview {
+    height: min(55vh, 360px);
+    min-height: 0;
+  }
+
+  .card-edit-title-preview {
+    height: 110px;
+  }
+
+  .card-edit-text-field textarea {
+    min-height: 150px;
+  }
+
+  .card-edit-actions button {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-height: 650px) and (min-width: 701px) {
+  .card-edit-main-preview {
+    height: min(55vh, 350px);
+  }
+
+  .card-edit-title-preview {
+    height: 110px;
+  }
+
+  .card-edit-text-field textarea {
+    min-height: 120px;
+  }
 }
 
 /* ===========================
@@ -695,7 +911,7 @@ body {
     30% 15%
   );
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  z-index: 9999;
+  z-index: 2;
   transition: opacity 0.3s, transform 0.3s;
   transform: rotate(-10deg);
 }
@@ -802,7 +1018,19 @@ body {
 /* ==============================
    Responsividade: Tablets e Celulares
    ============================== */
+@media (max-width: 1200px) {
+  .cards-list-container {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  .cards-list-container {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    padding: 14px;
+  }
+
   body {
     flex-direction: column;
     padding: 0;
@@ -865,6 +1093,12 @@ body {
    Responsividade: Celulares Pequenos
    ============================== */
 @media (max-width: 480px) {
+  .cards-list-container {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 12px;
+  }
+
   body {
     height: 100vh;
     justify-content: center; /* mantém centralização vertical */
